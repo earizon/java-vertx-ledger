@@ -1,2 +1,1 @@
-rootProject.name = 'java-ilp-master'
-include ':java-crypto-conditions' ,':java-ilp-core' ,':service-config-support' ,':vertx-support' ,':ledger-rest-websocket',':ledger-grpc'
+rootProject.name = 'java-vertx-ledger'

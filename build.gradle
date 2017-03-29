@@ -3,10 +3,12 @@ apply plugin: 'maven'
 apply plugin: 'eclipse'
 
 Properties props = new Properties()
-props.load(new FileInputStream("../java-build-support/interledger_versioning.prop"))
-props.each { prop -> project.ext.set(prop.key, prop.value) }
-props.load(new FileInputStream("../java-build-support/external_library_versioning.prop"))
-props.each { prop -> project.ext.set(prop.key, prop.value) }
+props.load(new FileInputStream("${projectDir}/version.prop"))
+  props.each { prop -> project.ext.set(prop.key, prop.value) }
+props.load(new FileInputStream("${projectDir}/../java-build-support/interledger_versioning.prop"))
+  props.each { prop -> project.ext.set(prop.key, prop.value) }
+props.load(new FileInputStream("${projectDir}/../java-build-support/external_library_versioning.prop"))
+  props.each { prop -> project.ext.set(prop.key, prop.value) }
 
 group = 'org.interledger'
 version = java_ilp_vertx_ledger_version
@@ -29,13 +31,17 @@ repositories {
 }
 
 dependencies {
-    compile     "com.google.guava:guava:${guava_version}"
     compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
+    compile     "org.javamoney:moneta:${moneta_version}"
+
+    compile     "com.google.guava:guava:${guava_version}"
     compile     "org.apache.commons:commons-lang3:${commons_lang3_version}"
     compile     "org.slf4j:slf4j-api:${slf4j_api_version}"
     compile     "com.typesafe:config:${typesafe_config_version}"
     compile     "ch.qos.logback:logback-classic:${logback_classic_version}"
     compile     "io.vertx:vertx-web:${vertx_web_version}"
+    
+
     testCompile "junit:junit:${junit_version}"
     testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
 }
