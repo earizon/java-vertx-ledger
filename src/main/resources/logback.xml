@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- <jmxConfigurator /> -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>ilp-connector.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>ilp-connector.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <maxFileSize>1MB</maxFileSize> 
+            <!-- keep 2 days' worth of history capped at 1MB total size -->
+            <maxHistory>2</maxHistory>
+            <totalSizeCap>2MB</totalSizeCap>
+        </rollingPolicy>    
+        <encoder>
+            <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+      
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{mm:ss.SSS} %-5level %logger{36} \n %msg%n</pattern>
+            <!-- <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern> -->
+        </encoder>
+    </appender>
+    
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.interledger" level="INFO"/>
+    <logger name="org.interledger.ilp.common.api.handlers.DebugRequestHandler"    level="INFO"/>
+    <logger name="org.interledger.ilp.common.api.handlers.RestEndpointHandler"    level="INFO"/>
+    <logger name="org.interledger.ilp.ledger.api.handlers.TransferWSEventHandler" level="TRACE"/>
+    <logger name="org.interledger.ilp.ledger.api.handlers.TransferHandler"        level="TRACE"/>
+
+    <root level="WARN">          
+        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="FILE" />-->
+    </root>
+  
+</configuration>

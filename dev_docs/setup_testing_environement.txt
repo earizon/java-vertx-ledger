@@ -1,0 +1,174 @@
+In order to test the integration between the java ledger and the ilp-connector next test setup is proposed:
+
+-  java ledger       ledger1.eur. listening on port 3001
+-  five-bells-ledger ledger2.eur. listening on port 3002
+-  five-bells-ledger ledger3.eur. listening on port 3003
+-  ilp-connector connected to the three ledger
+-  "simple client" executing transactions between the different ledgers.
+
+STEP 1: Launching java ledger in port 3001
+
+  STEP 1.1: adjust (.../java-ilp-ledger-api/)app.conf parameters
+  STEP 1.2: Launch server:
+      alternative 1: Using gradle)
+          cd .../java-ilp-master
+          gradle :java-ilp-ledger-api:launchServer
+      alternative 2: Using an IDE:
+          Execute org.interledger.ilp.ledger.api.Main.java as java app.
+
+STEP 2: Launching five-bells-ledger ledger2.eur and ledger3.eur on ports 3002, 3003
+     Follow the instructions indicated in https://github.com/interledgerjs/five-bells-ledger to install 
+     node libraries.
+     
+     Next shell script can be used as template / reference (not mandatory). 
+     If not port is indicated it launches two ledgers in background listening at port 3002/3003 
+     and creates some test users (alice, bob, ilpconnector)
+      | #!/bin/bash -x
+      | # set -e
+      | 
+      | if   [[ $# == 0 ]] ; then # default. launch 2 ledgers in background
+      |     $0 3002 & ; $0 3003 &  # Recursively call this script with provided listening ports
+      |     exit 0
+      | elif [[ $# != 1 ]] ; then 
+      |     echo "Ussage: $0 port_number" ; exit 1 ; 
+      | fi
+      | export LEDGER_PORT=$1
+      | NUMBER=$(( ${LEDGER_PORT} - 3000 )) 
+      | 
+      | export LEDGER_LOG_LEVEL=debug
+      | export LEDGER_ADMIN_USER=admin 
+      | export LEDGER_ILP_PREFIX="ledger${NUMBER}.eur."
+      | export LEDGER_ADMIN_PASS=admin 
+      | export LEDGER_DB_SYNC=1
+      | rm -f "${LEDGER_ILP_PREFIX}/ddbb.sqlite" 
+      | export LEDGER_DB_URI="sqlite://${LEDGER_ILP_PREFIX}/ddbb.sqlite"
+      | export LEDGER_CURRENCY_CODE=EUR
+      | export LEDGER_CURRENCY_SYMBOL=€
+      | export LEDGER_AUTH_BASIC_ENABLED=1
+      | export LEDGER_PUBLIC_URI="http://localhost:${LEDGER_PORT}"
+      | export LEDGER_AUTH_HTTP_SIGNATURE_ENABLED=0
+      | export LEDGER_AUTH_CLIENT_CERT_ENABLED=0
+      | 
+      | SERVER_LOG=${LEDGER_ILP_PREFIX}log
+      | 
+      | pushd .
+      | mkdir ${LEDGER_ILP_PREFIX} || echo -n ""
+      | cd    ${LEDGER_ILP_PREFIX}
+      | echo "Forwaring server logs to ${SERVER_LOG}"
+      | rm ${SERVER_LOG} || echo -n ""
+      | npm start 2>&1 | sed "s/^/${LEDGER_ILP_PREFIX} /" >> ${SERVER_LOG} &
+      | popd
+      | 
+      | echo "******************************"
+      | echo "Waiting for ledger to start up on ${LEDGER_PUBLIC_URI}"
+      | echo "******************************"
+      | while true ; do
+      |     ( echo "." ; wget --tries=1 -O - -o /dev/null "${LEDGER_PUBLIC_URI}") | grep --silent "ilp_prefix" 
+      |     if [ $? == 0 ] ; then break; fi
+      |     echo -n "."
+      |     sleep 1
+      | done
+      | wget -O - -o /dev/null "${LEDGER_PUBLIC_URI}" 
+      | netstat -ntl |grep ${LEDGER_PORT}
+      | 
+      | echo "*******************"
+      | echo "Creating accounts: "
+      | echo "*******************"
+      |   for user in alice bob         ilpconnector; do
+      |     # echo ""
+      |     echo -n "Creating account for: $user "
+      |     POST_DATA="{ \"name\" : \"${user}\", \"balance\": \"1000\", \"password\" : \"${user}\", \"connector\" : \"localhost:4000\" }"
+      |     # echo $POST_DATA
+      |     curl --noproxy \* -X PUT --user admin:admin -H "Content-Type: application/json" -d "${POST_DATA}" "${LEDGER_PUBLIC_URI}/accounts/${user}" 1>/dev/null
+      | done
+      | echo "checking log example:"
+      | echo "tail -f ledger2.eur./ledger2.eur.log ledger3.eur./ledger3.eur.log"
+
+STEP 3: Launch ilp-connector connected to three ledgers:
+     Follow the instructions indicated in https://github.com/interledgerjs/ilp-connector to install 
+     node libraries.
+     
+     Next shell script can be used as template / reference to launch the connector (not mandatory):
+      | #!/bin/bash
+      | set -e
+      | LEDGERA_PREFIX="ledger1.eur."
+      | LEDGERB_PREFIX="ledger2.eur."
+      | LEDGERC_PREFIX="ledger3.eur."
+      | LEDGERA="http://localhost:3001"
+      | LEDGERB="http://localhost:3002"
+      | LEDGERC="http://localhost:3003"
+      | export CONNECTOR_LEDGERS="{ \"${LEDGERA_PREFIX}\": { \"currency\": \"EUR\", \"plugin\": \"ilp-plugin-bells\", \"options\": { \"host\":\"${LEDGERA}\", \"account\" : \"${LEDGERA}/accounts/ilpconnector\", \"username\": \"ilpconnector\", \"password\": \"ilpconnector\" } }, \"${LEDGERB_PREFIX}\": { \"currency\": \"EUR\", \"plugin\": \"ilp-plugin-bells\", \"options\": { \"host\":\"${LEDGERB}\", \"account\" : \"${LEDGERB}/accounts/ilpconnector\", \"username\": \"ilpconnector\", \"password\": \"ilpconnector\" } }, \"${LEDGERC_PREFIX}\": { \"currency\": \"EUR\", \"plugin\": \"ilp-plugin-bells\", \"options\": { \"host\":\"${LEDGERC}\", \"account\" : \"${LEDGERC}/accounts/ilpconnector\", \"username\": \"ilpconnector\", \"password\": \"ilpconnector\" } } }"
+      | export CONNECTOR_LOG_LEVEL=info
+      | export CONNECTOR_PORT=4000
+      | export CONNECTOR_HOSTNAME=localhost
+      | export CONNECTOR_ADMINUSER=admin
+      | export CONNECTOR_ADMINPASS=admin
+      | export CONNECTOR_SPREAD=0
+      | export CONNECTOR_MAX_HOLD_TIME=600
+      |
+      | npm start 2>&1
+
+STEP 4: simple client executing transaction between ledgers:
+      Next node.js script (combined example @ https://github.com/interledgerjs/ilp) can 
+      be used to test transaction between ledgers (comment/uncomment/modify ledgers at will for senders/receivers):
+      | 'use strict'
+      | 
+      | require('stackup')
+      | const sleep = require('sleep')
+      | 
+      | sleep.sleep(3) // give time to strace to connect
+      | const co = require('co')
+      | const ILP = require('ilp')
+      | const FiveBellsLedgerPlugin = require('ilp-plugin-bells')
+      | 
+      |    const LEDGERA_PREFIX='ledger1.eur.'
+      |    const LEDGERA='http://localhost:3001'
+      | 
+      | // const LEDGERA_PREFIX='ledger2.eur.'
+      | // const LEDGERA='http://localhost:3002'
+      | 
+      | const LEDGERB_PREFIX='ledger3.eur.'
+      | const LEDGERB='http://localhost:3003'
+      | 
+      | const sender = ILP.createSender({
+      |   _plugin: FiveBellsLedgerPlugin,
+      |   prefix: LEDGERA_PREFIX,
+      |   account: LEDGERA+'/accounts/alice',
+      |   username: 'alice',
+      |   password: 'alice',
+      |   // connectors: [
+      |   //     'http://localhost:4000',
+      |   // ]
+      | })
+      | 
+      | const receiver = ILP.createReceiver({
+      |   _plugin: FiveBellsLedgerPlugin,
+      |   prefix: LEDGERB_PREFIX,
+      |   account: LEDGERB+'/accounts/bob',
+      |   username: 'bob',
+      |   password: 'bob',
+      |   // connectors: [
+      |   //     'http://localhost:4000',
+      |   // ]
+      | })
+      | 
+      | co(function * () {
+      |   yield receiver.listen()
+      |   receiver.on('incoming', (transfer, fulfillment) => {
+      |     console.log('received transfer:', transfer)
+      |     console.log('fulfilled transfer hold with fulfillment:', fulfillment)
+      |   })
+      | 
+      |   const request = receiver.createRequest({
+      |     amount: '1',
+      |   })
+      |   console.log('request:', request)
+      | 
+      |   const paymentParams = yield sender.quoteRequest(request)
+      |   console.log('paymentParams', paymentParams)
+      | 
+      |   const result = yield sender.payRequest(paymentParams)
+      |   console.log('sender result:', result)
+      | }).catch((err) => {
+      |   console.log(err)
+      | })

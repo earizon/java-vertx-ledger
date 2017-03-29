@@ -1,0 +1,113 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'eclipse'
+
+Properties props = new Properties()
+props.load(new FileInputStream("../java-build-support/interledger_versioning.prop"))
+props.each { prop -> project.ext.set(prop.key, prop.value) }
+props.load(new FileInputStream("../java-build-support/external_library_versioning.prop"))
+props.each { prop -> project.ext.set(prop.key, prop.value) }
+
+group = 'org.interledger'
+version = java_ilp_vertx_ledger_version
+description = "Interledger Java simple ledger (VertX Backend)"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': description,
+                   'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile     "com.google.guava:guava:${guava_version}"
+    compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
+    compile     "org.apache.commons:commons-lang3:${commons_lang3_version}"
+    compile     "org.slf4j:slf4j-api:${slf4j_api_version}"
+    compile     "com.typesafe:config:${typesafe_config_version}"
+    compile     "ch.qos.logback:logback-classic:${logback_classic_version}"
+    compile     "io.vertx:vertx-web:${vertx_web_version}"
+    testCompile "junit:junit:${junit_version}"
+    testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
+}
+
+task launchServer(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+
+  main = 'org.interledger.ilp.ledger.api.Main'
+
+  // arguments to pass to the application
+  // args 'appArg1'
+}
+
+// task launchTestWebSocket(type: JavaExec) {
+//   classpath = sourceSets.main.runtimeClasspath
+// 
+//   main = 'org.interledger.ilp.ledger.api.TestWebSocket'
+// 
+// }
+
+
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.0'
+}
+
+//Maven compatibility task:
+task writePom << {
+    pom {
+        project {
+            packaging 'jar'
+            name project.name
+            description "${project.description} ${build_ref}"
+            inceptionYear '2017'
+            properties {
+                "project.build.sourceEncoding" "UTF-8"
+                "maven.compiler.source" "${project.sourceCompatibility}"
+                "maven.compiler.target" "${project.targetCompatibility}"
+                "checkstyle.config.location" "google_checks.xml"
+                "checkstyle.consoleOutput" "true"
+            }
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }  
+            developers {
+                developer {
+                    id "earizon"
+                    name "Enrique Arizon Benito"
+                    email "enrique.arizon.benito@everis.com"
+                    organizationUrl "http://www.everis.com"
+                }
+                developer {
+                    id "mrmx"
+                    name "Manuel Polo"
+                    email "mistermx@gmail.com"
+                    organizationUrl "http://www.everis.com"
+                }
+            }
+            reporting  {
+                plugins {
+                    plugin {
+                        groupId "org.apache.maven.plugins"
+                        artifactId "maven-checkstyle-plugin"
+                        version "2.17"
+                    }
+                }
+            }
+        }
+    }.writeTo("pom.xml")
+}
