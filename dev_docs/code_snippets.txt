@@ -2,7 +2,7 @@ Get Config parameters related to ILP protocol:
 import org.interledger.ilp.core.LedgerInfo;
 import org.interledger.ilp.ledger.LedgerFactory;
     LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
-    String baseUri = ledgerInfo.getBaseUri(); // Note the baseUri contains a trailing '/' character
+    String ledger = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig().getPublicURI().toString();
 
 -------------------
 import org.interledger.ilp.common.config.Config;
@@ -34,4 +34,23 @@ Abort request and Launch Exception:
         |     response(context, ex.getException().getHTTPErrorCode(), buildJSON(ex.getException().getsID(), ex.getDescription()));
         | }
 
-
+-------------------------
+LedgerFactory.getDefaultLedger().getInfo().getCurrencyUnit().getCurrencyCode()
+-------------------------
+    protected void handleGet(RoutingContext context) {
+        AuthManager.getInstance().authenticate(context, res -> {
+            AuthInfo authInfo = res.result();
+            if (res.succeeded()) {
+                handleAuthorizedGet(context, authInfo);
+            } else if (authInfo.isEmpty()) {
+                String accountName = getAccountName(context);
+                if (StringUtils.isNotBlank(accountName)) {
+                    handleAuthorizedGet(context, null);
+                } else {
+                    throw new InterledgerException(InterledgerException.RegisteredException.BadRequestError, "Required param " + PARAM_NAME);
+                }
+            } else {
+                throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "");
+            }
+        });
+    }
