@@ -1,19 +1,22 @@
 package org.interledger.ilp.ledger.api.handlers;
 
+import java.net.URI;
 import java.util.List;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import static io.vertx.core.http.HttpMethod.GET;
-
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
+
+import org.interledger.cryptoconditions.Condition;
+import org.interledger.cryptoconditions.uri.CryptoConditionUri;
+import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.core.InterledgerException;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
+import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.core.ConditionURI;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
@@ -63,10 +66,17 @@ public class TransfersHandler extends RestEndpointHandler implements ProtectedRe
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
-        ConditionURI executionCondition = ConditionURI.build(context.request().getParam(execCondition));
+//        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
+        String sExecCond = context.request().getParam(execCondition);
+        Condition executionCondition;
+        try {
+            executionCondition = CryptoConditionUri.parse(URI.create(sExecCond));
+        } catch (URIEncodingException e) {
+            throw new RuntimeException("'"+ sExecCond + "' can't be parsed as URI");
+        }
         List<LedgerTransfer> transferList = tm.getTransfersByExecutionCondition(executionCondition);
         JsonArray ja = new JsonArray();
         for (LedgerTransfer transfer : transferList) {

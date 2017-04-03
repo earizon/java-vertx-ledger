@@ -1,8 +1,20 @@
 package org.interledger.ilp.common.config;
 
+import static org.interledger.ilp.common.config.Key.HOST;
+import static org.interledger.ilp.common.config.Key.PORT;
+import static org.interledger.ilp.common.config.Key.PREFIX;
+import static org.interledger.ilp.common.config.Key.PUBLIC;
+import static org.interledger.ilp.common.config.Key.SERVER;
+import static org.interledger.ilp.common.config.Key.URI;
+import static org.interledger.ilp.common.config.Key.USE_HTTPS;
+
 import com.google.common.base.Optional;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+
 import org.interledger.ilp.common.config.core.ArrayConfigKey;
 import org.interledger.ilp.common.config.core.ClassConfigKey;
 import org.interledger.ilp.common.config.core.CompoundConfigKey;
@@ -356,7 +368,7 @@ public class Config {
         return configuration.getBoolean(EnumConfigKey.of(key), defaultValue);
     }
 
-    private <T> void checkKey(T... key) {
+    private <T> void checkKey(@SuppressWarnings("unchecked") T... key) {
         if (key == null || key.length == 0) {
             throw new IllegalArgumentException(MSG_ILLEGAL_NO_KEY_ARGS);
         }
@@ -368,4 +380,30 @@ public class Config {
         }
     }
 
+    public URL getPublicURI() {
+        boolean ssl = this.getBoolean(SERVER, USE_HTTPS);
+        boolean pubSsl = this.getBoolean(ssl, SERVER, PUBLIC, USE_HTTPS);
+        String host = this.getString("localhost", SERVER, HOST);
+        String pubHost = this.getString(host, SERVER, PUBLIC, HOST);
+        int port = this.getInt(SERVER, PORT);
+        int pubPort = this.getInt(port, SERVER, PUBLIC, PORT);
+        final String DEFAULT_PREFIX_URI = "/";
+        String prefixUri = this.getString(DEFAULT_PREFIX_URI, SERVER, PREFIX, URI).trim();
+        if (!prefixUri.startsWith("/")) { prefixUri = "/" + prefixUri; } // sanitize
+        URL serverPublicURL;
+        try {
+            serverPublicURL = new URL("http" + (pubSsl ? "s" : ""), pubHost, pubPort, prefixUri);
+        } catch (MalformedURLException e) {
+            // TODO:(1) Improve exception details.
+            throw new RuntimeException("Could NOT create URL with {"
+                    + "pubHost='"+pubHost+"', "
+                    + "pubPort='"+pubPort+"', "
+                    + "prefixUri='"+prefixUri+"'}."
+                    + " recheck server config");
+        }
+        log.debug("serverPublicURL: {}", serverPublicURL);
+
+        return serverPublicURL;
+
+    }
 }

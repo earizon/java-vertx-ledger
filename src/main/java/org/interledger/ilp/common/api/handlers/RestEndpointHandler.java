@@ -112,13 +112,13 @@ public abstract class RestEndpointHandler extends EndpointHandler {
         User user = context.user();
         if (user == null) {
             log.warn("No user present in request in checkAuth with {}", authority);
-            throw new InterledgerException(HttpResponseStatus.FORBIDDEN);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: user == null ");
         } else {
             user.isAuthorised(authority, res -> {
                 if (res.succeeded()) {
                     handleAuthorized(context);
                 } else {
-                    throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+                    throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: res.succeeded() failed ");
                 }
             });
         }

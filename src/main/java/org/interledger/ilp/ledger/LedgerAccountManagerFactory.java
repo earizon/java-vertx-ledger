@@ -17,7 +17,7 @@ public class LedgerAccountManagerFactory {
         instance.store(instance.getHOLDAccountILP());
     }
 
-    public static LedgerAccountManager getLedgerAccountManagerSingleton() {
+    public static SimpleLedgerAccountManager getLedgerAccountManagerSingleton() {
         return instance;
     }
     

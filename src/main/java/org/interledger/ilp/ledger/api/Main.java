@@ -17,12 +17,14 @@ import org.interledger.ilp.common.api.handlers.EndpointHandler;
 import org.interledger.ilp.common.api.handlers.IndexHandler;
 import org.interledger.ilp.common.api.util.VertxRunner;
 import org.interledger.ilp.common.config.Config;
+
 import static org.interledger.ilp.common.config.Key.*;
+
 import org.interledger.ilp.common.config.core.Configurable;
 import org.interledger.ilp.common.config.core.ConfigurationException;
 import org.interledger.ilp.common.util.NumberConversionUtil;
-import org.interledger.ilp.core.Ledger;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.Ledger;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.LedgerInfoBuilder;
@@ -38,7 +40,6 @@ import org.interledger.ilp.ledger.api.handlers.TransfersHandler;
 import org.interledger.ilp.ledger.api.handlers.UnitTestSupportHandler;
 import org.interledger.ilp.ledger.api.handlers.TransferStateHandler;
 import org.interledger.ilp.ledger.api.handlers.FulfillmentHandler;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
         ilpPrefix = config.getString(LEDGER, ILP, PREFIX);
         String ledgerName = config.getString(DEFAULT_LEDGER_NAME, LEDGER, NAME);
         String currencyCode = config.getString(LEDGER, CURRENCY, CODE);
-        URL baseUri = getServerPublicURL();
+        URL baseUri = config.getPublicURI();
         //Development config
         Optional<Config> devConfig = config.getOptionalConfig(Dev.class);
         LedgerInfo ledgerInfo = new LedgerInfoBuilder()
@@ -99,7 +100,7 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
     }
 
     @Override
-    protected List<EndpointHandler> getEndpointHandlers(Config config) {
+    protected List<EndpointHandler> getEndpointHandlers() {
         return Arrays.asList(
                 HealthHandler.create(),
                 ConnectorsHandler.create(),
@@ -116,13 +117,13 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
     }
 
     @Override
-    protected void initIndexHandler(Router router, IndexHandler indexHandler) {
-        super.initIndexHandler(router, indexHandler);
+    protected void initIndexHandler(Router router, IndexHandler indexHandler, Config config) {
+        super.initIndexHandler(router, indexHandler, config);
         LedgerInfo ledgerInfo = ledger.getInfo();
         indexHandler
                 .put("ilp_prefix", ilpPrefix)
-                .put("currency_code", ledgerInfo.getCurrencyCode())
-                .put("currency_symbol", ledgerInfo.getCurrencySymbol())
+                .put("currency_code", ledgerInfo.getCurrencyUnit().getCurrencyCode())
+                // .put("currency_symbol", ledgerInfo.getCurrencySymbol()) // TODO:(0)???
                 .put("precision", ledgerInfo.getPrecision())
                 .put("scale", ledgerInfo.getScale());
 
@@ -133,7 +134,7 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
         //   - plugin.js (REQUIRED_LEDGER_URLS) @ five-bells-plugin
         //   The conector five-bells-plugin of the js-ilp-connector expect a 
         //   map urls { health:..., transfer: ..., 
-        String base = ledgerInfo.getBaseUri();
+        String base = config.getPublicURI().toString();
 
             // Required by wallet
             services.put("health"              , base + "health"                   );
@@ -150,7 +151,7 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
 
         indexHandler.put("urls", services);
         
-        Config config = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
+        // Config config = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
         String public_key = config.getString(SERVER, ED25519, PUBLIC_KEY);
         indexHandler.put("condition_sign_public_key", public_key);
  

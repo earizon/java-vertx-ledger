@@ -3,13 +3,16 @@ package org.interledger.ilp.ledger.impl.simple;
 import javax.money.MonetaryAmount;
 
 import org.interledger.ilp.common.config.Config;
-import org.interledger.ilp.core.AccountURI;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.ilp.ledger.model.LedgerInfo;
 import org.interledger.ilp.ledger.Currencies;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.LedgerInfoBuilder;
+
 import static org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManagerTest.URI_LEDGER_A;
+
 import org.javamoney.moneta.Money;
+
 import static org.junit.Assert.*;
 
 import java.net.URL;
@@ -21,7 +24,6 @@ import org.junit.Test;
 /**
  * SimpleLedgerAccount tests
  *
- * @author mrmx
  */
 public class SimpleLedgerAccountTest {
 
@@ -29,8 +31,8 @@ public class SimpleLedgerAccountTest {
     SimpleLedgerAccount instance;
     final String sTestURI = "http://ledgerTest";
     final String sOtherURI = "http://ledgerOther";
-    AccountURI testURI = new AccountURI(sTestURI, "test");
-    AccountURI otherURI = new AccountURI(sOtherURI, "others");
+    LedgerAccount testURI = new SimpleLedgerAccount(sTestURI);
+    LedgerAccount otherURI = new SimpleLedgerAccount(sOtherURI);
 
     @BeforeClass
     public static void init() throws Exception {
@@ -43,7 +45,7 @@ public class SimpleLedgerAccountTest {
 
     @Before
     public void setUp() {
-        instance = new SimpleLedgerAccount("test", CURRENCY_CODE);
+        instance = new SimpleLedgerAccount("test");
     }
 
     /**
@@ -171,7 +173,7 @@ public class SimpleLedgerAccountTest {
     @Test
     public void testEquals() {
         System.out.println("equals");
-        SimpleLedgerAccount other = new SimpleLedgerAccount(sOtherURI, CURRENCY_CODE);
+        SimpleLedgerAccount other = new SimpleLedgerAccount(sOtherURI);
         assertNotEquals(instance, other);
         assertNotEquals(instance, null);
         assertEquals(instance, instance);

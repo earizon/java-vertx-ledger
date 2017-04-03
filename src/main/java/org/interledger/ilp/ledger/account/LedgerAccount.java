@@ -14,13 +14,9 @@ import javax.money.MonetaryAmount;
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public interface LedgerAccount {
 
-    @JsonProperty("id")
-    String getUri(); // FIXME: Convert String to org.interledger.ilp.core.AccountUri
-
+    // @JsonProperty("id") // TODO:(0)
     String getName();
     
-    @JsonIgnore
-    String getCurrencyCode();
 
     LedgerAccount setMinimumAllowedBalance(Number balance);
 

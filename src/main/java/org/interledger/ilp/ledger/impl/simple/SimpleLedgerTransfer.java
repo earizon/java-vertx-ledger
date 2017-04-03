@@ -2,23 +2,21 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import io.vertx.core.json.JsonArray;
 
-//import javax.money.MonetaryAmount;
-
-//import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import org.interledger.ilp.core.Credit;
-import org.interledger.ilp.core.Debit;
-import org.interledger.ilp.core.FulfillmentURI;
+
+import org.interledger.cryptoconditions.Condition;
+import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.ilp.common.config.Config;
+import org.interledger.ilp.ledger.transfer.Credit;
+import org.interledger.ilp.ledger.transfer.Debit;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.ilp.core.ConditionURI;
-import org.interledger.ilp.core.DTTM;
-import org.interledger.ilp.core.LedgerPartialEntry;
-import org.interledger.ilp.core.TransferID;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
-import org.interledger.ilp.core.ledger.model.TransferStatus;
+import org.interledger.ilp.ledger.transfer.DTTM;
+import org.interledger.ilp.ledger.transfer.LedgerPartialEntry;
+import org.interledger.ilp.ledger.transfer.TransferID;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
+import org.interledger.ilp.ledger.model.TransferStatus;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.account.LedgerAccount;
@@ -27,14 +25,19 @@ import org.javamoney.moneta.Money;
 // FIXME: Allow multiple debit/credits (Remove all code related to index [0]
 
 public class SimpleLedgerTransfer implements LedgerTransfer {
+
+    static final Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
+
+    static  final SimpleLedgerAccountManager  ledgerAccountManager = 
+            LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
     // TODO: IMPROVEMENT. Mix of local/remote transactions not contemplated. Either all debit_list are remote or local
     final TransferID transferID;
     final LedgerAccount fromAccount;
     final Credit[] credit_list;
     final Debit []  debit_list;
     // URI encoded execution & cancelation crypto-conditions
-    final ConditionURI URIExecutionCond;
-    final ConditionURI URICancelationCond;
+    final Condition executionCond;
+    final Condition cancelationCond;
     final DTTM DTTM_expires ;
     final DTTM DTTM_proposed;
 
@@ -44,8 +47,8 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
      * will trigger a transaction just if the ConditionURI for Execution/Cancelation
      * are also empty.
      */
-    FulfillmentURI URIExecutionFF     = FulfillmentURI.MISSING;
-    FulfillmentURI URICancelationFF   = FulfillmentURI.MISSING;
+    Fulfillment executionFF   = null; /* TODO:(0) Remove null */
+    Fulfillment cancelationFF = null; /* TODO:(0) Remove null */
     String data = "";
     String noteToSelf = "";
 
@@ -56,8 +59,8 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
 
     public SimpleLedgerTransfer(TransferID transferID,
         Debit[] debit_list, Credit[] credit_list, 
-        ConditionURI URIExecutionCond, 
-        ConditionURI URICancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
+        Condition executionCond, 
+        Condition cancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
         String data, String noteToSelf, TransferStatus transferStatus ){
         // TODO: Check that debit_list[idx].ammount.currency is always the same and match the ledger
         // TODO: Check that credit_list[idx].ammount.currency is always the same.
@@ -77,12 +80,12 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
         this.debit_list         = debit_list        ;
         this.data               = data              ;
         this.noteToSelf         = noteToSelf        ;
-        this.URIExecutionCond   = URIExecutionCond  ;
-        this.URICancelationCond = URICancelationCond;
+        this.executionCond      = executionCond  ;
+        this.cancelationCond    = cancelationCond;
         this.DTTM_expires       = DTTM_expires      ;
         this.DTTM_proposed      = DTTM_proposed     ;
         this.DTTM_prepared      = DTTM.getNow()     ;
-        if (transferStatus.equals(TransferStatus.PROPOSED) && !URIExecutionCond.equals(ConditionURI.EMPTY)){
+        if (transferStatus.equals(TransferStatus.PROPOSED) /* && !ExecutionCond.equals(ConditionURI.EMPTY) TODO:(0)*/){
             transferStatus = TransferStatus.PREPARED;
         }
         this.transferStatus     = transferStatus    ;
@@ -93,9 +96,8 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
          *  we need the "accountId" to fetch the correct local "from" Account
          */
 
-        this.fromAccount = LedgerAccountManagerFactory.
-                getLedgerAccountManagerSingleton().
-                    getAccountByName(credit_list[0].account.getAccountId());
+        this.fromAccount = ledgerAccountManager.
+                    getAccountByName(credit_list[0].account.getName());
     }
     
     public void checkBalancedTransaction(){
@@ -183,13 +185,13 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
 
     
     @Override
-    public ConditionURI getURIExecutionCondition() {
-        return URIExecutionCond;
+    public Condition getExecutionCondition() {
+        return executionCond;
     }
 
     @Override
-    public ConditionURI getURICancellationCondition() {
-        return URICancelationCond;
+    public Condition getCancellationCondition() {
+        return cancelationCond;
     }
 
     @Override
@@ -233,23 +235,23 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     }
 
     @Override
-    public void  setURIExecutionFulfillment(FulfillmentURI ffURI){
-        this.URIExecutionFF = ffURI;
+    public void  setExecutionFulfillment(Fulfillment ff){
+        this.executionFF = ff;
     }
     
     @Override
-    public FulfillmentURI getURIExecutionFulfillment(){
-        return URIExecutionFF;
+    public Fulfillment getExecutionFulfillment(){
+        return executionFF;
     }
 
     @Override
-    public void  setURICancelationFulfillment(FulfillmentURI ffURI){
-        this.URICancelationFF = ffURI;
+    public void  setCancelationFulfillment(Fulfillment ff){
+        this.cancelationFF = ff;
     }
     
     @Override
-    public FulfillmentURI getURICancellationFulfillment(){
-        return URICancelationFF;
+    public Fulfillment getCancellationFulfillment(){
+        return cancelationFF;
     }
     
     // NOTE: The JSON returned to the ILP connector and the Wallet must not necesarelly match
@@ -257,22 +259,22 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     // That's why two different JSON encoders exist
 
     public JsonObject toILPJSONStringifiedFormat() {
-        LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
 
         // REF: convertToExternalTransfer@
         // https://github.com/interledger/five-bells-ledger/blob/master/src/models/converters/transfers.js
         JsonObject jo = new JsonObject();
-        String ledger = ledgerInfo.getBaseUri();
+        String ledger = ledgerConfig.getPublicURI().toString();
+
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         String id = ledger + "/transfers/"+ transferID.transferID;
         jo.put("id", id);
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));
         jo.put("credits", entryList2Json(credit_list));
-        jo.put("execution_condition", this.getURIExecutionCondition().URI);
+        jo.put("execution_condition", this.getExecutionCondition().toString());
         jo.put("state", this.getTransferStatus().toString());
-//        if (!this.getURICancellationCondition().URI.equals(ConditionURI.NOT_PROVIDED)) {
-//            jo.put("cancellation_condition", this.getURICancellationCondition().URI);
+//        if (!this.getCancellationCondition().equals(Condition....NOT_PROVIDED)) {
+//            jo.put("cancellation_condition", this.getCancellationCondition());
 //        }
         // FIXME: Cancelation_condition?
         jo.put("expires_at", this.DTTM_expires.toString());
@@ -300,10 +302,10 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
                 //  REF: sendNotifications @
                 //       five-bells-ledger/src/lib/notificationBroadcasterWebsocket.js
                 JsonObject related_resources = new JsonObject();
-                String URI_FF = (this.getTransferStatus() == TransferStatus.EXECUTED)
-                        ? this.  getURIExecutionFulfillment().URI
-                        : this.getURICancellationFulfillment().URI;
-                related_resources.put("execution_condition_fulfillment", URI_FF);
+                final Fulfillment FF = (this.getTransferStatus() == TransferStatus.EXECUTED)
+                        ? this.  getExecutionFulfillment()
+                        : this.getCancellationFulfillment();
+                related_resources.put("execution_condition_fulfillment", FF.toString());
                 jo2.put("related_resources", related_resources);
             }
         return jo2;
@@ -315,7 +317,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
         for (LedgerPartialEntry entry : input_list) {
             // FIXME: This code to calculate amount is PLAIN WRONG. Just to pass five-bells-ledger tests
             JsonObject jo = new JsonObject();
-            jo.put("account", entry.account.getUri());
+            jo.put("account", ledgerAccountManager.getPublicURIForAccount(entry.account) );
             String sAmount = "" + entry. amount.getNumber();
             jo.put( "amount", sAmount);
             if (entry instanceof Debit) {
@@ -345,9 +347,9 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     
     @Override
     public boolean isLocal() {
-        String localLedgerURI = debit_list[0].account.getLedgerUri();
+        String localLedgerURI = ledgerConfig.getPublicURI().toString();
         for (Credit credit : credit_list) {
-            if (! localLedgerURI.equals(credit.account.getLedgerUri() ) ) {
+            if (! localLedgerURI.equals(ledgerAccountManager.getPublicURIForAccount(credit.account) ) ) {
                 return false;
             }
         }

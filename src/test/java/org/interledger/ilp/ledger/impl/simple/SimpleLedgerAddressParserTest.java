@@ -1,7 +1,7 @@
 package org.interledger.ilp.ledger.impl.simple;
 
 import static org.junit.Assert.*;
-import org.interledger.ilp.core.InterledgerException;
+import org.interledger.ilp.exceptions.InterledgerException;
 
 import org.junit.Before;
 import org.junit.Test;

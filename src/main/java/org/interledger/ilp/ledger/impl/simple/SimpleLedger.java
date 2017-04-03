@@ -1,7 +1,7 @@
 package org.interledger.ilp.ledger.impl.simple;
 
-import org.interledger.ilp.core.Ledger;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.Ledger;
+import org.interledger.ilp.ledger.model.LedgerInfo;
 import org.interledger.ilp.common.config.Config;
 
 /**
@@ -12,7 +12,7 @@ import org.interledger.ilp.common.config.Config;
 public class SimpleLedger implements Ledger {
 
     private LedgerInfo info;
-    private String name;
+    private String name; // TODO:(?) Place "inside" config?
     private Config config;
 
     public SimpleLedger(LedgerInfo info, String name, Config config) {
@@ -21,6 +21,7 @@ public class SimpleLedger implements Ledger {
         this.config = config;
     }
 
+    @Override
     public LedgerInfo getInfo() {
         return info;
     }
@@ -32,6 +33,7 @@ public class SimpleLedger implements Ledger {
     /**
      * @return internal implementation server config parameters (public/private keys, ...)
      */
+    @Override
     public Config getConfig() {
         return config;
     }

@@ -1,26 +1,27 @@
 package org.interledger.ilp.ledger.api.handlers;
 
+
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 //import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.ext.web.RoutingContext;
-
 import static io.vertx.core.http.HttpMethod.GET;
 import static io.vertx.core.http.HttpMethod.PUT;
 
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.cryptoconditions.FulfillmentFactory;
-import org.interledger.cryptoconditions.types.MessagePayload;
+import org.interledger.cryptoconditions.HexDump;
+import org.interledger.cryptoconditions.der.CryptoConditionReader;
+import org.interledger.cryptoconditions.der.DEREncodingException;
+//import org.interledger.cryptoconditions.types.MessagePayload;
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.core.InterledgerException;
+import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.core.ConditionURI;
-import org.interledger.ilp.core.Credit;
-import org.interledger.ilp.core.Debit;
-import org.interledger.ilp.core.FulfillmentURI;
-import org.interledger.ilp.core.TransferID;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
+import org.interledger.ilp.ledger.transfer.Credit;
+import org.interledger.ilp.ledger.transfer.Debit;
+import org.interledger.ilp.ledger.transfer.TransferID;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
@@ -99,56 +100,62 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
          *     conditions (which append a prefix to this empty message)
          **/
         LedgerTransfer transfer = tm.getTransferById(transferID);
-        if (ConditionURI.EMPTY.equals(transfer.getURIExecutionCondition())){
+        if ( transfer.getExecutionCondition() == null /* TODO:(0) Replace by DOESNT_EXITS */ ) {
             throw new InterledgerException(
                     InterledgerException.RegisteredException.TransferNotConditionalError,
                     "Transfer is not conditional");
         }
-        String   fulfillmentURI = context.getBodyAsString();
-        log.trace("fulfillmentURI: "+fulfillmentURI);
-        Fulfillment          ff = FulfillmentFactory.getFulfillmentFromURI(fulfillmentURI);
-        MessagePayload message = new MessagePayload(new byte[]{});
+        String hexFulfillment = context.getBodyAsString();
+        byte[] fulfillmentBytes = HexDump.hexStringToByteArray(hexFulfillment);
+        Fulfillment ff;
+        try {
+            ff = CryptoConditionReader.readFulfillment(fulfillmentBytes);
+        } catch (DEREncodingException e1) {
+            throw new RuntimeException("body request '"+hexFulfillment+"' can not be parsed as HEX -> DER");
+        }
+        byte[] message = new byte[]{};
         boolean ffExisted = false;
-        log.trace("transfer.getURIExecutionCondition().URI:"+transfer.getURIExecutionCondition().URI.toString());
-        log.trace("transfer.getURICancellationCondition().URI:"+transfer.getURICancellationCondition().URI.toString());
-        log.trace("request fulfillmentURI:"+fulfillmentURI);
-        log.trace("request ff.getCondition().toURI():"+ff.getCondition().toURI());
+        log.trace("transfer.getExecutionCondition():"+transfer.getExecutionCondition().toString());
+        log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
+        log.trace("request hexFulfillment:"+hexFulfillment);
+        log.trace("request ff.getCondition():"+ff.getCondition().toString());
 
-        if (/*isFulfillment && */transfer.getURIExecutionCondition().URI.equals(ff.getCondition().toURI()) ) {
-            ffExisted = transfer.getURIExecutionFulfillment().URI.equals(fulfillmentURI);
+        if (/*isFulfillment && */transfer.getExecutionCondition().equals(ff.getCondition()) ) {
+            ffExisted = transfer.getExecutionFulfillment().equals(ff);
             if (!ffExisted) {
-                if (!ff.validate(message)){
+                if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("execution fulfillment doesn't validate");
                 }
-                tm.executeRemoteILPTransfer(transfer, new FulfillmentURI(fulfillmentURI));
+                tm.executeRemoteILPTransfer(transfer, ff);
 
             }
-        } else if (/*isRejection && */transfer.getURICancellationCondition().URI.equals(ff.getCondition().toURI()) ){
-            ffExisted = transfer.getURICancellationFulfillment().URI.equals(fulfillmentURI);
+        } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
+            ffExisted = transfer.getCancellationFulfillment().equals(ff);
             if (!ffExisted) {
-                if (!ff.validate(message)){
+                if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("cancelation fulfillment doesn't validate");
                 }
-                tm.abortRemoteILPTransfer(transfer, new FulfillmentURI(fulfillmentURI));
+                tm.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
             throw new InterledgerException(InterledgerException.RegisteredException.UnmetConditionError, "Fulfillment does not match any condition");
         }
         log.trace("ffExisted:"+ffExisted);
 
+        String response = ff.toString(); /*TODO:(0) Recheck. It was fulfillmentURI previously */
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
-            .putHeader(HttpHeaders.CONTENT_LENGTH, ""+fulfillmentURI.length())
+            .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
             .setStatusCode(!ffExisted ? HttpResponseStatus.CREATED.code() : HttpResponseStatus.OK.code())
-            .end(fulfillmentURI);
+            .end(response);
         try {
             String notification = ((SimpleLedgerTransfer) transfer).toMessageStringifiedFormat().encode();
             // Notify affected accounts:
             for (Debit  debit  : transfer.getDebits() ) {
-                TransferWSEventHandler.notifyListener(context, debit.account.getAccountId(), notification);
+                TransferWSEventHandler.notifyListener(context, debit.account, notification);
             }
             for (Credit credit : transfer.getCredits() ) {
-                TransferWSEventHandler.notifyListener(context, credit.account.getAccountId(), notification);
+                TransferWSEventHandler.notifyListener(context, credit.account, notification);
             }
         } catch (Exception e) {
             log.warn("Fulfillment registrered correctly but ilp-connector couldn't be notified due to " + e.toString());
@@ -164,7 +171,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "");
         }
         boolean isFulfillment = false; // false => isRejection
         if (context.request().path().endsWith("/fulfillment")){
@@ -185,24 +192,25 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferID transferID = new TransferID(context.request().getParam(transferUUID));
         LedgerTransfer transfer = tm.getTransferById(transferID);
-        if (ConditionURI.EMPTY.equals(transfer.getURIExecutionCondition())){
+        if (transfer.getExecutionCondition()==null /* TODO:(0) Remove null*/){
             throw new InterledgerException(
                     InterledgerException.RegisteredException.TransferNotConditionalError,
                     "Transfer does not have any conditions");
         }
-        String fulfillmentURI = (isFulfillment) 
-                ? transfer.getURIExecutionFulfillment().URI
-                : transfer.getURICancellationFulfillment().URI;
-        if ( FulfillmentURI.MISSING.URI.equals(fulfillmentURI)) {
+        Fulfillment fulfillment= (isFulfillment) 
+                ? transfer.getExecutionFulfillment()
+                : transfer.getCancellationFulfillment();
+        if ( fulfillment == null /* TODO:(0) Fix null */) {
             throw new InterledgerException(
                 InterledgerException.RegisteredException.MissingFulfillmentError,
                 "This transfer has not yet been fulfilled");
         }
+        String response  = fulfillment.toString(); // TODO:(0)  previously fulfillmentURI
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
-            .putHeader(HttpHeaders.CONTENT_LENGTH, ""+fulfillmentURI.length())
+            .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
             .setStatusCode(HttpResponseStatus.OK.code())
-            .end(fulfillmentURI);
+            .end(response);
     }
 }
 

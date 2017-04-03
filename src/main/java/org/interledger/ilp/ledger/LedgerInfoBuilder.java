@@ -1,14 +1,15 @@
 package org.interledger.ilp.ledger;
 
 import java.net.URL;
+import java.security.PublicKey;
 import java.util.Currency;
-import java.util.List;
 
 import javax.money.CurrencyUnit;
+import javax.money.format.MonetaryAmountFormat;
 
+import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.common.util.StringUtils;
-import org.interledger.ilp.core.ledger.model.ConnectorInfo;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.model.LedgerInfo;
 
 /**
  * LedgerInfo builder
@@ -73,7 +74,7 @@ public class LedgerInfoBuilder {
             throw new IllegalArgumentException("baseUri");
         }
         //TODO precission scale
-        return new LedgerInfoImpl(precission, scale, currencyCode, currencySymbol,baseUri);
+        return new LedgerInfoImpl(precission, scale, currencyCode, currencySymbol);
     }
 
     static final class LedgerInfoImpl implements LedgerInfo {
@@ -82,14 +83,12 @@ public class LedgerInfoBuilder {
         private final int scale;
         private final String currencyCode;
         private final String currencySymbol;
-        private String baseUri;
 
-        public LedgerInfoImpl(int precision, int scale, String currencyCode, String currencySymbol, String baseUri) {
+        public LedgerInfoImpl(int precision, int scale, String currencyCode, String currencySymbol) {
             this.precision = precision;
             this.scale = scale;
             this.currencyCode = currencyCode;
             this.currencySymbol = currencySymbol;
-            this.baseUri = baseUri;
         }
 
         /**
@@ -121,25 +120,39 @@ public class LedgerInfoBuilder {
         }
 
         @Override
-        public String getBaseUri() {
-            return baseUri;
-        }
-
-        @Override
-        public String getConditionSignPublicKey() {
+        public PublicKey getConditionSignPublicKey() {
             // FIXME Implement TODO
             throw new RuntimeException("Not implemented");
         }
 
         @Override
-        public String getNotificationSignPublicKey() {
-            // FIXME Implement TODO
-            throw new RuntimeException("Not implemented");
+        public String getId() {
+            // TODO Auto-generated method stub
+            return null;
         }
 
         @Override
-        public List<ConnectorInfo> getConnectors() {
-            // FIXME Implement TODO
+        public InterledgerAddress getAddressPrefix() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public CurrencyUnit getCurrencyUnit() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public MonetaryAmountFormat getMonetaryAmountFormat() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+
+        @Override
+        public PublicKey getNotificationSignPublicKey() {
+            // TODO:(0) FIXME. Implement
             throw new RuntimeException("Not implemented");
         }
 

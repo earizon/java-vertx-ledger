@@ -3,7 +3,6 @@ package org.interledger.ilp.ledger.api.handlers;
 // TESTING FROM COMMAND LINE: https://blogs.oracle.com/PavelBucek/entry/websocket_command_line_client
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-
 import static io.vertx.core.http.HttpMethod.GET;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.RoutingContext;
@@ -12,6 +11,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
+import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,8 @@ import org.slf4j.LoggerFactory;
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
+    private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+
 
     private final static String PARAM_NAME = "name";
 
@@ -49,6 +53,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     @Override
     protected void handleGet(RoutingContext context) {
         String accountName = context.request().getParam(PARAM_NAME);
+        LedgerAccount account = accountManager.getAccountByName(accountName);
         // GET /accounts/alice/transfers -> Upgrade to websocket
         log.debug("TransferWSEventHandler Connected. Upgrading HTTP GET to WebSocket!");
         ServerWebSocket sws = context.request().upgrade();
@@ -68,13 +73,12 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
          *   this.websocket.send(JSON.stringify({ type: 'connect' })) 
          */
         sws.writeFinalTextFrame("{\"type\" : \"connect\" }"); // TODO: recheck this line
-        registerServerWebSocket(context, accountName, sws);
+        registerServerWebSocket(context, account, sws);
     }
 
-    private static void registerServerWebSocket(RoutingContext context, String accountName, ServerWebSocket sws) {
-        String handlerID = sws.textHandlerID(); // | binaryHandlerID
+    private static void registerServerWebSocket(RoutingContext context, LedgerAccount account, ServerWebSocket sws) {
 
-        log.debug("registering WS connection: "+accountName);
+        log.debug("registering WS connection: "+account);
 
         sws.frameHandler/* bytes read from the connector */(/*WebSocketFrame*/frame -> {
                log.debug("ilpConnector input frame -> frame.textData()   " + frame.textData());
@@ -84,7 +88,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         EventBus eventBus = context.vertx().eventBus();
 
         io.vertx.core.eventbus.MessageConsumer<String> mc = 
-                eventBus.consumer("message-" + accountName, message -> { 
+                eventBus.consumer("message-" + account.getName(), message -> { 
             log.debug("received '"+message.body()+"' from internal *Manager:");
             sws.writeFinalTextFrame(message.body());
             log.debug("message forwarded to websocket peer through websocket");
@@ -93,7 +97,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         sws.closeHandler(new Handler<Void>() {
             @Override
             public void handle(final Void event) {
-                log.debug("un-registering WS connection: "+accountName);
+                log.debug("un-registering WS connection: "+account.getName());
                 mc.unregister();
             }
         });
@@ -104,7 +108,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             throwable.printStackTrace( printWriter );
             printWriter.flush();
             String stackTrace = writer.toString();
-            log.warn("There was an exception in the ws "+accountName + ":"+throwable.toString()+ "\n" +stackTrace );
+            log.warn("There was an exception in the ws "+account.getName()+ ":"+throwable.toString()+ "\n" +stackTrace );
         });
     }
 
@@ -114,10 +118,10 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
      * @param context
      * @param message
      */
-    public static void notifyListener(RoutingContext context, String account, String message) {
+    public static void notifyListener(RoutingContext context, LedgerAccount account, String message) {
         // Send notification to all existing webSockets
         log.debug("notifyListener to account:"+account + ", message:'''" + message + "'''\n");
-        context.vertx().eventBus().send("message-"+account, message); // will be sent to handler "@bookmark1"
+        context.vertx().eventBus().send("message-"+account.getName(), message); // will be sent to handler "@bookmark1"
         
     }
 

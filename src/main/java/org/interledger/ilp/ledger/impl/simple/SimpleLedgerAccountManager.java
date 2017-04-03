@@ -1,14 +1,16 @@
 package org.interledger.ilp.ledger.impl.simple;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.interledger.ilp.core.AccountURI;
-import org.interledger.ilp.core.InterledgerException;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+
+import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.LedgerFactory;
+import org.interledger.ilp.ledger.account.ILPAccountSupport;
 import org.interledger.ilp.ledger.account.LedgerAccount;
 import org.interledger.ilp.ledger.account.LedgerAccountManager;
 
@@ -17,9 +19,9 @@ import org.interledger.ilp.ledger.account.LedgerAccountManager;
  *
  * @author mrmx
  */
-public class SimpleLedgerAccountManager implements LedgerAccountManager {
+public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAccountSupport {
     private Map<String, LedgerAccount> accountMap;
-    private static final String ILP_HOLD_ACCOUNT = "@@HOLD@@"; 
+    private static final String ILP_HOLD_ACCOUNT = "@@HOLD@@";
 
     public SimpleLedgerAccountManager() {
         accountMap = new TreeMap<String, LedgerAccount>();
@@ -31,18 +33,13 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager {
             throw new InterledgerException(InterledgerException.RegisteredException.AccountExists, "account '"+name+"' already exists");
 
         }
-        return new SimpleLedgerAccount(name, getLedgerInfo().getCurrencyCode());
+        return new SimpleLedgerAccount(name);
     }
 
     @Override
     public void store(LedgerAccount account) {
         accountMap.put(account.getName(), account);
     }
-
-    @Override
-    public AccountURI getAccountUri(LedgerAccount account) {
-        return new AccountURI(getLedgerInfo().getBaseUri() , account.getName()); 
-    }    
 
     @Override
     public boolean hasAccount(String name) {
@@ -52,10 +49,23 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager {
     @Override
     public LedgerAccount getAccountByName(String name) throws InterledgerException {
         if (!hasAccount(name)) {
-            throw new InterledgerException(InterledgerException.RegisteredException.AccountNotFoundError, name);
-
+            throw new InterledgerException(InterledgerException.RegisteredException.AccountNotFoundError, "local account '"+name+"' not found");
         }
         return accountMap.get(name);
+    }
+
+    @Override
+    public URI getPublicURIForAccount(LedgerAccount account) {
+        String baseURI = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig().getPublicURI().toString();
+        String sURI = baseURI+"accounts/"+account.getName();
+        try {
+            URI result = new URI(sURI);
+            return result;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Can't create URI from string '"+sURI+"'");
+        }
+        
+
     }
 
     @Override
@@ -72,11 +82,7 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager {
     public int getTotalAccounts() {
         return accountMap.size();
     }
-    
-    private LedgerInfo getLedgerInfo() {
-        return LedgerFactory.getDefaultLedger().getInfo();
-    }
-    
+
     @Override
     public LedgerAccount getHOLDAccountILP() {
         if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }

@@ -1,15 +1,15 @@
 package org.interledger.ilp.ledger.transfer;
 
-
-import org.interledger.ilp.core.ConditionURI;
-import org.interledger.ilp.core.FulfillmentURI;
-import org.interledger.ilp.core.TransferID;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
+// TODO:(0) Maybe "parts" of this interface can be extracted to an standard API
+import org.interledger.cryptoconditions.Condition;
+import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.ilp.ledger.transfer.TransferID;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 
 public  interface LedgerTransferManager {
     LedgerTransfer getTransferById(TransferID transferId);
 
-    java.util.List<LedgerTransfer> getTransfersByExecutionCondition(ConditionURI condition);
+    java.util.List<LedgerTransfer> getTransfersByExecutionCondition(Condition condition);
 
     boolean transferExists(TransferID transferId);
     
@@ -19,8 +19,8 @@ public  interface LedgerTransferManager {
 
     void executeLocalTransfer(LedgerTransfer transfer);
 
-    void executeRemoteILPTransfer(LedgerTransfer transfer, FulfillmentURI executionFulfillmentURI);
+    void executeRemoteILPTransfer(LedgerTransfer transfer, Fulfillment executionFulfillment);
 
-    void abortRemoteILPTransfer(LedgerTransfer transfer, FulfillmentURI cancellationFulfillmentURI);
+    void abortRemoteILPTransfer(LedgerTransfer transfer, Fulfillment cancellationFulfillment);
 
 }

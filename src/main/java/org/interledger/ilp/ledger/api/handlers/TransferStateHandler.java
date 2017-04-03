@@ -1,22 +1,19 @@
 package org.interledger.ilp.ledger.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-
 import static io.vertx.core.http.HttpMethod.GET;
-
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.core.InterledgerException;
+import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
 import org.interledger.ilp.common.config.Config;
-import org.interledger.ilp.core.TransferID;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
-import org.interledger.ilp.core.ledger.model.TransferStatus;
+import org.interledger.ilp.ledger.transfer.TransferID;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
+import org.interledger.ilp.ledger.model.TransferStatus;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
@@ -36,7 +33,9 @@ import static org.interledger.ilp.common.config.Key.*;
 public class TransferStateHandler extends RestEndpointHandler implements ProtectedResource {
 
     private static final Logger log = LoggerFactory.getLogger(TransferStateHandler.class);
-    private final static String transferUUID  = "transferUUID";
+    // TODO:(0) Clean code. Check that getConfig is not used "N" times in the same class.
+    private final  static Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
+    private static final String transferUUID  = "transferUUID";
     private static final String RECEIPT_TYPE_ED25519 = "ed25519-sha512",
                                 RECEIPT_TYPE_SHA256  = "sha256";
     private static final MessageDigest md256;
@@ -63,9 +62,9 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
     }
     
     private static JsonObject makeTransferStateMessage(TransferID transferId, TransferStatus state, String receiptType) {
-        LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
-        String baseUri = ledgerInfo.getBaseUri();
+        String baseUri = ledgerConfig.getPublicURI().toString();
         JsonObject jo = new JsonObject();
+        // <-- TODO:(0) Move URI logic to Iface ILPTransferSupport and add iface to SimpleLedgerTransferManager
         jo.put("id", baseUri+ "transfers/" + transferId.transferID);
         jo.put("state", state.toString());
         if (receiptType.equals(RECEIPT_TYPE_SHA256)) {
@@ -90,7 +89,7 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
         }
         String transferId = context.request().getParam(transferUUID);
         TransferID transferID = new TransferID(transferId);
@@ -118,9 +117,7 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
             JsonObject message = makeTransferStateMessage(transferID, status, RECEIPT_TYPE_ED25519);
             String signature = "";   // FIXME: sign(hashJSON(message))
             
-            LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
-            Config config = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
-            String public_key = config.getString(SERVER, ED25519, PUBLIC_KEY);
+            String public_key = ledgerConfig.getString(SERVER, ED25519, PUBLIC_KEY);
 
             jo.put("type", RECEIPT_TYPE_ED25519);
             jo.put("message", message);

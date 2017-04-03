@@ -4,32 +4,37 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import static io.vertx.core.http.HttpMethod.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.AuthInfo;
 import org.interledger.ilp.common.api.auth.AuthManager;
 import org.interledger.ilp.common.api.auth.RoleUser;
-import org.interledger.ilp.core.InterledgerException;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.model.LedgerInfo;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
 import org.interledger.ilp.common.api.util.JsonObjectBuilder;
+import org.interledger.ilp.common.config.Config;
 import org.interledger.ilp.common.util.NumberConversionUtil;
+import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.account.LedgerAccount;
-import org.interledger.ilp.ledger.account.LedgerAccountManager;
+import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccount;
+import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Single Account handler
  *
- * @author mrmx
  */
 public class AccountHandler extends RestEndpointHandler  implements ProtectedResource {
 
     private static final Logger log = LoggerFactory.getLogger(AccountHandler.class);
+    final  Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
+    private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+
 
     private final static String PARAM_NAME = "name";
     private final static String PARAM_BALANCE = "balance";
@@ -59,7 +64,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
                     throw new InterledgerException(InterledgerException.RegisteredException.BadRequestError, "Required param " + PARAM_NAME);
                 }
             } else {
-                throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+                throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "");
             }
         });
     }
@@ -75,11 +80,10 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
         RoleUser user = AuthManager.getInstance().getAuthUser(authInfo);
         log.debug("put with user {}", user);
         if (user == null || !user.hasRole(RoleUser.ROLE_ADMIN)) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: user == null || !user.hasRole(RoleUser.ROLE_ADMIN)");
         }
         LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
         String accountName = getAccountName(context);
-        LedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
         if(exists && !accountName.equalsIgnoreCase(data.getString(PARAM_NAME))) {
@@ -100,7 +104,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
         if(data.containsKey(PARAM_DISABLED)) {
             ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         }
-        log.debug("Put account {} balance: {}{}", accountName, balance, ledgerInfo.getCurrencyCode());        
+        log.debug("Put account {} balance: {}{}", accountName, balance, ledgerInfo.getCurrencyUnit().getCurrencyCode());
         accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
@@ -140,19 +144,19 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
 
     private JsonObject accountToJsonObject(LedgerAccount account, boolean isAdmin) {
         isAdmin = true; // FIXME deleteme
-        String ledger = LedgerFactory.getDefaultLedger().getInfo().getBaseUri();
+        String ledger = ledgerConfig.getPublicURI().toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
+        
         JsonObjectBuilder build = JsonObjectBuilder.create()
-                .put("id", account.getUri())
+                .put("id", accountManager.getPublicURIForAccount(account))
                 .put("name", account.getName())
                 .put("ledger", ledger);
         if (isAdmin){ 
             build
                 .put("balance", account.getBalanceAsString())
-                .put("connector", "localhost:4000" /* FIXME Hardcoded*/)
+                .put("connector", "localhost:4000" /* TODO: FIXME Hardcoded . Use data from connector connected event */)
                 .put("is_disabled", false /* FIXME Hardcoded*/)
-                .put("minimum_allowed_balance", "0" /* FIXME Hardcoded*/)
-                .put("id", account.getUri());
+                .put("minimum_allowed_balance", account.getMinimumAllowedBalance().getNumber().toString());
         }
 
         return build.get();

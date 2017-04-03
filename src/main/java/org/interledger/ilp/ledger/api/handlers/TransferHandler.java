@@ -1,35 +1,46 @@
 package org.interledger.ilp.ledger.api.handlers;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.time.ZonedDateTime;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import static io.vertx.core.http.HttpMethod.GET;
 import static io.vertx.core.http.HttpMethod.POST;
 import static io.vertx.core.http.HttpMethod.PUT;
-
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
+
+import org.interledger.cryptoconditions.Condition;
+import org.interledger.cryptoconditions.types.PreimageSha256Condition;
+import org.interledger.cryptoconditions.uri.CryptoConditionUri;
+import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.core.InterledgerException;
+import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.core.AccountURI;
-import org.interledger.ilp.core.ConditionURI;
-import org.interledger.ilp.core.Credit;
-import org.interledger.ilp.core.DTTM;
-import org.interledger.ilp.core.Debit;
-import org.interledger.ilp.core.InterledgerPacketHeader;
-import org.interledger.ilp.core.TransferID;
-import org.interledger.ilp.core.ledger.model.LedgerInfo;
-import org.interledger.ilp.core.ledger.model.LedgerTransfer;
-import org.interledger.ilp.core.ledger.model.TransferStatus;
+import org.interledger.ilp.ledger.transfer.Credit;
+import org.interledger.ilp.ledger.transfer.DTTM;
+import org.interledger.ilp.ledger.transfer.Debit;
+import org.interledger.ilp.InterledgerAddress;
+import org.interledger.ilp.InterledgerPacketHeader;
+import org.interledger.ilp.ledger.transfer.TransferID;
+import org.interledger.ilp.ledger.model.LedgerInfo;
+import org.interledger.ilp.ledger.transfer.LedgerTransfer;
+import org.interledger.ilp.ledger.model.TransferStatus;
+import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
+import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.ilp.ledger.account.LedgerAccountManager;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +55,16 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
 
     private static final Logger log = LoggerFactory.getLogger(TransferHandler.class);
     private final static String transferUUID  = "transferUUID";
-    // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204 
+    
+    private static final LedgerAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+
+    // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+    
+    // TODO:(0) Generate random preimage. This object is just used to avoid null comparations. The real preimage
+    // doesn't really matter (but in cryptography always is better to be paranoid)
+    
+    public static final Condition Condition_NOT_PROVIDED =  new PreimageSha256Condition(new byte[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}/*preimage*/);
+    
 
     public TransferHandler() {
         // REF: https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/app.js
@@ -65,7 +85,7 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-          throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+          throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
         }
         log.trace(this.getClass().getName() + "handlePut invoqued ");
         log.trace(context.getBodyAsString());
@@ -102,28 +122,35 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
 
         // TODO: Check state is  'proposed' for new transactions?
 
-        JsonArray debits = requestBody.getJsonArray("debits");
+        JsonArray debits = requestBody.getJsonArray("debits"); // TODO:(0) "Tainted" object
         Debit[] debitList = new Debit[debits.size()];
         LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
-        CurrencyUnit currencyUnit /*local ledger currency */ = Monetary.getCurrency(ledgerInfo.getCurrencyCode());
+        CurrencyUnit currencyUnit /*local ledger currency */ = Monetary.getCurrency(ledgerInfo.getCurrencyUnit().getCurrencyCode());
 
         for (int idx=0; idx < debits.size(); idx ++ )  {
             JsonObject jsonDebit = debits.getJsonObject(idx);
             log.debug("check123 jsonDebit: " + jsonDebit.encode());
         // debit0 will be similar to {"account":"http://localhost/accounts/alice","amount":"50"}
-            AccountURI fromURI = AccountURI.buildFromURI(jsonDebit.getString("account") /*account URI*/);
+            String account_name = jsonDebit.getString("account");  // TODO:(0) FIXME. We receive an URL, not an "ID"
+            LedgerAccount debitor = ledgerAccountManager.getAccountByName(account_name);
             MonetaryAmount debit_ammount = Money.of(Double.parseDouble(jsonDebit.getString("amount")), currencyUnit);
             log.debug("check123 debit_ammount (must match jsonDebit ammount: " + debit_ammount.toString());
-            debitList[idx] = new Debit(fromURI, debit_ammount);
+            debitList[idx] = new Debit(debitor, debit_ammount);
         }
         // REF: JsonArray ussage: http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
         JsonArray credits = requestBody.getJsonArray("credits");
 
         DTTM DTTM_expires = new DTTM(requestBody.getString("expires_at"));
 
-        ConditionURI URIExecutionCond = (requestBody.getString("execution_condition") != null)
-                ? ConditionURI.build(requestBody.getString("execution_condition"))
-                : ConditionURI.EMPTY ; // TODO: Execution Condition = EMPTY if not provided, Cancellation condition == Not provided.
+        String execution_condition = requestBody.getString("execution_condition");
+        Condition URIExecutionCond;
+        try {
+            URIExecutionCond = (execution_condition != null)
+                    ? CryptoConditionUri.parse(URI.create(execution_condition ))
+                    : TransferHandler.Condition_NOT_PROVIDED;
+        } catch (URIEncodingException e1) {
+            throw new RuntimeException("execution_condition '"+execution_condition+"' could not be parsed as URI");
+        }
         Credit[] creditList = new Credit[credits.size()];
 
         for (int idx=0; idx < credits.size(); idx ++ )  {
@@ -140,20 +167,24 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
              * }
              */
             JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo").getJsonObject("ilp_header");
-            AccountURI toURI = AccountURI.buildFromURI(jsonCredit.getString("account") /*accountURI */);
+            String account_name = jsonCredit.getString("account");  // TODO:(0) FIXME. We receive an URL, not an "ID"
+            LedgerAccount creditor = ledgerAccountManager.getAccountByName(account_name);
             MonetaryAmount credit_ammount = Money.of(Double.parseDouble(jsonCredit.getString("amount")), currencyUnit);
 
             String ilp_ph_ilp_dst_address = jsonMemoILPHeader.getString("account");
+            InterledgerAddress dstAddress = new InterledgerAddress(ilp_ph_ilp_dst_address);
             String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
-            ConditionURI ilp_ph_condition = URIExecutionCond;
+            BigDecimal ammount = new BigDecimal(ilp_ph_amount); // TODO:(0) FIXME?
+            Condition ilp_ph_condition = URIExecutionCond;
             DTTM ilp_ph_expires = new DTTM(jsonMemoILPHeader.getJsonObject("data").getString("expires_at"));
             if (! DTTM_expires.equals(ilp_ph_expires)){
                 DTTM_expires = ilp_ph_expires;// TODO: Recheck
             }
-
-            InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(
-                    ilp_ph_ilp_dst_address,  ilp_ph_amount, ilp_ph_condition, DTTM_expires);
-            creditList[idx] = new Credit(toURI, credit_ammount, memo_ph);
+            ZonedDateTime zdt = ZonedDateTime.parse((DTTM_expires.toString()));
+            // InterledgerPacketHeader(InterledgerAddress destinationAddress, BigDecimal amount,
+            //  Condition condition, ZonedDateTime expiry)
+            InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(dstAddress,  ammount, ilp_ph_condition, zdt);
+            creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         String data = ""; // Not yet used
@@ -162,10 +193,14 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
         log.debug(transferID.transferID+" expires_at == null" + (requestBody.getString("expires_at") == null));
 
         String cancelation_condition = requestBody.getString("cancellation_condition");
-
-        ConditionURI URICancelationCond = (cancelation_condition != null)
-                ? ConditionURI.build(cancelation_condition)
-                : ConditionURI.NOT_PROVIDED ;
+        Condition URICancelationCond;
+        try {
+            URICancelationCond = (cancelation_condition != null)
+                    ? CryptoConditionUri.parse(URI.create(cancelation_condition))
+                    : Condition_NOT_PROVIDED;
+        } catch (URIEncodingException e1) {
+            throw new RuntimeException("cancelation_condition '"+cancelation_condition+"' could not be parsed as URI");
+        }
         TransferStatus status = TransferStatus.PROPOSED; // By default
         if (requestBody.getString("state") != null) {
           // TODO: Must status change be allowed or must we force it to be 'prepared'?
@@ -198,10 +233,10 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
             log.info("send transfer update to ILP Connector through websocket: \n:" + notification + "\n");
             // Notify affected accounts: 
             for (Debit  debit  : effectiveTransfer.getDebits() ) {
-                TransferWSEventHandler.notifyListener(context, debit.account.getAccountId(), notification);
+                TransferWSEventHandler.notifyListener(context, debit.account, notification);
             }
             for (Credit credit : effectiveTransfer.getCredits() ) {
-                TransferWSEventHandler.notifyListener(context, credit.account.getAccountId(), notification);
+                TransferWSEventHandler.notifyListener(context, credit.account, notification);
             }
         } catch (Exception e) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to " + e.toString());
@@ -222,7 +257,7 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
+            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser @ handleGet");
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferID transferID = new TransferID(context.request().getParam(transferUUID));

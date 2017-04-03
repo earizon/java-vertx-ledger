@@ -14,6 +14,7 @@ import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.handler.LoggerHandler;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,7 +33,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.security.auth.x500.X500Principal;
+
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -42,8 +45,9 @@ import org.interledger.ilp.common.api.handlers.DebugRequestHandler;
 import org.interledger.ilp.common.api.handlers.EndpointHandler;
 import org.interledger.ilp.common.api.handlers.IndexHandler;
 import org.interledger.ilp.common.config.Config;
+
 import static org.interledger.ilp.common.config.Key.*;
-import org.interledger.ilp.core.DTTM;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,15 +60,13 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractMainEntrypointVerticle.class);
 
-    protected static final String DEFAULT_PREFIX_URI = "/";
     protected static final String KEY_INDEX_URLS = "urls";
 
     protected static final String SELFSIGNED_JKS_FILENAME = ".selfsigned.jks";
     protected static final String SELFSIGNED_JKS_PASSWORD = "changeit";
 
-    private Config config;
+    protected Config config;
     private HttpServer server;
-    private URL serverPublicURL;
     private String prefixUri;
     private AuthHandler authHandler;
 
@@ -99,17 +101,14 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         }
     }
 
-    protected abstract List<EndpointHandler> getEndpointHandlers(Config config);
+    protected abstract List<EndpointHandler> getEndpointHandlers();
 
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
         config = Config.create();
-        prefixUri = sanitizePrefixUri(config.getString(DEFAULT_PREFIX_URI, SERVER, PREFIX, URI));
         String host = config.getString("localhost", SERVER, HOST);
-        String pubHost = config.getString(host, SERVER, PUBLIC, HOST);
-        int port = config.getInt(SERVER, PORT);
-        int pubPort = config.getInt(port, SERVER, PUBLIC, PORT);
         boolean ssl = config.getBoolean(SERVER, USE_HTTPS);
-        boolean pubSsl = config.getBoolean(ssl, SERVER, PUBLIC, USE_HTTPS);
+        int port = config.getInt(SERVER, PORT);
+
         HttpServerOptions serverOptions = new HttpServerOptions().setHost(host).setPort(port);
         if (ssl) {
             log.debug("Using SSL");
@@ -180,8 +179,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         if (result.failed()) {
             return;
         }
-        serverPublicURL = new URL("http" + (pubSsl ? "s" : ""), pubHost, pubPort, prefixUri);
-        log.debug("serverPublicURL: {}", serverPublicURL);
 
         //Init auth
         authHandler = AuthManager.getInstance(config).getAuthHandler();
@@ -189,10 +186,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         //Extra configuration on child classes:
         config.apply(this);
         result.complete(serverOptions);
-    }
-
-    public URL getServerPublicURL() {
-        return serverPublicURL;
     }
 
     protected void initRouter(Router router) {
@@ -207,7 +200,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             router.route("/*").handler(new DebugRequestHandler());
             router.route("/*").handler(LoggerHandler.create(false, LoggerFormat.TINY)); //Log used time of request execution
         }
-        initIndexHandler(router, IndexHandler.create());
+        initIndexHandler(router, IndexHandler.create(), config);
     }
 
     protected void initServer(Router router, HttpServerOptions serverOptions) {
@@ -223,7 +216,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             if (listenHandler.succeeded()) {
                 log.info("Server ready at {}:{} ({})",
                         serverOptions.getHost(), server.actualPort(),
-                        serverPublicURL
+                        config.getPublicURI()
                 );
             } else {
                 log.error("Server failed listening at port {}",
@@ -237,8 +230,8 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     }
 
-    protected void initIndexHandler(Router router, IndexHandler indexHandler) {
-        List<EndpointHandler> endpointHandlers = getEndpointHandlers(config);
+    protected void initIndexHandler(Router router, IndexHandler indexHandler, Config config) {
+        List<EndpointHandler> endpointHandlers = getEndpointHandlers();
         publish(router, endpointHandlers);
         router.route(HttpMethod.GET, prefixUri).handler(indexHandler);
     }
@@ -270,10 +263,10 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             String[] uriList = handler.getUriList();
             List<String> result = new LinkedList<String>();
             for (String uri : uriList) {
-                URL url = new URL(serverPublicURL, paths(prefixUri, uri));
+                URL url = new URL(config.getPublicURI(), paths(prefixUri, uri));
                 handler.setUrl(url);
                 result.add(url.getPath());
-                result.add(new URL(serverPublicURL, paths(prefixUri, uri.toUpperCase())).getPath());
+                result.add(new URL(config.getPublicURI(), paths(prefixUri, uri.toUpperCase())).getPath());
             }
             return result;
         } catch (MalformedURLException ex) {
@@ -289,16 +282,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         return fileBuffer;
     }
 
-    private String sanitizePrefixUri(String path) {
-        if (StringUtils.isBlank(path)) {
-            return DEFAULT_PREFIX_URI;
-        }
-        path = path.trim();
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        return path;
-    }
+
 
     private String paths(String parent, String... childs) {
         StringBuilder path = new StringBuilder();
@@ -314,7 +298,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     private String getEndpointUrl(String path) {
         try {
-            return new URL(serverPublicURL, path).toString();
+            return new URL(config.getPublicURI(), path).toString();
         } catch (MalformedURLException ex) {
             log.error(path, ex);
         }

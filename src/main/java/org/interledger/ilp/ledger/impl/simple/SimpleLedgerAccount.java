@@ -1,12 +1,10 @@
 package org.interledger.ilp.ledger.impl.simple;
 
-import java.util.Currency;
-import javax.money.CurrencyUnit;
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
+
 import org.interledger.ilp.common.util.NumberConversionUtil;
-import org.interledger.ilp.core.AccountURI;
-import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
+import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.MoneyUtils;
 import org.interledger.ilp.ledger.account.LedgerAccount;
 import org.javamoney.moneta.Money;
@@ -18,41 +16,26 @@ import org.javamoney.moneta.Money;
  */
 public class SimpleLedgerAccount implements LedgerAccount {
 
-    private AccountURI accountUri;
-    private final String name;
-    private final String currencyCode;
+    public static final String currencyCode = LedgerFactory.getDefaultLedger().getInfo().getCurrencyUnit().getCurrencyCode();
+
+    // TODO:(0) Rename as ID and add {first name, second name, ...} if needed.
+    //    (Check commented @JsonProperty("id") in parent class)
+    private final String name; 
     private MonetaryAmount balance;
     private MonetaryAmount minimumAllowedBalance;
     private Boolean admin;
     private boolean disabled;
     private String connector;
 
-    public SimpleLedgerAccount(String name, Currency currency) {
-        this(name, currency.getCurrencyCode());
-    }
-
-    public SimpleLedgerAccount(String name, CurrencyUnit currencyUnit) {
-        this(name, currencyUnit.getCurrencyCode());
-    }
-
-    public SimpleLedgerAccount(String name, String currencyCode) {
+    public SimpleLedgerAccount(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name         null at SimpleLedgerAccount constructor");
         }
-        if (currencyCode == null) {
-            throw new IllegalArgumentException("currencyCode null at SimpleLedgerAccount constructor");
-        }
 
         this.name = name;
-        this.currencyCode = currencyCode;
         this.balance = Money.of(0, currencyCode);
         this.minimumAllowedBalance = Money.of(0, currencyCode);
         this.disabled = false;
-    }
-
-    @Override
-    public String getUri() { // FIXME: rename to getAccountUri
-        return getAccountUri().getUri();
     }
 
     @Override
@@ -78,11 +61,6 @@ public class SimpleLedgerAccount implements LedgerAccount {
     @Override
     public boolean isDisabled() {
         return disabled;
-    }
-
-    @Override
-    public String getCurrencyCode() {
-        return currencyCode;
     }
 
     @Override
@@ -183,7 +161,11 @@ public class SimpleLedgerAccount implements LedgerAccount {
         if (obj == this) {
             return true;
         }
-        return getUri().equalsIgnoreCase(((SimpleLedgerAccount) obj).getUri());
+        SimpleLedgerAccount other =  (SimpleLedgerAccount) obj;
+        boolean result = name.equals(other.getName());
+        // Extra checks while refactoring name -> account_id;
+        assert(balance.equals(other.getBalance()));
+        return result;
     }
 
     @Override
@@ -201,10 +183,4 @@ public class SimpleLedgerAccount implements LedgerAccount {
         return MoneyUtils.toMonetaryAmount(amount, currencyCode);
     }
 
-    private AccountURI getAccountUri() {
-        if (accountUri == null) {
-            accountUri = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton().getAccountUri(this);
-        }
-        return accountUri;
-    }
 }
