@@ -7,7 +7,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.AuthHandler;
@@ -16,29 +15,15 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.handler.LoggerHandler;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.cert.X509Certificate;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.security.auth.x500.X500Principal;
-
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.interledger.ilp.common.api.auth.AuthManager;
 import org.interledger.ilp.common.api.handlers.DebugRequestHandler;
 import org.interledger.ilp.common.api.handlers.EndpointHandler;
@@ -52,11 +37,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Vertx main entry point base verticle.
- *
- * @author mrmx
  */
 public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
-
     private static final Logger log = LoggerFactory.getLogger(AbstractMainEntrypointVerticle.class);
 
     protected static final String KEY_INDEX_URLS = "urls";
@@ -112,78 +94,30 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         if (ssl) {
             log.debug("Using SSL");
             //SEE http://vertx.io/docs/vertx-core/java/#ssl
-            if (config.hasKey(SERVER, TLS_KEY)) {
-                String keyFile = config.getString(SERVER, TLS_KEY);
-                String certFile = config.getString(SERVER, TLS_CERT);
-                //Assume PEM encoding
-                serverOptions.setPemKeyCertOptions(
-                        new PemKeyCertOptions()
-                        .setKeyValue(readRelativeFile(keyFile))
-                        .setCertValue(readRelativeFile(certFile))
-                );
-            } else {
-                try {
-                    File jksFile = new File(getCWD(), SELFSIGNED_JKS_FILENAME);
-                    if (!jksFile.exists() || jksFile.length() == 0) {
-                        log.info("Generating a self-signed key pair and certificate");
-                        Security.addProvider(new BouncyCastleProvider());
-                        // generate a key pair
-                        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
-                        keyPairGenerator.initialize(4096, new SecureRandom());
-                        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-                        // build a certificate generator
-                        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-                        X500Principal dnName = new X500Principal("cn=example");
-
-                        // add some options
-                        certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-                        certGen.setSubjectDN(new X509Name("dc=name"));
-                        certGen.setIssuerDN(dnName); // use the same
-                        // yesterday
-                        certGen.setNotBefore(new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000));
-                        // in 2 years
-                        certGen.setNotAfter(new Date(System.currentTimeMillis() + 2 * 365 * 24 * 60 * 60 * 1000));
-                        certGen.setPublicKey(keyPair.getPublic());
-                        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-                        // finally, sign the certificate with the private key of the same KeyPair
-                        X509Certificate cert = certGen.generate(keyPair.getPrivate(), "BC");
-                        X509Certificate[] chain = new X509Certificate[1];
-                        chain[0] = cert;
-                        //Setup JKS
-                        KeyStore store = KeyStore.getInstance("JKS");
-                        store.load(null, null); //Init jks                    
-                        store.setKeyEntry("selfsigned", keyPair.getPrivate(), SELFSIGNED_JKS_PASSWORD.toCharArray(), chain);
-                        log.debug("Storing KS to {}", jksFile);
-                        store.store(new FileOutputStream(jksFile), SELFSIGNED_JKS_PASSWORD.toCharArray());
-                    } else {
-                        log.info("Using pregenerated self-signed key/certificate {}", jksFile);
-                    }
-                    serverOptions.setKeyStoreOptions(
-                            new JksOptions()
-                            .setPath(jksFile.getAbsolutePath())
-                            .setPassword(SELFSIGNED_JKS_PASSWORD)
-                    );
-                    //TODO if(debug) serverOptions.setLogActivity(true);                          
-                    //TODO set via config:
-                    //serverOptions.setOpenSslEngineOptions(new OpenSSLEngineOptions());
-
-                    serverOptions.setSsl(true);
-                } catch (Exception ex) {
-                    log.error("Failed to generate a self-signed cert and other SSL configuration methods failed.", ex);
-                    result.fail(ex);
-                }
+            if (! config.hasKey(SERVER, TLS_KEY)) {
+                throw new RuntimeException(
+                    "Server tls_key/tls_cert not found in config. If use_https is true your conf must include something similar to \n"
+                    + "server {\n"
+                    + "    tls_key: \"./eu.ledger1.key\"\n"
+                    + "    tls_cert:\"./eu.ledger1.crt\"\n"
+                    + "    ...\n"
+                    + "}\n"
+                    + "Check "
+                    + "\nhttps://github.com/earizon/IT_notes/blob/master/openssl_certificate_handling_summary.txt \n"
+                    + "for a summary about generating (self-signed)certificates with openssl "
+                    + "");
             }
+            String keyFile  = config.getString(SERVER, TLS_KEY );
+            String certFile = config.getString(SERVER, TLS_CERT);
+            serverOptions.setPemKeyCertOptions( //Assume PEM encoding
+                    new PemKeyCertOptions()
+                    .setKeyValue(readRelativeFile(keyFile))
+                    .setCertValue(readRelativeFile(certFile))
+            );
         }
-        if (result.failed()) {
-            return;
-        }
+        authHandler = AuthManager.getInstance(config).getAuthHandler(); //Init auth
 
-        //Init auth
-        authHandler = AuthManager.getInstance(config).getAuthHandler();
-
-        //Extra configuration on child classes:
-        config.apply(this);
+        config.apply(this); //Extra configuration on child classes:
         result.complete(serverOptions);
     }
 
