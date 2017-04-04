@@ -16,9 +16,16 @@ Get Internal Config parameters (related to ledger implementation):
 -------------------
 
 Abort request and Launch Exception:
-    if ("failed assertCondition") {
-        throw new InterledgerException(InterledgerException.RegisteredException.BadRequestError, "Required param ...");
-    }
+    import org.interledger.ilp.common.api.util.ILPExceptionSupport;
+    import org.interledger.ilp.exceptions.InterledgerException;
+    import org.interledger.ilp.exceptions.InterledgerException.ErrorCode;
+    
+    ILPExceptionSupport.launchILPException(InterledgerException.ErrorCode.XXX , "..."/* data */)
+    or (with default INTERNAL ERROR)
+    ILPExceptionSupport.launchILPException(this.getClass().getName() + " constructor params can NOT be null"/* data */);
+    ILPExceptionSupport.launchILPForbiddenException();
+
+
 
     Note:
     This InterledgerException is captured by default in RestEndpointHandler.java and a JSON response mapping
