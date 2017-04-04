@@ -12,6 +12,7 @@ import org.interledger.ilp.common.api.auth.AuthManager;
 import org.interledger.ilp.common.api.auth.RoleUser;
 import org.interledger.ilp.ledger.model.LedgerInfo;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.common.api.util.JsonObjectBuilder;
 import org.interledger.ilp.common.config.Config;
 import org.interledger.ilp.common.util.NumberConversionUtil;
@@ -61,10 +62,12 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
                 if (StringUtils.isNotBlank(accountName)) {
                     handleAuthorizedGet(context, null);
                 } else {
-                    throw new InterledgerException(InterledgerException.RegisteredException.BadRequestError, "Required param " + PARAM_NAME);
+                    ILPExceptionSupport.launchILPException(
+                        InterledgerException.ErrorCode.F00_BAD_REQUEST,
+                        this.getClass().getName() + "Required param " + PARAM_NAME);
                 }
             } else {
-                throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "");
+                ILPExceptionSupport.launchILPForbiddenException();
             }
         });
     }
@@ -75,19 +78,19 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
 
         AuthInfo authInfo = AuthManager.getInstance().getAuthInfo(context);
         if (authInfo.isEmpty()) {
-            throw new InterledgerException(InterledgerException.RegisteredException.UnauthorizedError, AuthManager.DEFAULT_BASIC_REALM);
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         RoleUser user = AuthManager.getInstance().getAuthUser(authInfo);
         log.debug("put with user {}", user);
         if (user == null || !user.hasRole(RoleUser.ROLE_ADMIN)) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: user == null || !user.hasRole(RoleUser.ROLE_ADMIN)");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
         String accountName = getAccountName(context);
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
         if(exists && !accountName.equalsIgnoreCase(data.getString(PARAM_NAME))) {
-            throw new InterledgerException(InterledgerException.RegisteredException.BadRequestError, accountName);
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         log.debug("Put data: {} to account {}", data,accountName);
         Number balance = null;

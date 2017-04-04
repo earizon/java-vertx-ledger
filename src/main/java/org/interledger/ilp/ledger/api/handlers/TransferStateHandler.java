@@ -10,6 +10,7 @@ import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.common.config.Config;
 import org.interledger.ilp.ledger.transfer.TransferID;
 import org.interledger.ilp.ledger.transfer.LedgerTransfer;
@@ -89,7 +90,7 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         String transferId = context.request().getParam(transferUUID);
         TransferID transferID = new TransferID(transferId);

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.LedgerFactory;
 import org.interledger.ilp.ledger.account.ILPAccountSupport;
@@ -30,8 +31,8 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
     @Override
     public LedgerAccount create(String name) throws InterledgerException {
         if (accountMap.containsKey(name)) {
-            throw new InterledgerException(InterledgerException.RegisteredException.AccountExists, "account '"+name+"' already exists");
-
+            ILPExceptionSupport.launchILPException(
+                    this.getClass().getName() +  "account '"+name+"' already exists");
         }
         return new SimpleLedgerAccount(name);
     }
@@ -49,7 +50,8 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
     @Override
     public LedgerAccount getAccountByName(String name) throws InterledgerException {
         if (!hasAccount(name)) {
-            throw new InterledgerException(InterledgerException.RegisteredException.AccountNotFoundError, "local account '"+name+"' not found");
+            ILPExceptionSupport.launchILPException(
+                this.getClass().getName() +  "local account '"+name+"' not found");
         }
         return accountMap.get(name);
     }

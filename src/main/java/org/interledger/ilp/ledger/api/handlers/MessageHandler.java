@@ -12,6 +12,7 @@ import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.common.config.Config;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.LedgerFactory;
@@ -52,7 +53,7 @@ public class MessageHandler extends RestEndpointHandler implements ProtectedReso
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         log.debug("handlePost context.getBodyAsString():\n   "+context.getBodyAsString());
 

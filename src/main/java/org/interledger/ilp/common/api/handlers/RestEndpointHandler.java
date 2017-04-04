@@ -5,9 +5,12 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
+
 import java.util.function.Supplier;
+
 import org.apache.commons.lang3.StringUtils;
 import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.common.api.util.JsonObjectBuilder;
 import org.interledger.ilp.common.api.util.VertxUtils;
 import org.slf4j.Logger;
@@ -111,14 +114,13 @@ public abstract class RestEndpointHandler extends EndpointHandler {
     protected void checkAuth(RoutingContext context, String authority) {
         User user = context.user();
         if (user == null) {
-            log.warn("No user present in request in checkAuth with {}", authority);
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: user == null ");
+            ILPExceptionSupport.launchILPForbiddenException();
         } else {
             user.isAuthorised(authority, res -> {
                 if (res.succeeded()) {
                     handleAuthorized(context);
                 } else {
-                    throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: res.succeeded() failed ");
+                    ILPExceptionSupport.launchILPForbiddenException();
                 }
             });
         }

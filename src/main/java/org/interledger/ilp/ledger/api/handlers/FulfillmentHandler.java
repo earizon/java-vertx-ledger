@@ -18,6 +18,7 @@ import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.transfer.Credit;
 import org.interledger.ilp.ledger.transfer.Debit;
 import org.interledger.ilp.ledger.transfer.TransferID;
@@ -101,9 +102,9 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
          **/
         LedgerTransfer transfer = tm.getTransferById(transferID);
         if ( transfer.getExecutionCondition() == null /* TODO:(0) Replace by DOESNT_EXITS */ ) {
-            throw new InterledgerException(
-                    InterledgerException.RegisteredException.TransferNotConditionalError,
-                    "Transfer is not conditional");
+            ILPExceptionSupport.launchILPException(
+                    InterledgerException.ErrorCode.F00_BAD_REQUEST,
+                    this.getClass().getName() + "Transfer is not conditional");
         }
         String hexFulfillment = context.getBodyAsString();
         byte[] fulfillmentBytes = HexDump.hexStringToByteArray(hexFulfillment);
@@ -138,7 +139,9 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
                 tm.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
-            throw new InterledgerException(InterledgerException.RegisteredException.UnmetConditionError, "Fulfillment does not match any condition");
+            ILPExceptionSupport.launchILPException(
+                    InterledgerException.ErrorCode.F05_WRONG_CONDITION,
+                    this.getClass().getName() + "Fulfillment does not match any condition");
         }
         log.trace("ffExisted:"+ffExisted);
 
@@ -171,7 +174,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         boolean isFulfillment = false; // false => isRejection
         if (context.request().path().endsWith("/fulfillment")){
@@ -193,18 +196,21 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         TransferID transferID = new TransferID(context.request().getParam(transferUUID));
         LedgerTransfer transfer = tm.getTransferById(transferID);
         if (transfer.getExecutionCondition()==null /* TODO:(0) Remove null*/){
-            throw new InterledgerException(
-                    InterledgerException.RegisteredException.TransferNotConditionalError,
-                    "Transfer does not have any conditions");
+            // TODO:(0) This could mean a crytical security error. At some point the condition was "lost"
+            //   while the already-registered-transfer is supposed to have it attached to "lock" the execution.
+            ILPExceptionSupport.launchILPException(
+                    InterledgerException.ErrorCode.F05_WRONG_CONDITION,
+                    this.getClass().getName());
         }
         Fulfillment fulfillment= (isFulfillment) 
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == null /* TODO:(0) Fix null */) {
-            throw new InterledgerException(
-                InterledgerException.RegisteredException.MissingFulfillmentError,
-                "This transfer has not yet been fulfilled");
+            ILPExceptionSupport.launchILPException(
+                InterledgerException.ErrorCode.F99_APPLICATION_ERROR,
+                this.getClass().getName() + "This transfer has not yet been fulfilled");
         }
+
         String response  = fulfillment.toString(); // TODO:(0)  previously fulfillmentURI
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")

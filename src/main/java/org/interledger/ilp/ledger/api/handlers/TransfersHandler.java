@@ -17,6 +17,7 @@ import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
@@ -66,7 +67,7 @@ public class TransfersHandler extends RestEndpointHandler implements ProtectedRe
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));

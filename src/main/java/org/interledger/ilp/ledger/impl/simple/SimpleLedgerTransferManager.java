@@ -15,6 +15,7 @@ import org.interledger.ilp.ledger.transfer.Debit;
 import org.interledger.ilp.ledger.transfer.TransferID;
 import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.ledger.model.TransferStatus;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.account.LedgerAccount;
@@ -61,10 +62,12 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
     public LedgerTransfer getTransferById(TransferID transferId) {
         LedgerTransfer result = transferMap.get(transferId);
         if (result == null) {
-            throw new InterledgerException(InterledgerException.RegisteredException.TransferNotFoundError, "This transfer does not exist");
+            ILPExceptionSupport.launchILPException(
+                this.getClass().getName() + "This transfer does not exist");
         }
         if (result.getTransferStatus() == TransferStatus.REJECTED) {
-            throw new InterledgerException(InterledgerException.RegisteredException.AlreadyRolledBackError, "This transfer has already been rejected");
+            ILPExceptionSupport.launchILPException(
+                    this.getClass().getName() + "This transfer has already been rejected");
         }
     
         return result;

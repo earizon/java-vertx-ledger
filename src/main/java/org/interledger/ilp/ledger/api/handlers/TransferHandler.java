@@ -25,10 +25,12 @@ import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.transfer.Credit;
 import org.interledger.ilp.ledger.transfer.DTTM;
 import org.interledger.ilp.ledger.transfer.Debit;
 import org.interledger.ilp.InterledgerAddress;
+import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerPacketHeader;
 import org.interledger.ilp.ledger.transfer.TransferID;
 import org.interledger.ilp.ledger.model.LedgerInfo;
@@ -85,7 +87,7 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-          throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         log.trace(this.getClass().getName() + "handlePut invoqued ");
         log.trace(context.getBodyAsString());
@@ -172,7 +174,8 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
             MonetaryAmount credit_ammount = Money.of(Double.parseDouble(jsonCredit.getString("amount")), currencyUnit);
 
             String ilp_ph_ilp_dst_address = jsonMemoILPHeader.getString("account");
-            InterledgerAddress dstAddress = new InterledgerAddress(ilp_ph_ilp_dst_address);
+
+            InterledgerAddress dstAddress = InterledgerAddressBuilder.builder().value(ilp_ph_ilp_dst_address).build();
             String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
             BigDecimal ammount = new BigDecimal(ilp_ph_amount); // TODO:(0) FIXME?
             Condition ilp_ph_condition = URIExecutionCond;
@@ -257,7 +260,7 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement
         if (!isAdmin && !transferMatchUser) {
-            throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError, "WARN: SECURITY: !isAdmin && !transferMatchUser @ handleGet");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferID transferID = new TransferID(context.request().getParam(transferUUID));

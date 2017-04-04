@@ -2,12 +2,11 @@ package org.interledger.ilp.ledger;
 
 
 import java.util.Date;
+
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.ilp.ledger.model.TransferStatus;
-
-
-import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 
 /*
  * ILPTransfer entities are created for ILP aware transfer.
@@ -15,11 +14,13 @@ import org.interledger.ilp.exceptions.InterledgerException;
  *    Is used to keep trace of the ILP transaction status.
  * TODO: Move (or create interface) to java-ilp-core
  */
-public class ILPTransfer {
+public class ILPTransfer { // TODO:(0) Divide into InternalTransfer and ILP data
+                           // (in the memo?)
 
-    private final String id;                           
-    private final String ledger;    
-    private final Condition condition; // When the fulfillment arrives compare with Condition
+    private final String id;
+    private final String ledger;
+    private final Condition condition; // When the fulfillment arrives compare
+                                       // with Condition
     private final Date expirationAt;
     private final Date proposedAt;
 
@@ -32,10 +33,11 @@ public class ILPTransfer {
     private Date rejectedAt;
 
     ILPTransfer(String id, String ledger, Condition condition, Date expirationAt) {
-        if (id == null || ledger == null || condition == null || expirationAt == null) {
-            throw new InterledgerException(InterledgerException.RegisteredException.InternalError, "constructor params can't be null");
+        if (id == null || ledger == null || condition == null
+                || expirationAt == null) {
+            ILPExceptionSupport.launchILPException(this.getClass().getName() + " constructor params can NOT be null"/* data */);
         }
-        this.id = id;        
+        this.id = id;
         this.ledger = ledger;
         this.condition = condition;
         this.expirationAt = expirationAt;
@@ -45,7 +47,6 @@ public class ILPTransfer {
     public String getId() {
         return id;
     }
-
 
     public String getLedger() {
         return ledger;
@@ -87,24 +88,24 @@ public class ILPTransfer {
         // Note: This logic could be placed in a "higher" level class.
         // For now is enought. (Simple implementation)
         if (new_status == TransferStatus.PROPOSED) {
-            throw new InterledgerException(InterledgerException.RegisteredException.InternalError, "new state " + status + " not allowed");
+            ILPExceptionSupport.launchILPForbiddenException();
         }
 
         if (new_status == TransferStatus.PREPARED) {
             if (status != TransferStatus.PROPOSED) {
-                throw new InterledgerException(InterledgerException.RegisteredException.InternalError, "new state " + status + " not allowed");
+                ILPExceptionSupport.launchILPForbiddenException();
             }
             this.preparedAt = getCurrentTime();
         }
         if (new_status == TransferStatus.EXECUTED) {
             if (status != TransferStatus.PREPARED) {
-                throw new InterledgerException(InterledgerException.RegisteredException.InternalError, "new state " + status + " not allowed");
+                ILPExceptionSupport.launchILPForbiddenException();
             }
             this.executedAt = getCurrentTime();
         }
         if (new_status == TransferStatus.REJECTED) {
             if (status == TransferStatus.EXECUTED) {
-                throw new InterledgerException(InterledgerException.RegisteredException.InternalError, "new state " + status + " not allowed");
+                ILPExceptionSupport.launchILPForbiddenException();
             }
             this.rejectedAt = getCurrentTime();
         }
