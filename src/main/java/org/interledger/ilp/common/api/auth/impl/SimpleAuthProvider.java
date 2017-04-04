@@ -15,8 +15,8 @@ import org.interledger.ilp.common.api.auth.RoleUser;
 import org.interledger.ilp.common.config.Config;
 import org.interledger.ilp.common.config.core.Configurable;
 import org.interledger.ilp.common.config.core.ConfigurationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 /**
  * Simple in-memory vertx {@code AuthProvider}.
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleAuthProvider implements Configurable, AuthProvider , AuthUserSupplier<SimpleAuthProvider.SimpleUser> {
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleAuthProvider.class);
+//    private static final Logger log = LoggerFactory.getLogger(SimpleAuthProvider.class);
 
     private final static String USER_ROLE = "role";
 

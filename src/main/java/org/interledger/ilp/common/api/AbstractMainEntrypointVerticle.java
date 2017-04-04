@@ -36,7 +36,6 @@ import java.util.Map;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -207,10 +206,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         log.debug("Init server");
         server = vertx.createHttpServer(serverOptions);
         server.requestHandler(router::accept);
-        boolean useMockClock = true; // TODO: FIXME get from serverOptions.
-//        if (useMockClock) {
-//            DTTM.mockDate = "2015-06-16T00:00:00.000Z";
-//        }
 
         server.listen(listenHandler -> {
             if (listenHandler.succeeded()) {

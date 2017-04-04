@@ -16,7 +16,6 @@ import org.interledger.ilp.ledger.transfer.TransferID;
 import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.ledger.model.TransferStatus;
 import org.interledger.ilp.common.api.util.ILPExceptionSupport;
-import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
 import org.interledger.ilp.ledger.account.LedgerAccount;
 import org.interledger.ilp.ledger.account.LedgerAccountManager;

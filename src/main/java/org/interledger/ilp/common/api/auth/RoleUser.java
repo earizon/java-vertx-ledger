@@ -3,6 +3,8 @@ package org.interledger.ilp.common.api.auth;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.auth.AuthProvider;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,13 @@ public class RoleUser extends AuthUser {
             log.debug("User {} has no permission {}", getAuthInfo(), permission);
             resultHandler.handle(Future.failedFuture(permission));
         }
+    }
+
+    @Override
+    public void setAuthProvider(AuthProvider authProvider) {
+        // TODO:(?) Not used
+        log.warn(this.getClass().getName() + "inherited setAthProvider invoqued but ignored");
+        
     }
 
 }

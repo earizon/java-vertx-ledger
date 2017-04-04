@@ -37,14 +37,14 @@ public class AuthManager {
         realm
     }
 
-    private final Provider provider;
+    // private final Provider provider;
     private final AuthProvider authProvider;
     private final AuthHandler authHandler;
     private final AuthInfoBuilder authInfoBuilder;
     private AuthUserSupplier<?> authUserSupplier;
 
-    public AuthManager(Provider provider, AuthProvider authProvider, AuthHandler authHandler, AuthInfoBuilder authInfoBuilder) {
-        this.provider = provider;
+    public AuthManager(/*Provider provider, */AuthProvider authProvider, AuthHandler authHandler, AuthInfoBuilder authInfoBuilder) {
+//        this.provider = provider;
         this.authProvider = authProvider;
         this.authHandler = authHandler;
         this.authInfoBuilder = authInfoBuilder;
@@ -92,7 +92,7 @@ public class AuthManager {
         }
         authConfig.apply(authProvider);
         log.debug("Created {} authProvider using {} impl", provider, authProvider.getClass().getSimpleName());
-        return instance = new AuthManager(provider, authProvider, authHandler, authInfoBuilder);
+        return instance = new AuthManager(/*provider,*/ authProvider, authHandler, authInfoBuilder);
     }
 
     public void authenticate(RoutingContext context, Handler<AsyncResult<AuthInfo>> resultHandler) {
@@ -116,7 +116,7 @@ public class AuthManager {
     //TODO add async version
     public <T extends AuthUser> T getAuthUser(AuthInfo authInfo) {
         if (authUserSupplier == null) {
-            throw new AuthException("no " + AuthUserSupplier.class.getSimpleName() + " available!");
+            throw new RuntimeException("no " + AuthUserSupplier.class.getSimpleName() + " available!");
         }
         return (T) authUserSupplier.getAuthUser(authInfo);
     }

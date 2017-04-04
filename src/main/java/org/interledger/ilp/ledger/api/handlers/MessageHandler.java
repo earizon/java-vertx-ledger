@@ -8,7 +8,6 @@ import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.ilp.common.api.ProtectedResource;
 import org.interledger.ilp.common.api.auth.RoleUser;
-import org.interledger.ilp.exceptions.InterledgerException;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
