@@ -33,7 +33,7 @@ repositories {
 dependencies {
     compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
     compile     "org.javamoney:moneta:${moneta_version}"
-
+    compile     "org.bouncycastle:bcprov-jdk15:1.46"
     compile     "com.google.guava:guava:${guava_version}"
     compile     "org.apache.commons:commons-lang3:${commons_lang3_version}"
     compile     "org.slf4j:slf4j-api:${slf4j_api_version}"
