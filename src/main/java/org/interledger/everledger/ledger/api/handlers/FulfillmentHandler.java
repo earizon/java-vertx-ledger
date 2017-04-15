@@ -1,4 +1,4 @@
-package org.interledger.ilp.ledger.api.handlers;
+package org.interledger.everledger.ledger.api.handlers;
 
 
 
@@ -14,18 +14,18 @@ import org.interledger.cryptoconditions.HexDump;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
 //import org.interledger.cryptoconditions.types.MessagePayload;
-import org.interledger.ilp.common.api.ProtectedResource;
-import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.exceptions.InterledgerException;
-import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.common.api.util.ILPExceptionSupport;
-import org.interledger.ilp.ledger.transfer.Credit;
-import org.interledger.ilp.ledger.transfer.Debit;
-import org.interledger.ilp.ledger.transfer.TransferID;
-import org.interledger.ilp.ledger.transfer.LedgerTransfer;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
-import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
+import org.interledger.everledger.common.api.ProtectedResource;
+import org.interledger.everledger.common.api.auth.impl.SimpleAuthProvider;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
+import org.interledger.everledger.ledger.transfer.Credit;
+import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.LedgerTransfer;
+import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
+import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         LedgerTransfer transfer = tm.getTransferById(transferID);
         if ( transfer.getExecutionCondition() == null /* TODO:(0) Replace by DOESNT_EXITS */ ) {
             ILPExceptionSupport.launchILPException(
-                    InterledgerException.ErrorCode.F00_BAD_REQUEST,
+                    InterledgerError.ErrorCode.F00_BAD_REQUEST,
                     this.getClass().getName() + "Transfer is not conditional");
         }
         String hexFulfillment = context.getBodyAsString();
@@ -140,7 +140,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
             }
         } else {
             ILPExceptionSupport.launchILPException(
-                    InterledgerException.ErrorCode.F05_WRONG_CONDITION,
+                    InterledgerError.ErrorCode.F05_WRONG_CONDITION,
                     this.getClass().getName() + "Fulfillment does not match any condition");
         }
         log.trace("ffExisted:"+ffExisted);
@@ -199,7 +199,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
             // TODO:(0) This could mean a crytical security error. At some point the condition was "lost"
             //   while the already-registered-transfer is supposed to have it attached to "lock" the execution.
             ILPExceptionSupport.launchILPException(
-                    InterledgerException.ErrorCode.F05_WRONG_CONDITION,
+                    InterledgerError.ErrorCode.F05_WRONG_CONDITION,
                     this.getClass().getName());
         }
         Fulfillment fulfillment= (isFulfillment) 
@@ -207,7 +207,7 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == null /* TODO:(0) Fix null */) {
             ILPExceptionSupport.launchILPException(
-                InterledgerException.ErrorCode.F99_APPLICATION_ERROR,
+                    InterledgerError.ErrorCode.F99_APPLICATION_ERROR,
                 this.getClass().getName() + "This transfer has not yet been fulfilled");
         }
 

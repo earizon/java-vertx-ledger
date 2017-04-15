@@ -36,10 +36,9 @@ dependencies {
     compile     "com.google.guava:guava:${guava_version}"
     compile     "org.apache.commons:commons-lang3:${commons_lang3_version}"
     compile     "org.slf4j:slf4j-api:${slf4j_api_version}"
-    compile     "com.typesafe:config:${typesafe_config_version}"
+//  compile     "com.typesafe:config:${typesafe_config_version}"
     compile     "ch.qos.logback:logback-classic:${logback_classic_version}"
     compile     "io.vertx:vertx-web:${vertx_web_version}"
-    
 
     testCompile "junit:junit:${junit_version}"
     testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
@@ -48,7 +47,7 @@ dependencies {
 task launchServer(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 
-  main = 'org.interledger.ilp.ledger.api.Main'
+  main = 'org.interledger.everledger.ledger.api.Main'
 
   // arguments to pass to the application
   // args 'appArg1'

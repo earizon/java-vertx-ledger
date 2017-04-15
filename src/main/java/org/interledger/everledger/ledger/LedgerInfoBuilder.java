@@ -1,4 +1,4 @@
-package org.interledger.ilp.ledger;
+package org.interledger.everledger.ledger;
 
 import java.net.URL;
 import java.security.PublicKey;
@@ -7,8 +7,8 @@ import java.util.Currency;
 import javax.money.CurrencyUnit;
 import javax.money.format.MonetaryAmountFormat;
 
+import org.interledger.everledger.common.util.StringUtils;
 import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.common.util.StringUtils;
 import org.interledger.ilp.ledger.model.LedgerInfo;
 
 /**

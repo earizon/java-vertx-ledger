@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.util;
+package org.interledger.everledger.common.util;
 
 public class StringUtils {
     public static boolean isBlank(String s) {

@@ -1,4 +1,4 @@
-package org.interledger.ilp.ledger.transfer;
+package org.interledger.everledger.ledger.transfer;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;

@@ -1,12 +1,12 @@
-package org.interledger.ilp.ledger.impl.simple;
+package org.interledger.everledger.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
 
-import org.interledger.ilp.common.util.NumberConversionUtil;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.MoneyUtils;
-import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.everledger.common.util.NumberConversionUtil;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.MoneyUtils;
+import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.javamoney.moneta.Money;
 
 /**

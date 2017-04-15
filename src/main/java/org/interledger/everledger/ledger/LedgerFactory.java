@@ -1,9 +1,9 @@
-package org.interledger.ilp.ledger;
+package org.interledger.everledger.ledger;
 
-import org.interledger.ilp.common.config.Config;
-import org.interledger.ilp.ledger.Ledger;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.ledger.Ledger;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,28 +1,30 @@
-package org.interledger.ilp.ledger.api.handlers;
+package org.interledger.everledger.ledger.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+
 import static io.vertx.core.http.HttpMethod.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+
 import org.apache.commons.lang3.StringUtils;
-import org.interledger.ilp.common.api.ProtectedResource;
-import org.interledger.ilp.common.api.auth.AuthInfo;
-import org.interledger.ilp.common.api.auth.AuthManager;
-import org.interledger.ilp.common.api.auth.RoleUser;
+import org.interledger.everledger.common.api.ProtectedResource;
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
+import org.interledger.everledger.common.api.auth.RoleUser;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.common.api.util.JsonObjectBuilder;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.common.util.NumberConversionUtil;
+import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedger;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.common.api.util.ILPExceptionSupport;
-import org.interledger.ilp.common.api.util.JsonObjectBuilder;
-import org.interledger.ilp.common.config.Config;
-import org.interledger.ilp.common.util.NumberConversionUtil;
-import org.interledger.ilp.exceptions.InterledgerException;
-import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.account.LedgerAccount;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedger;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccount;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManager;
+import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +65,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
                     handleAuthorizedGet(context, null);
                 } else {
                     ILPExceptionSupport.launchILPException(
-                        InterledgerException.ErrorCode.F00_BAD_REQUEST,
+                        InterledgerError.ErrorCode.F00_BAD_REQUEST,
                         this.getClass().getName() + "Required param " + PARAM_NAME);
                 }
             } else {
@@ -76,7 +78,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
     protected void handlePut(RoutingContext context) {
         log.debug("Handing put account");
 
-        AuthInfo authInfo = AuthManager.getInstance().getAuthInfo(context);
+        AuthInfo authInfo = AuthManager.getAuthInfo(context);
         if (authInfo.isEmpty()) {
             ILPExceptionSupport.launchILPForbiddenException();
         }

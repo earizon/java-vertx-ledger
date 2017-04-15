@@ -1,4 +1,4 @@
-package org.interledger.ilp.ledger.api.handlers;
+package org.interledger.everledger.ledger.api.handlers;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -21,27 +21,27 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
-import org.interledger.ilp.common.api.ProtectedResource;
-import org.interledger.ilp.common.api.auth.impl.SimpleAuthProvider;
-import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
-import org.interledger.ilp.common.api.util.ILPExceptionSupport;
-import org.interledger.ilp.ledger.transfer.Credit;
-import org.interledger.ilp.ledger.transfer.DTTM;
-import org.interledger.ilp.ledger.transfer.Debit;
+import org.interledger.everledger.common.api.ProtectedResource;
+import org.interledger.everledger.common.api.auth.impl.SimpleAuthProvider;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
+import org.interledger.everledger.ledger.transfer.Credit;
+import org.interledger.everledger.ledger.transfer.DTTM;
+import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.LedgerTransfer;
+import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
+import org.interledger.everledger.ledger.transfer.TransferID;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerPacketHeader;
-import org.interledger.ilp.ledger.transfer.TransferID;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.transfer.LedgerTransfer;
 import org.interledger.ilp.ledger.model.TransferStatus;
-import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransfer;
-import org.interledger.ilp.ledger.impl.simple.SimpleLedgerTransferManager;
-import org.interledger.ilp.ledger.transfer.LedgerTransferManager;
-import org.interledger.ilp.ledger.account.LedgerAccount;
-import org.interledger.ilp.ledger.account.LedgerAccountManager;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,6 +255,7 @@ public class TransferHandler extends RestEndpointHandler implements ProtectedRes
     @Override
     protected void handleGet(RoutingContext context) {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
+        User user = context.user();
         SimpleAuthProvider.SimpleUser user = (SimpleAuthProvider.SimpleUser) context.user();
         boolean isAdmin = user.hasRole("admin");
         boolean transferMatchUser = true; // FIXME: TODO: implement

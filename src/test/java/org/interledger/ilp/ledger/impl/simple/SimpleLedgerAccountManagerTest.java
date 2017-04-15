@@ -3,16 +3,19 @@ package org.interledger.ilp.ledger.impl.simple;
 import java.net.URL;
 import java.util.Collection;
 
-import org.interledger.ilp.common.config.Config;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.ledger.Currencies;
+import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.LedgerInfoBuilder;
+import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.Currencies;
-import org.interledger.ilp.ledger.LedgerAccountManagerFactory;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.LedgerInfoBuilder;
-import org.interledger.ilp.ledger.account.LedgerAccount;
-import org.interledger.ilp.ledger.account.LedgerAccountManager;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,7 +41,7 @@ public class SimpleLedgerAccountManagerTest {
             .setCurrency(Currencies.EURO)
             .setBaseUri(new URL("https", URI_LEDGER_A, 80, ""))
             .build();        
-        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.create());
+        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.singleton);
     }
     
     @Before

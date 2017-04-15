@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api.handlers;
+package org.interledger.everledger.common.api.handlers;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.vertx.core.Handler;

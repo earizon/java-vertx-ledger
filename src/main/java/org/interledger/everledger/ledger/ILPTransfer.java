@@ -1,12 +1,12 @@
-package org.interledger.ilp.ledger;
+package org.interledger.everledger.ledger;
 
 
 import java.util.Date;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.model.TransferStatus;
-import org.interledger.ilp.common.api.util.ILPExceptionSupport;
 
 /*
  * ILPTransfer entities are created for ILP aware transfer.

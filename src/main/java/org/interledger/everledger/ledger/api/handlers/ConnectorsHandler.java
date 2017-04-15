@@ -1,8 +1,8 @@
 
-package org.interledger.ilp.ledger.api.handlers;
+package org.interledger.everledger.ledger.api.handlers;
 
-import org.interledger.ilp.common.api.handlers.EndpointHandler;
-import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.common.api.handlers.EndpointHandler;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 
 /**
  * List available connectors

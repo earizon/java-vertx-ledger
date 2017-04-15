@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.util;
+package org.interledger.everledger.common.util;
 
 import org.apache.commons.lang3.math.NumberUtils;
 

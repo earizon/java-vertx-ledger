@@ -1,10 +1,10 @@
-package org.interledger.ilp.ledger.transfer;
+package org.interledger.everledger.ledger.transfer;
 
 // TODO:(0) Maybe "parts" of this interface can be extracted to an standard API
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.ilp.ledger.transfer.TransferID;
-import org.interledger.ilp.ledger.transfer.LedgerTransfer;
+import org.interledger.everledger.ledger.transfer.LedgerTransfer;
+import org.interledger.everledger.ledger.transfer.TransferID;
 
 public  interface LedgerTransferManager {
     LedgerTransfer getTransferById(TransferID transferId);

@@ -1,8 +1,8 @@
-package org.interledger.ilp.ledger.transfer;
+package org.interledger.everledger.ledger.transfer;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.LedgerAccount;
 
 public class Debit extends LedgerPartialEntry {
     public Debit(LedgerAccount account, MonetaryAmount amount){

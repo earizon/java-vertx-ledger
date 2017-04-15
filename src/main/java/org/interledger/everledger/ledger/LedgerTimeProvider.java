@@ -1,4 +1,4 @@
-package org.interledger.ilp.ledger;
+package org.interledger.everledger.ledger;
 
 import java.util.Calendar;
 import java.util.Date;

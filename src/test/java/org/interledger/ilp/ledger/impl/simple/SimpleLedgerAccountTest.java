@@ -2,12 +2,13 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.ilp.common.config.Config;
-import org.interledger.ilp.ledger.account.LedgerAccount;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.ledger.Currencies;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.LedgerInfoBuilder;
+import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.Currencies;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.LedgerInfoBuilder;
 
 import static org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManagerTest.URI_LEDGER_A;
 
@@ -40,7 +41,7 @@ public class SimpleLedgerAccountTest {
                 .setCurrency(Currencies.EURO)
                 .setBaseUri(new URL("https", URI_LEDGER_A, 80, ""))
                 .build();
-        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.create());
+        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.singleton);
     }
 
     @Before

@@ -1,10 +1,11 @@
 package org.interledger.ilp.ledger.impl.simple;
 
-import org.interledger.ilp.common.config.Config;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.ledger.Currencies;
+import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.ledger.LedgerInfoBuilder;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedger;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.Currencies;
-import org.interledger.ilp.ledger.LedgerFactory;
-import org.interledger.ilp.ledger.LedgerInfoBuilder;
 
 import static org.junit.Assert.*;
 
@@ -42,13 +43,13 @@ public class SimpleLedgerTest {
     
     @BeforeClass
     public static void init() {
-        Config config = Config.create();
+        Config config = Config.singleton;
         LedgerFactory.initialize(ledgerInfo, "test-ledger", config);
     }
     
     @Before
     public void setUp() {
-        Config config = Config.create();
+        Config config = Config.singleton;
         instance = new SimpleLedger(ledgerInfo, "test", config);
     }
 

@@ -1,13 +1,12 @@
-package org.interledger.ilp.ledger.api.handlers;
+package org.interledger.everledger.ledger.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.ext.web.RoutingContext;
-
 import static io.vertx.core.http.HttpMethod.GET;
 import static io.vertx.core.http.HttpMethod.HEAD;
 
-import org.interledger.ilp.common.api.handlers.EndpointHandler;
-import org.interledger.ilp.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.common.api.handlers.EndpointHandler;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 
 /**
  * Health handler

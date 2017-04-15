@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.util;
+package org.interledger.everledger.common.util;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api.auth;
+package org.interledger.everledger.common.api.auth;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api.auth;
+package org.interledger.everledger.common.api.auth;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AbstractUser;

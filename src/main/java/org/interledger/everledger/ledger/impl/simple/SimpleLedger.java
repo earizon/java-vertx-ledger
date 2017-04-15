@@ -1,8 +1,8 @@
-package org.interledger.ilp.ledger.impl.simple;
+package org.interledger.everledger.ledger.impl.simple;
 
-import org.interledger.ilp.ledger.Ledger;
+import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.ledger.Ledger;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.common.config.Config;
 
 /**
  * Simple in-memory ledger implementation

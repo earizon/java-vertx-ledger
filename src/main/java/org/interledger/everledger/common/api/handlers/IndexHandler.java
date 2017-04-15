@@ -1,10 +1,12 @@
-package org.interledger.ilp.common.api.handlers;
+package org.interledger.everledger.common.api.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
+
 import java.util.HashMap;
 import java.util.Map;
-import org.interledger.ilp.common.api.core.JsonResultHandler;
+
+import org.interledger.everledger.common.api.core.JsonResultHandler;
 
 /**
  * Handler for the index route.

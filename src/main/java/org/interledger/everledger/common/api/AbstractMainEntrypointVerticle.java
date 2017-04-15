@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api;
+package org.interledger.everledger.common.api;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -24,13 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.interledger.ilp.common.api.auth.AuthManager;
-import org.interledger.ilp.common.api.handlers.DebugRequestHandler;
-import org.interledger.ilp.common.api.handlers.EndpointHandler;
-import org.interledger.ilp.common.api.handlers.IndexHandler;
-import org.interledger.ilp.common.config.Config;
+import org.interledger.everledger.common.api.auth.AuthManager;
+import org.interledger.everledger.common.api.handlers.DebugRequestHandler;
+import org.interledger.everledger.common.api.handlers.EndpointHandler;
+import org.interledger.everledger.common.api.handlers.IndexHandler;
+import org.interledger.everledger.common.config.Config;
 
-import static org.interledger.ilp.common.config.Key.*;
+import static org.interledger.everledger.common.config.Key.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected abstract List<EndpointHandler> getEndpointHandlers();
 
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
-        config = Config.create();
+        config = Config.singleton;
         String host = config.getString("localhost", SERVER, HOST);
         boolean ssl = config.getBoolean(SERVER, USE_HTTPS);
         int port = config.getInt(SERVER, PORT);

@@ -1,8 +1,7 @@
-package org.interledger.ilp.ledger;
+package org.interledger.everledger.ledger;
 
+import org.interledger.everledger.common.config.Config;
 import org.interledger.ilp.ledger.model.LedgerInfo;
-
-import org.interledger.ilp.common.config.Config;
 
 
 public interface Ledger { // TODO:(0) Recheck this interface. Doesn't look to be very useful.

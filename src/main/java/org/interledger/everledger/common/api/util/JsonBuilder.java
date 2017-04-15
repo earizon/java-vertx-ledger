@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api.util;
+package org.interledger.everledger.common.api.util;
 
 import io.vertx.core.json.JsonObject;
 import java.util.function.Supplier;

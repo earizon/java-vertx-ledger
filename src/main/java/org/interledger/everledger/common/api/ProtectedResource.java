@@ -1,4 +1,4 @@
-package org.interledger.ilp.common.api;
+package org.interledger.everledger.common.api;
 
 /**
  * Mark interface for a protected resource.

@@ -1,10 +1,10 @@
-package org.interledger.ilp.ledger.transfer;
+package org.interledger.everledger.ledger.transfer;
 
 
 import javax.money.MonetaryAmount;
 
+import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.ilp.InterledgerPacketHeader;
-import org.interledger.ilp.ledger.account.LedgerAccount;
 
 public class Credit extends LedgerPartialEntry {
     public final InterledgerPacketHeader ph;
