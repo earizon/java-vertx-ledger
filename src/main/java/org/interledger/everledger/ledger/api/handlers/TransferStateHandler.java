@@ -7,12 +7,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.everledger.common.api.ProtectedResource;
-import org.interledger.everledger.common.api.auth.impl.SimpleAuthProvider;
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.LedgerFactory;
-import org.interledger.everledger.ledger.impl.simple.SimpleLedger;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
 import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
@@ -24,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static org.interledger.everledger.common.config.Key.*;
-
 /**
  * TransferHandler handler
  *
@@ -34,7 +31,6 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
 
     private static final Logger log = LoggerFactory.getLogger(TransferStateHandler.class);
     // TODO:(0) Clean code. Check that getConfig is not used "N" times in the same class.
-    private final  static Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
     private static final String transferUUID  = "transferUUID";
     private static final String RECEIPT_TYPE_ED25519 = "ed25519-sha512",
                                 RECEIPT_TYPE_SHA256  = "sha256";
@@ -62,10 +58,9 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
     }
     
     private static JsonObject makeTransferStateMessage(TransferID transferId, TransferStatus state, String receiptType) {
-        String baseUri = ledgerConfig.getPublicURI().toString();
         JsonObject jo = new JsonObject();
         // <-- TODO:(0) Move URI logic to Iface ILPTransferSupport and add iface to SimpleLedgerTransferManager
-        jo.put("id", baseUri+ "transfers/" + transferId.transferID);
+        jo.put("id", Config.publicURL + "transfers/" + transferId.transferID);
         jo.put("state", state.toString());
         if (receiptType.equals(RECEIPT_TYPE_SHA256)) {
             String token = ""; // FIXME: sign(sha512(transferId + ':' + state))
@@ -85,10 +80,9 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
          * {"type":"sha256","message":{"id":"http://localhost/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204","state":"proposed","token":"xy9kB4n/nWd+MsI84WeK2qg/tLfDr/4SIe5xO9OAz9PTmAwKOUzzJxY1+7c7e3rs0iQ0jy57L3U1Xu8852qlCg=="},"signer":"http://localhost","digest":"P6K2HEaZxAthBeGmbjeyPau0BIKjgkaPqW781zmSvf4="}
          */
         log.debug(this.getClass().getName() + "handleGet invoqued ");
-        SimpleAuthProvider.SimpleUser user = (SimpleAuthProvider.SimpleUser) context.user();
-        boolean isAdmin = user.hasRole("admin");
-        boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!isAdmin && !transferMatchUser) {
+        AuthInfo ai = AuthManager.authenticate(context);
+        boolean transferMatchUser = true; // FIXME: TODO:(0) implement
+        if (!ai.isAdmin() && !transferMatchUser) {
             ILPExceptionSupport.launchILPForbiddenException();
         }
         String transferId = context.request().getParam(transferUUID);
@@ -116,13 +110,10 @@ public class TransferStateHandler extends RestEndpointHandler implements Protect
             //      @ five-bells-ledger/src/models/transfers.js
             JsonObject message = makeTransferStateMessage(transferID, status, RECEIPT_TYPE_ED25519);
             String signature = "";   // FIXME: sign(hashJSON(message))
-            
-            String public_key = ledgerConfig.getString(SERVER, ED25519, PUBLIC_KEY);
-
             jo.put("type", RECEIPT_TYPE_ED25519);
             jo.put("message", message);
             jo.put("signer", signer);
-            jo.put("public_key", public_key);
+            jo.put("public_key", Config.ilpLedgerInfo.getNotificationSignPublicKey().toString()/*TODO:(0) Check toString format*/);
             jo.put("signature", signature);
         } else {
             // REF: makeSha256Receipt(transferId, transferState, conditionState) @

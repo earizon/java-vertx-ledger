@@ -3,8 +3,8 @@ package org.interledger.everledger.ledger.impl.simple;
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
 
+import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.NumberConversionUtil;
-import org.interledger.everledger.ledger.LedgerFactory;
 import org.interledger.everledger.ledger.MoneyUtils;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.javamoney.moneta.Money;
@@ -14,10 +14,12 @@ import org.javamoney.moneta.Money;
  *
  * @author mrmx
  */
+// TODO:(0) Fixme must implement org.interledger.ilp.ledger.model.AccountInfo,
+//    (not custom org.interledger.everledger.ledger.account.LedgerAccount)
 public class SimpleLedgerAccount implements LedgerAccount {
 
-    public static final String currencyCode = LedgerFactory.getDefaultLedger().getInfo().getCurrencyUnit().getCurrencyCode();
-
+    public static final String currencyCode = Config.ledgerCurrencyCode;
+    // TODO:(0) Convert to "inmutable" object. 
     // TODO:(0) Rename as ID and add {first name, second name, ...} if needed.
     //    (Check commented @JsonProperty("id") in parent class)
     private final String name; 
@@ -120,10 +122,6 @@ public class SimpleLedgerAccount implements LedgerAccount {
         return connector;
     }
 
-    public SimpleLedgerAccount credit(String amount) {
-        return credit(toMonetaryAmount(amount));
-    }
-
     @Override
     public SimpleLedgerAccount credit(Number amount) {
         return credit(Money.of(amount, currencyCode));
@@ -134,11 +132,6 @@ public class SimpleLedgerAccount implements LedgerAccount {
         // TODO: FIXME: Check amount > 0
         setBalance(getBalance().add(amount));
         return this;
-    }
-
-    public SimpleLedgerAccount debit(String amount) {
-        // TODO: FIXME: Check amount > 0
-        return debit(toMonetaryAmount(amount));
     }
 
     @Override

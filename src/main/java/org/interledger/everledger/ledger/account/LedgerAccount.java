@@ -12,6 +12,7 @@ import javax.money.MonetaryAmount;
  * @author mrmx
  */
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
+// TODO:(0) Remove and use java-ilp-core org.interledger.ilp.ledger.model.AccountInfo
 public interface LedgerAccount {
 
     // @JsonProperty("id") // TODO:(0)
@@ -46,10 +47,7 @@ public interface LedgerAccount {
     boolean isDisabled();
     
     String getConnector();
-    
-    // FIXME: credit & debit not needed must be associated 
-    //  to transactions, not Accounts. Accounts must keep only
-    // the balance.
+
     LedgerAccount credit(Number amount);
 
     LedgerAccount credit(MonetaryAmount amount);

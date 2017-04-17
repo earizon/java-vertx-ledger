@@ -1,17 +1,11 @@
 package org.interledger.ilp.ledger.impl.simple;
 
-import java.net.URL;
 import java.util.Collection;
 
-import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.Currencies;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.LedgerFactory;
-import org.interledger.everledger.ledger.LedgerInfoBuilder;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.everledger.ledger.account.LedgerAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
-import org.interledger.ilp.ledger.model.LedgerInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -37,11 +31,6 @@ public class SimpleLedgerAccountManagerTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LedgerInfo ledgerInfo = new LedgerInfoBuilder()
-            .setCurrency(Currencies.EURO)
-            .setBaseUri(new URL("https", URI_LEDGER_A, 80, ""))
-            .build();        
-        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.singleton);
     }
     
     @Before

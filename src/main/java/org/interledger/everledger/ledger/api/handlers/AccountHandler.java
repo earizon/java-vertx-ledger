@@ -11,20 +11,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.common.api.auth.RoleUser;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.NumberConversionUtil;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.LedgerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.impl.simple.SimpleLedger;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
-import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +30,6 @@ import org.slf4j.LoggerFactory;
 public class AccountHandler extends RestEndpointHandler  implements ProtectedResource {
 
     private static final Logger log = LoggerFactory.getLogger(AccountHandler.class);
-    final  Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
     private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
 
 
@@ -55,39 +49,16 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
 
     @Override
     protected void handleGet(RoutingContext context) {
-        AuthManager.getInstance().authenticate(context, res -> {
-            AuthInfo authInfo = res.result();
-            if (res.succeeded()) {
-                handleAuthorizedGet(context, authInfo);
-            } else if (authInfo.isEmpty()) {
-                String accountName = getAccountName(context);
-                if (StringUtils.isNotBlank(accountName)) {
-                    handleAuthorizedGet(context, null);
-                } else {
-                    ILPExceptionSupport.launchILPException(
-                        InterledgerError.ErrorCode.F00_BAD_REQUEST,
-                        this.getClass().getName() + "Required param " + PARAM_NAME);
-                }
-            } else {
-                ILPExceptionSupport.launchILPForbiddenException();
-            }
-        });
+        AuthInfo ai = AuthManager.authenticate(context);
+        LedgerAccount account = getAccountByName(context);
+        JsonObject result = accountToJsonObject(account, ai.isAdmin());
+        response(context, HttpResponseStatus.OK, result);
     }
 
     @Override
     protected void handlePut(RoutingContext context) {
         log.debug("Handing put account");
-
-        AuthInfo authInfo = AuthManager.getAuthInfo(context);
-        if (authInfo.isEmpty()) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
-        RoleUser user = AuthManager.getInstance().getAuthUser(authInfo);
-        log.debug("put with user {}", user);
-        if (user == null || !user.hasRole(RoleUser.ROLE_ADMIN)) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
-        LedgerInfo ledgerInfo = LedgerFactory.getDefaultLedger().getInfo();
+        AuthManager.authenticate(context);
         String accountName = getAccountName(context);
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
@@ -109,7 +80,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
         if(data.containsKey(PARAM_DISABLED)) {
             ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         }
-        log.debug("Put account {} balance: {}{}", accountName, balance, ledgerInfo.getCurrencyUnit().getCurrencyCode());
+        log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
@@ -122,7 +93,7 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
     }
 
     private String getAccountName(RoutingContext context) {
-        String accountName = context.request().getParam(PARAM_NAME);        
+        String accountName = context.request().getParam(PARAM_NAME);
         return accountName == null ? null : accountName.trim().toLowerCase();
     }
 
@@ -134,22 +105,11 @@ public class AccountHandler extends RestEndpointHandler  implements ProtectedRes
         return accountName;
     }
 
-    private void handleAuthorizedGet(RoutingContext context, AuthInfo authInfo) {
-        log.debug("handleAuthorized {}", authInfo);
-        LedgerAccount account = getAccountByName(context);
-        JsonObject result;
-        if (authInfo == null) {
-            result = accountToJsonObject(account, false);
-        } else {
-            RoleUser user = AuthManager.getInstance().getAuthUser(authInfo);
-            result = accountToJsonObject(account, user.hasRole(RoleUser.ROLE_ADMIN));
-        }
-        response(context, HttpResponseStatus.OK, result);
-    }
+
 
     private JsonObject accountToJsonObject(LedgerAccount account, boolean isAdmin) {
-        isAdmin = true; // FIXME deleteme
-        String ledger = ledgerConfig.getPublicURI().toString();
+        isAdmin = true; // TODO:(0) FIXME deleteme
+        String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
         JsonObjectBuilder build = JsonObjectBuilder.create()

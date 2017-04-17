@@ -16,7 +16,11 @@ public class AuthInfo { // TODO:(0) Recheck. Split in web users and ledger accou
         this.roll = roll;
     }
 
-    public String getUsername() {
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
         return name;
     }
 
@@ -24,9 +28,15 @@ public class AuthInfo { // TODO:(0) Recheck. Split in web users and ledger accou
         return roll;
     }
 
+    public boolean isAdmin() {
+        return "admin".equals(roll);
+    }
+
     @Override
     public String toString() {
         return pass;
     }
+    
+    
 
 }

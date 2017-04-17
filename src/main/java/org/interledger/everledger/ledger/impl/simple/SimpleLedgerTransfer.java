@@ -7,7 +7,6 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.LedgerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
@@ -24,8 +23,6 @@ import org.javamoney.moneta.Money;
 // FIXME: Allow multiple debit/credits (Remove all code related to index [0]
 
 public class SimpleLedgerTransfer implements LedgerTransfer {
-
-    static final Config ledgerConfig = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
 
     static  final SimpleLedgerAccountManager  ledgerAccountManager = 
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
@@ -262,7 +259,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
         // REF: convertToExternalTransfer@
         // https://github.com/interledger/five-bells-ledger/blob/master/src/models/converters/transfers.js
         JsonObject jo = new JsonObject();
-        String ledger = ledgerConfig.getPublicURI().toString();
+        String ledger = Config.publicURL.toString();
 
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         String id = ledger + "/transfers/"+ transferID.transferID;
@@ -346,7 +343,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     
     @Override
     public boolean isLocal() {
-        String localLedgerURI = ledgerConfig.getPublicURI().toString();
+        String localLedgerURI = Config.publicURL.toString();
         for (Credit credit : credit_list) {
             if (! localLedgerURI.equals(ledgerAccountManager.getPublicURIForAccount(credit.account) ) ) {
                 return false;

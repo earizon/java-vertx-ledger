@@ -30,8 +30,6 @@ import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.common.config.Config;
 
-import static org.interledger.everledger.common.config.Key.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +44,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected static final String SELFSIGNED_JKS_FILENAME = ".selfsigned.jks";
     protected static final String SELFSIGNED_JKS_PASSWORD = "changeit";
 
-    protected Config config;
     private HttpServer server;
     private String prefixUri;
     private AuthHandler authHandler;
@@ -85,55 +82,32 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected abstract List<EndpointHandler> getEndpointHandlers();
 
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
-        config = Config.singleton;
-        String host = config.getString("localhost", SERVER, HOST);
-        boolean ssl = config.getBoolean(SERVER, USE_HTTPS);
-        int port = config.getInt(SERVER, PORT);
 
-        HttpServerOptions serverOptions = new HttpServerOptions().setHost(host).setPort(port);
-        if (ssl) {
+        HttpServerOptions serverOptions = new HttpServerOptions().setHost(Config.serverHost).setPort(Config.serverPort);
+        if (Config.serverUseHTTPS) {
             log.debug("Using SSL");
-            //SEE http://vertx.io/docs/vertx-core/java/#ssl
-            if (! config.hasKey(SERVER, TLS_KEY)) {
-                throw new RuntimeException(
-                    "Server tls_key/tls_cert not found in config. If use_https is true your conf must include something similar to \n"
-                    + "server {\n"
-                    + "    tls_key: \"./eu.ledger1.key\"\n"
-                    + "    tls_cert:\"./eu.ledger1.crt\"\n"
-                    + "    ...\n"
-                    + "}\n"
-                    + "Check "
-                    + "\nhttps://github.com/earizon/IT_notes/blob/master/openssl_certificate_handling_summary.txt \n"
-                    + "for a summary about generating (self-signed)certificates with openssl "
-                    + "");
-            }
-            String keyFile  = config.getString(SERVER, TLS_KEY );
-            String certFile = config.getString(SERVER, TLS_CERT);
             serverOptions.setPemKeyCertOptions( //Assume PEM encoding
                     new PemKeyCertOptions()
-                    .setKeyValue(readRelativeFile(keyFile))
-                    .setCertValue(readRelativeFile(certFile))
+                    .setKeyValue(readRelativeFile(Config.tls_key))
+                    .setCertValue(readRelativeFile(Config.tls_crt))
             );
         }
-        authHandler = AuthManager.getInstance(config).getAuthHandler(); //Init auth
-
-        config.apply(this); //Extra configuration on child classes:
+        authHandler = AuthManager.getInstance().getAuthHandler(); //Init auth
         result.complete(serverOptions);
     }
 
     protected void initRouter(Router router) {
         log.debug("Init router");
-        int requestBodyLimit = config.getInt(2, SERVER, REQUEST, LIMIT);
         router.route()
-                .handler(BodyHandler.create().setBodyLimit(requestBodyLimit * 1024));
+                .handler(BodyHandler.create().setBodyLimit(2 * 1024 /* TODO:(0) hardcoded Use Config.*/));
 
-        if (config.getBoolean(false, SERVER, DEBUG)) {
+        if (Config.debug) {
             log.info("Enabled request debug");
             router.route("/*").handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
             router.route("/*").handler(new DebugRequestHandler());
             router.route("/*").handler(LoggerHandler.create(false, LoggerFormat.TINY)); //Log used time of request execution
         }
-        initIndexHandler(router, IndexHandler.create(), config);
+        initIndexHandler(router, IndexHandler.create());
     }
 
     protected void initServer(Router router, HttpServerOptions serverOptions) {
@@ -145,7 +119,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             if (listenHandler.succeeded()) {
                 log.info("Server ready at {}:{} ({})",
                         serverOptions.getHost(), server.actualPort(),
-                        config.getPublicURI()
+                        Config.publicURL
                 );
             } else {
                 log.error("Server failed listening at port {}",
@@ -159,7 +133,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     }
 
-    protected void initIndexHandler(Router router, IndexHandler indexHandler, Config config) {
+    protected void initIndexHandler(Router router, IndexHandler indexHandler) {
         List<EndpointHandler> endpointHandlers = getEndpointHandlers();
         publish(router, endpointHandlers);
         router.route(HttpMethod.GET, prefixUri).handler(indexHandler);
@@ -192,10 +166,10 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             String[] uriList = handler.getUriList();
             List<String> result = new LinkedList<String>();
             for (String uri : uriList) {
-                URL url = new URL(config.getPublicURI(), paths(prefixUri, uri));
+                URL url = new URL(Config.publicURL, paths(prefixUri, uri));
                 handler.setUrl(url);
                 result.add(url.getPath());
-                result.add(new URL(config.getPublicURI(), paths(prefixUri, uri.toUpperCase())).getPath());
+                result.add(new URL(Config.publicURL, paths(prefixUri, uri.toUpperCase())).getPath());
             }
             return result;
         } catch (MalformedURLException ex) {
@@ -227,7 +201,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     private String getEndpointUrl(String path) {
         try {
-            return new URL(config.getPublicURI(), path).toString();
+            return new URL(Config.publicURL, path).toString();
         } catch (MalformedURLException ex) {
             log.error(path, ex);
         }

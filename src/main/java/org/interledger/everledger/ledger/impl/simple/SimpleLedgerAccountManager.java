@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
-import org.interledger.everledger.ledger.LedgerFactory;
+import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.account.ILPAccountSupport;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.everledger.ledger.account.LedgerAccountManager;
@@ -58,7 +58,7 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
 
     @Override
     public URI getPublicURIForAccount(LedgerAccount account) {
-        String baseURI = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig().getPublicURI().toString();
+        String baseURI = Config.publicURL.toString();
         String sURI = baseURI+"accounts/"+account.getName();
         try {
             URI result = new URI(sURI);

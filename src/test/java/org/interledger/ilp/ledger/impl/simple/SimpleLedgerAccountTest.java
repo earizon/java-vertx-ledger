@@ -2,21 +2,12 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.Currencies;
-import org.interledger.everledger.ledger.LedgerFactory;
-import org.interledger.everledger.ledger.LedgerInfoBuilder;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
-import org.interledger.ilp.ledger.model.LedgerInfo;
-
-import static org.interledger.ilp.ledger.impl.simple.SimpleLedgerAccountManagerTest.URI_LEDGER_A;
 
 import org.javamoney.moneta.Money;
 
 import static org.junit.Assert.*;
-
-import java.net.URL;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -37,11 +28,6 @@ public class SimpleLedgerAccountTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LedgerInfo ledgerInfo = new LedgerInfoBuilder()
-                .setCurrency(Currencies.EURO)
-                .setBaseUri(new URL("https", URI_LEDGER_A, 80, ""))
-                .build();
-        LedgerFactory.initialize(ledgerInfo, "test-ledger", Config.singleton);
     }
 
     @Before
@@ -97,48 +83,11 @@ public class SimpleLedgerAccountTest {
      * Test of credit method, of class SimpleLedgerAccount.
      */
     @Test
-    public void testCredit_String() {
-        System.out.println("credit string");
-        String amount = "1234567890123";
-        MonetaryAmount expResult = Money.of(Double.parseDouble(amount), CURRENCY_CODE);
-        MonetaryAmount result = instance.credit(amount).getBalance();
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of credit method, of class SimpleLedgerAccount.
-     */
-    @Test
     public void testCredit_Number() {
         System.out.println("credit");
         Number amount = 123;
         MonetaryAmount expResult = Money.of(amount, CURRENCY_CODE);
         MonetaryAmount result = instance.credit(amount).getBalance();
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of credit method, of class SimpleLedgerAccount.
-     */
-    @Test
-    public void testCredit_MonetaryAmount() {
-        System.out.println("credit");
-        MonetaryAmount amount = Money.of(123, CURRENCY_CODE);
-        MonetaryAmount expResult = Money.of(123, CURRENCY_CODE);
-        MonetaryAmount result = instance.credit(amount).getBalance();
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of debit method, of class SimpleLedgerAccount.
-     */
-    @Test
-    public void testDebit_String() {
-        System.out.println("debit String");
-        instance.setBalance(100);
-        String amount = "50";
-        MonetaryAmount expResult = Money.of(Double.valueOf(amount), CURRENCY_CODE);
-        MonetaryAmount result = instance.debit(amount).getBalance();
         assertEquals(expResult, result);
     }
 

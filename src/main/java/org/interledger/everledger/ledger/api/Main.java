@@ -1,29 +1,21 @@
 package org.interledger.everledger.ledger.api;
 
-import com.google.common.base.Optional;
-
 import io.vertx.ext.web.Router;
 
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.common.api.AbstractMainEntrypointVerticle;
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.common.config.core.Configurable;
-import org.interledger.everledger.common.config.core.ConfigurationException;
-import org.interledger.everledger.common.util.NumberConversionUtil;
-import org.interledger.everledger.ledger.Ledger;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.LedgerFactory;
-import org.interledger.everledger.ledger.LedgerInfoBuilder;
 import org.interledger.everledger.ledger.account.LedgerAccountManager;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
@@ -37,10 +29,6 @@ import org.interledger.everledger.ledger.api.handlers.TransferWSEventHandler;
 import org.interledger.everledger.ledger.api.handlers.TransfersHandler;
 import org.interledger.everledger.ledger.api.handlers.UnitTestSupportHandler;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
-
-import static org.interledger.everledger.common.config.Key.*;
-
-import org.interledger.ilp.ledger.model.LedgerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +37,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author mrmx
  */
-public class Main extends AbstractMainEntrypointVerticle implements Configurable {
+public class Main extends AbstractMainEntrypointVerticle {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-
-    private static final String DEFAULT_LEDGER_NAME = "ledger-simple";
-
-    private String ilpPrefix;
-    private Ledger ledger;
 
     //Development configuration namespace:
     enum Dev {
@@ -68,6 +51,7 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
     }
 
     public static void main(String[] args) {
+        configureDevelopmentEnvirontment();
         VertxRunner.run(Main.class);
 
     }
@@ -76,27 +60,6 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
     public void start() throws Exception {
         log.info("Starting ILP ledger api server");
         super.start();
-    }
-
-    @Override
-    public void configure(Config config) throws ConfigurationException {
-        ilpPrefix = config.getString(LEDGER, ILP, PREFIX);
-        String ledgerName = config.getString(DEFAULT_LEDGER_NAME, LEDGER, NAME);
-        String currencyCode = config.getString(LEDGER, CURRENCY, CODE);
-        URL baseUri = config.getPublicURI();
-        //Development config
-        Optional<Config> devConfig = config.getOptionalConfig(Dev.class);
-        LedgerInfo ledgerInfo = new LedgerInfoBuilder()
-                .setBaseUri(baseUri)
-                .setCurrencyCodeAndSymbol(currencyCode)
-                //TODO precission and scale
-                .build();
-        LedgerFactory.initialize(ledgerInfo, ledgerName, config);
-        ledger = LedgerFactory.getDefaultLedger();
-        //Development config
-        if (devConfig.isPresent()) {
-            configureDevelopmentEnvirontment(devConfig.get());
-        }
     }
 
     @Override
@@ -117,15 +80,14 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
     }
 
     @Override
-    protected void initIndexHandler(Router router, IndexHandler indexHandler, Config config) {
-        super.initIndexHandler(router, indexHandler, config);
-        LedgerInfo ledgerInfo = ledger.getInfo();
+    protected void initIndexHandler(Router router, IndexHandler indexHandler) {
+        super.initIndexHandler(router, indexHandler); // TODO:(0) Update and sync with JS version
         indexHandler
-                .put("ilp_prefix", ilpPrefix)
-                .put("currency_code", ledgerInfo.getCurrencyUnit().getCurrencyCode())
-                // .put("currency_symbol", ledgerInfo.getCurrencySymbol()) // TODO:(0)???
-                .put("precision", ledgerInfo.getPrecision())
-                .put("scale", ledgerInfo.getScale());
+                .put("ilp_prefix", Config.ilpPrefix)
+                .put("currency_code", Config.ledgerCurrencyCode)
+                .put("currency_symbol", Config.ledgerCurrencySymbol)
+                .put("precision", Config.ledgerPrecision)
+                .put("scale", Config.ledgerScale);
 
         Map<String, String > services = new HashMap<String, String >();
 
@@ -134,58 +96,52 @@ public class Main extends AbstractMainEntrypointVerticle implements Configurable
         //   - plugin.js (REQUIRED_LEDGER_URLS) @ five-bells-plugin
         //   The conector five-bells-plugin of the js-ilp-connector expect a 
         //   map urls { health:..., transfer: ..., 
-        String base = config.getPublicURI().toString();
-
-            // Required by wallet
-            services.put("health"              , base + "health"                   );
-            services.put("accounts"            , base + "accounts"                 );
-            services.put("transfer_state"      , base + "transfers/:id/state"      );
-            services.put("account"             , base + "accounts/:name"           );
-            services.put("account_transfers"   , base.replace("http://", "ws://")
-                    .replace("https://", "ws://") + "accounts/:name/transfers" );
-            // Required by wallet & ilp (ilp-plugin-bells) connector
-            services.put("transfer"            , base + "transfers/:id"            );
-            services.put("transfer_fulfillment", base + "transfers/:id/fulfillment");
-            services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
-            services.put("message"             , base + "messages"                 );
+        String base = Config.publicURL.toString();
+        // Required by wallet
+        services.put("health"              , base + "health"                   );
+        services.put("accounts"            , base + "accounts"                 );
+        services.put("transfer_state"      , base + "transfers/:id/state"      );
+        services.put("account"             , base + "accounts/:name"           );
+        services.put("account_transfers"   , base.replace("http://", "ws://")
+                .replace("https://", "ws://") + "accounts/:name/transfers" );
+        // Required by wallet & ilp (ilp-plugin-bells) connector
+        services.put("transfer"            , base + "transfers/:id"            );
+        services.put("transfer_fulfillment", base + "transfers/:id/fulfillment");
+        services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
+        services.put("message"             , base + "messages"                 );
 
         indexHandler.put("urls", services);
         
-        // Config config = ((SimpleLedger)LedgerFactory.getDefaultLedger()).getConfig();
-        String public_key = config.getString(SERVER, ED25519, PUBLIC_KEY);
-        indexHandler.put("condition_sign_public_key", public_key);
- 
-        String[] list = new String[]{"alice", "bob", "ilpconnector"};// FIXME:(NOW) TODO: Connector accounts data hardcoded. 
-        List<Map<String,String>> connectors = new ArrayList<Map<String,String>>();
-        for (int idx = 0; idx < list.length ; idx++){
-            String accountName = list[idx];
-            
-            Map<String, String > connector1 = new HashMap<String, String >();
-                connector1.put("id", base +"accounts/"+accountName);
-                connector1.put("name", accountName);
-                connector1.put("connector", "localhost:4000");
-             connectors.add(connector1);
-        }
-        indexHandler.put("connectors", connectors);
+        indexHandler.put("condition_sign_public_key", 
+                Config.ilpLedgerInfo.getConditionSignPublicKey().toString()); // TODO:(0) Check is  properly encoded
+        
+
+//        Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
+//        Set<String> keyUsers = mapUsers.keySet();
+//        List<Map<String,String>> connectors = new ArrayList<Map<String,String>>();
+//        
+//        for (String accountId : keyUsers) {
+//            Map<String, String > connector1 = new HashMap<String, String >();
+//                connector1.put("id", base +"accounts/"+accountId);
+//                connector1.put("name", accountId);
+//                connector1.put("connector", "localhost:4000"); // TODO:(0) Hardcoded
+//             connectors.add(connector1);
+//        }
+//        indexHandler.put("connectors", connectors);
     }
 
-    private void configureDevelopmentEnvirontment(Config config) {
+    private static void configureDevelopmentEnvirontment() { // TODO:(0) Remove once everything is properly setup
         log.info("Preparing development environment");
-        List<String> accounts = config.getStringList(Dev.accounts);
+        Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
+        Set<String> keyUsers = mapUsers.keySet();
         LedgerAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
-        for (String accountName : accounts) {
-            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(accountName);
-            Config accountConfig = config.getConfig(accountName);
-            account.setBalance(accountConfig.getInt(0, Dev.balance));
-            if (accountConfig.getBoolean(false, Dev.admin)) {
+        for (String accountId : keyUsers) {
+            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(accountId);
+            account.setBalance(10000);
+            if (accountId.equals("admin")) {
                 account.setAdmin(true);
             }
-            account.setDisabled(accountConfig.getBoolean(false, Dev.disabled));
-            account.setConnector(accountConfig.getString((String) null, Dev.connector));
-            String minAllowedBalance = accountConfig.getString((String) null, Dev.minimum_allowed_balance);
-            if (StringUtils.isNoneBlank(minAllowedBalance)) {
-                account.setMinimumAllowedBalance(NumberConversionUtil.toNumber(minAllowedBalance, 0));
-            }
+            account.setMinimumAllowedBalance(0);
             ledgerAccountManager.store(account);
         }
     }

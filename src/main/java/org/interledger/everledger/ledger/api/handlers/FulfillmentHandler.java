@@ -13,9 +13,9 @@ import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.cryptoconditions.HexDump;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
-//import org.interledger.cryptoconditions.types.MessagePayload;
 import org.interledger.everledger.common.api.ProtectedResource;
-import org.interledger.everledger.common.api.auth.impl.SimpleAuthProvider;
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
@@ -170,10 +170,10 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
         // GET /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment 
         //                                                    /rejection
         log.trace(this.getClass().getName() + " handleGet invoqued ");
-        SimpleAuthProvider.SimpleUser user = (SimpleAuthProvider.SimpleUser) context.user();
-        boolean isAdmin = user.hasRole("admin");
-        boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!isAdmin && !transferMatchUser) {
+        AuthInfo ai = AuthManager.authenticate(context);
+        
+        boolean transferMatchUser = true; // FIXME: TODO:(0) implement
+        if (!ai.isAdmin() && !transferMatchUser) {
             ILPExceptionSupport.launchILPForbiddenException();
         }
         boolean isFulfillment = false; // false => isRejection

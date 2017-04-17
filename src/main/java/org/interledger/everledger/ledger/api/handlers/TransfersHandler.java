@@ -13,7 +13,8 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.everledger.common.api.ProtectedResource;
-import org.interledger.everledger.common.api.auth.impl.SimpleAuthProvider;
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
@@ -62,10 +63,9 @@ public class TransfersHandler extends RestEndpointHandler implements ProtectedRe
          *        "credits":[{"account":"http://localhost/accounts/bob","amount":"10"}]}]
          */
         log.trace(this.getClass().getName() + "handleGet invoqued ");
-        SimpleAuthProvider.SimpleUser user = (SimpleAuthProvider.SimpleUser) context.user();
-        boolean isAdmin = user.hasRole("admin");
+        AuthInfo ai = AuthManager.authenticate(context);
         boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!isAdmin && !transferMatchUser) {
+        if (!ai.isAdmin() && !transferMatchUser) {
             ILPExceptionSupport.launchILPForbiddenException();
         }
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
