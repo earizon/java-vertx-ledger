@@ -9,7 +9,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.AuthHandler;
+//import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.handler.LoggerHandler;
@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.interledger.everledger.common.api.auth.AuthManager;
+//import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.DebugRequestHandler;
 import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
@@ -46,7 +46,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     private HttpServer server;
     private String prefixUri;
-    private AuthHandler authHandler;
+//    private AuthHandler authHandler;
 
     @Override
     public void start(final Future<Void> startFuture) throws Exception {
@@ -82,7 +82,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected abstract List<EndpointHandler> getEndpointHandlers();
 
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
-
         HttpServerOptions serverOptions = new HttpServerOptions().setHost(Config.serverHost).setPort(Config.serverPort);
         if (Config.serverUseHTTPS) {
             log.debug("Using SSL");
@@ -92,7 +91,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
                     .setCertValue(readRelativeFile(Config.tls_crt))
             );
         }
-        authHandler = AuthManager.getInstance().getAuthHandler(); //Init auth
+//        authHandler = AuthManager.getInstance().getAuthHandler(); //Init auth
         result.complete(serverOptions);
     }
 
@@ -144,7 +143,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         for (EndpointHandler handler : handlers) {
             endpoints.put(handler.getName(), handler);
             for (String path : handlerPath(handler)) {
-                checkProtectedEndpoint(router, handler, path);
+//                checkProtectedEndpoint(router, handler, path);
                 for (HttpMethod httpMethod : handler.getHttpMethods()) {
                     log.debug("publishing {} endpoint {} at {}", httpMethod, handler.getClass().getName(), getEndpointUrl(path));
                     router.route(httpMethod, path).handler(handler);
@@ -154,12 +153,12 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         return endpoints;
     }
 
-    private void checkProtectedEndpoint(Router router, EndpointHandler handler, String path) {
-        if (ProtectedResource.class.isAssignableFrom(handler.getClass())) {
-            log.debug("protecting endpoint {} at {}", handler, getEndpointUrl(path));
-            router.route(path).handler(authHandler);
-        }
-    }
+//    private void checkProtectedEndpoint(Router router, EndpointHandler handler, String path) {
+//        if (ProtectedResource.class.isAssignableFrom(handler.getClass())) {
+//            log.debug("protecting endpoint {} at {}", handler, getEndpointUrl(path));
+//            router.route(path).handler(authHandler);
+//        }
+//    }
 
     private List<String> handlerPath(EndpointHandler handler) {
         try {

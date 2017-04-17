@@ -1,13 +1,15 @@
 package org.interledger.everledger.common.api.auth;
 
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+//import io.vertx.ext.auth.AuthProvider;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthHandler;
+//import io.vertx.ext.web.handler.AuthHandler;
 
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.slf4j.Logger;
@@ -17,6 +19,10 @@ public class AuthManager {
 
     private static final Logger log = LoggerFactory.getLogger(AuthManager.class);
     
+//    private final AuthProvider authProvider = new -();
+//    String realm = authConfig.getString(DEFAULT_BASIC_REALM, Auth.realm);
+//    public final AuthHandler authHandler = BasicAuthHandler.create(authProvider, realm);
+
     private static final Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
     static {
         // TODO:(0) Hardcoded
@@ -29,16 +35,6 @@ public class AuthManager {
     
     public static Map<String, AuthInfo> getUsers() {
         return users;
-    }
-
-    private final AuthHandler authHandler;
-
-    public AuthManager(AuthHandler authHandler) {
-        this.authHandler = authHandler;
-    }
-
-    public AuthHandler getAuthHandler() {
-        return authHandler;
     }
 
     public static AuthInfo authenticate(RoutingContext context, boolean allowAnonymous) {
