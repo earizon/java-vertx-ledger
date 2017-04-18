@@ -45,7 +45,7 @@ public class Config {
                 }
     }
     
-    public static final boolean debug = getBoolean("config.debug");
+    public static final boolean debug = getBoolean("server.debug");
     public static final String ilpPrefix=getString("ledger.ilp.prefix");
     public static final String ledgerCurrencyCode=getString("ledger.currency.code");
     public static final String ledgerCurrencySymbol=getString("ledger.currency.symbol");
@@ -105,7 +105,7 @@ public class Config {
         }
 
         // 
-        boolean pubSsl = getBoolean("server.pulic.use_https");
+        boolean pubSsl = getBoolean("server.public.use_https");
         String pubHost = getString ("server.public.host");
         int pubPort    = getInteger("server.public.port");
         String prefixUri = getString("ledger.ilp.prefix");

@@ -35,7 +35,17 @@ Java in-memory ledger implementing the Rest/Websocket expected by ilp-plugin-bel
 ./gradlew test
 ```
 
-## Configuration
+``` 
+Generate random Private/Public keys used in application.conf: 
+   - ledger.ed25519.conditionSignPrivateKey 
+   - ledger.ed25519.conditionSignPublicKey
+   - ledger.ed25519.notificationSignPrivateKey
+   - ledger.ed25519.notificationSignPublicKey
+
+./gradlew printRandomDSAEd25519PrivPubKey
+``` 
+
+## iConfiguration
 
  * application.conf is the main configuration file. app.conf can be used to overload and customize the setup.
 

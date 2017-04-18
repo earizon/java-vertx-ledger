@@ -66,9 +66,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             } else {
                 startFuture.fail(result.cause());
             }
-
         });
-
     }
 
     @Override

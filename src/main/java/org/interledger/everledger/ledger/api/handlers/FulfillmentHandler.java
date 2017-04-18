@@ -1,7 +1,6 @@
 package org.interledger.everledger.ledger.api.handlers;
 
-
-
+import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 //import io.netty.handler.codec.http.HttpResponseStatus;
@@ -10,7 +9,7 @@ import static io.vertx.core.http.HttpMethod.GET;
 import static io.vertx.core.http.HttpMethod.PUT;
 
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.cryptoconditions.HexDump;
+//import org.interledger.cryptoconditions.HexDump;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.everledger.common.api.ProtectedResource;
@@ -107,7 +106,9 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
                     this.getClass().getName() + "Transfer is not conditional");
         }
         String hexFulfillment = context.getBodyAsString();
-        byte[] fulfillmentBytes = HexDump.hexStringToByteArray(hexFulfillment);
+        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(hexFulfillment);
+        
         Fulfillment ff;
         try {
             ff = CryptoConditionReader.readFulfillment(fulfillmentBytes);
@@ -218,5 +219,6 @@ public class FulfillmentHandler extends RestEndpointHandler implements Protected
             .setStatusCode(HttpResponseStatus.OK.code())
             .end(response);
     }
+    
 }
 

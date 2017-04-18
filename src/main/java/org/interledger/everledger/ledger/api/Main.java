@@ -41,15 +41,6 @@ public class Main extends AbstractMainEntrypointVerticle {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    //Development configuration namespace:
-    enum Dev {
-        uri,
-        accounts,
-        balance, minimum_allowed_balance,
-        admin, disabled,
-        connector
-    }
-
     public static void main(String[] args) {
         configureDevelopmentEnvirontment();
         VertxRunner.run(Main.class);
