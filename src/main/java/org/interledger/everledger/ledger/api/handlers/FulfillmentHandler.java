@@ -12,7 +12,6 @@ import org.interledger.cryptoconditions.Fulfillment;
 //import org.interledger.cryptoconditions.HexDump;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -33,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  * REF: five-bells-ledger/src/controllers/transfers.js
  */
-public class FulfillmentHandler extends RestEndpointHandler implements ProtectedResource {
+public class FulfillmentHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(FulfillmentHandler.class);
     private final static String transferUUID= "transferUUID";

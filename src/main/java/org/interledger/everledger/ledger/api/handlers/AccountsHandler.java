@@ -4,7 +4,6 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.VertxUtils;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
@@ -15,7 +14,7 @@ import org.interledger.everledger.ledger.account.LedgerAccountManager;
  *
  * @author mrmx
  */
-public class AccountsHandler extends RestEndpointHandler implements ProtectedResource {
+public class AccountsHandler extends RestEndpointHandler {
 
     public AccountsHandler() {
         super("accounts");

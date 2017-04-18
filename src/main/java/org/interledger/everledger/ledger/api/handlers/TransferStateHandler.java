@@ -6,7 +6,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -27,7 +26,7 @@ import java.security.NoSuchAlgorithmException;
  * TransferHandler handler
  *
  */
-public class TransferStateHandler extends RestEndpointHandler implements ProtectedResource {
+public class TransferStateHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TransferStateHandler.class);
     // TODO:(0) Clean code. Check that getConfig is not used "N" times in the same class.

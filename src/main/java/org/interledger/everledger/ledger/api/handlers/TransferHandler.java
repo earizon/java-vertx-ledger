@@ -21,7 +21,6 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -51,8 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author earizon REF: five-bells-ledger/src/controllers/transfers.js
  */
-public class TransferHandler extends RestEndpointHandler implements
-        ProtectedResource {
+public class TransferHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory
             .getLogger(TransferHandler.class);

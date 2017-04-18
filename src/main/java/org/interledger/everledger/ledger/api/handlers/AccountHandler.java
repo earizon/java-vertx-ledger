@@ -8,7 +8,6 @@ import io.vertx.ext.web.RoutingContext;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -27,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * Single Account handler
  *
  */
-public class AccountHandler extends RestEndpointHandler  implements ProtectedResource {
+public class AccountHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(AccountHandler.class);
     private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();

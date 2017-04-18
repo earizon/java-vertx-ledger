@@ -12,7 +12,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
-import org.interledger.everledger.common.api.ProtectedResource;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * REF: five-bells-ledger/src/controllers/transfers.js
  */
-public class TransfersHandler extends RestEndpointHandler implements ProtectedResource {
+public class TransfersHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TransfersHandler.class);
     private final static String execCondition = "execCondition";
