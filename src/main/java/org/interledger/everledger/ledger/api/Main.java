@@ -27,7 +27,6 @@ import org.interledger.everledger.ledger.api.handlers.TransferHandler;
 import org.interledger.everledger.ledger.api.handlers.TransferStateHandler;
 import org.interledger.everledger.ledger.api.handlers.TransferWSEventHandler;
 import org.interledger.everledger.ledger.api.handlers.TransfersHandler;
-import org.interledger.everledger.ledger.api.handlers.UnitTestSupportHandler;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,6 @@ public class Main extends AbstractMainEntrypointVerticle {
                 TransfersHandler.create(),
                 TransferStateHandler.create(),
                 FulfillmentHandler.create(),
-                UnitTestSupportHandler.create(),
                 MessageHandler.create()
         );
     }

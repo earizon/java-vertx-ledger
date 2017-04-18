@@ -8,6 +8,7 @@ import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.model.TransferStatus;
 
+// TODO:(0) Use java-ilp-core interface.
 /*
  * ILPTransfer entities are created for ILP aware transfer.
  *    local or non-ILP transfers don't use it.

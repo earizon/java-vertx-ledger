@@ -1,12 +1,11 @@
 package org.interledger.everledger.common.api.handlers;
 
 import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.interledger.everledger.common.api.core.JsonResultHandler;
 
 /**
  * Handler for the index route.
@@ -15,11 +14,9 @@ import org.interledger.everledger.common.api.core.JsonResultHandler;
  */
 public class IndexHandler implements Handler<RoutingContext> {
     private final Map<String, Object> index;
-    private final JsonResultHandler handler;
 
     IndexHandler() {
         index = new HashMap<>();
-        handler = new JsonResultHandler(index);
     }
 
     public static IndexHandler create() {
@@ -33,7 +30,9 @@ public class IndexHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
-        handler.handle(context);
+        context.response()
+        .putHeader("content-type", "application/json; charset=utf-8")
+        .end(Json.encodePrettily(index));
     }
 
 }
