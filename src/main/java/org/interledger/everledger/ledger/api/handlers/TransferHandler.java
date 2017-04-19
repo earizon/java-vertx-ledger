@@ -40,6 +40,7 @@ import org.interledger.everledger.ledger.transfer.TransferID;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerPacketHeader;
+import org.interledger.ilp.InterledgerError.ErrorCode;
 import org.interledger.ilp.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
@@ -84,10 +85,7 @@ public class TransferHandler extends RestEndpointHandler {
     protected void handlePut(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject requestBody = getBodyAsJson(context);
-        boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+        boolean transferMatchUser = false;
         log.trace(this.getClass().getName() + "handlePut invoqued ");
         log.trace(context.getBodyAsString());
         /*
@@ -117,9 +115,17 @@ public class TransferHandler extends RestEndpointHandler {
 
         // TODO: Check state is 'proposed' for new transactions?
 
-        JsonArray debits = requestBody.getJsonArray("debits"); // TODO:(0)
-                                                               // "Tainted"
-                                                               // object
+        // TODO:(?) mark as "Tainted" object
+        JsonArray debits = requestBody.getJsonArray("debits");
+
+        if (debits == null) {
+            ILPExceptionSupport.launchILPException(
+                ErrorCode.F00_BAD_REQUEST,"debits not found");
+        }
+        if (debits.size()!=1) {
+            ILPExceptionSupport.launchILPException(
+                ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
+        }
         Debit[] debitList = new Debit[debits.size()];
         CurrencyUnit currencyUnit /* local ledger currency */= Monetary
                 .getCurrency(Config.ledgerCurrencyCode);
@@ -129,11 +135,10 @@ public class TransferHandler extends RestEndpointHandler {
             log.debug("check123 jsonDebit: " + jsonDebit.encode());
             // debit0 will be similar to
             // {"account":"http://localhost/accounts/alice","amount":"50"}
-            String account_name = jsonDebit.getString("account"); // TODO:(0)
-                                                                  // FIXME. We
-                                                                  // receive an
-                                                                  // URL, not an
-                                                                  // "ID"
+            String account_name = jsonDebit.getString("account");
+            if (ai.getId().equals(account_name)) { 
+                transferMatchUser = true; 
+            }
             LedgerAccount debitor = ledgerAccountManager
                     .getAccountByName(account_name);
             MonetaryAmount debit_ammount = Money.of(
@@ -142,6 +147,9 @@ public class TransferHandler extends RestEndpointHandler {
             log.debug("check123 debit_ammount (must match jsonDebit ammount: "
                     + debit_ammount.toString());
             debitList[idx] = new Debit(debitor, debit_ammount);
+        }
+        if (!ai.isAdmin() && !transferMatchUser) {
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         // REF: JsonArray ussage:
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
@@ -289,16 +297,21 @@ public class TransferHandler extends RestEndpointHandler {
     @Override
     protected void handleGet(RoutingContext context) {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
-        AuthManager.authenticate(context);
-        boolean transferMatchUser = true; // FIXME: TODO:(0) implement
-        if (!transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+        AuthInfo ai = AuthManager.authenticate(context);
+        
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferID transferID = new TransferID(context.request().getParam(
                 transferUUID));
         LedgerTransfer transfer = tm.getTransferById(transferID);
 
+        String debit0_account = transfer.getDebits()[0].account.getName();
+        boolean transferMatchUser = ai.getId().equals(debit0_account);
+        if (!transferMatchUser) {
+            log.error("transferMatchUser false: "
+                    + "\n    ai.getId()    :" + ai.getId()
+                    + "\n    debit0_account:" + debit0_account );
+            ILPExceptionSupport.launchILPForbiddenException();
+        }
         response(
                 context,
                 HttpResponseStatus.OK,
