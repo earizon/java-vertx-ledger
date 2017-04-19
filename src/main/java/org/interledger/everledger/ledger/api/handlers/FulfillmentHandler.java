@@ -172,10 +172,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         log.trace(this.getClass().getName() + " handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
         
-        boolean transferMatchUser = true; // FIXME: TODO:(0) implement
-        if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+        boolean transferMatchUser = false;
         boolean isFulfillment = false; // false => isRejection
         if (context.request().path().endsWith("/fulfillment")){
             isFulfillment = true;
@@ -195,7 +192,13 @@ public class FulfillmentHandler extends RestEndpointHandler {
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferID transferID = new TransferID(context.request().getParam(transferUUID));
         LedgerTransfer transfer = tm.getTransferById(transferID);
-        if (transfer.getExecutionCondition()==null /* TODO:(0) Remove null*/){
+        transferMatchUser = false 
+                || ai.getId().equals(transfer.getDebits ()[0].account.getName())
+                || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
+        if ( !ai.isAdmin()  &&  !(ai.isConnector() && transferMatchUser)  ){
+            ILPExceptionSupport.launchILPForbiddenException();
+        }
+        if (transfer.getExecutionCondition()==null){
             // TODO:(0) This could mean a crytical security error. At some point the condition was "lost"
             //   while the already-registered-transfer is supposed to have it attached to "lock" the execution.
             ILPExceptionSupport.launchILPException(
