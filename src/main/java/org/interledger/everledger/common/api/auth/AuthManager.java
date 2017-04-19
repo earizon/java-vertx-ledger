@@ -27,10 +27,10 @@ public class AuthManager {
     static {
         // TODO:(0) Hardcoded
         users.put("admin"         , new AuthInfo(        "admin",        "admin",        "admin", "admin"));
-        users.put("ilpconnector"  , new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector",  "user"));
-        users.put("alice"         , new AuthInfo(        "alice",        "alice",        "alice",  "user"));
-        users.put("bob"           , new AuthInfo(          "bob",          "bob",          "bob",  "user"));
-        users.put("admin"         , new AuthInfo(      "candice",      "candice",      "candice",  "user"));
+        users.put("ilpconnector"  , new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector"));
+        users.put("alice"         , new AuthInfo(        "alice",        "alice",        "alice", "user"));
+        users.put("bob"           , new AuthInfo(          "bob",          "bob",          "bob", "user"));
+        users.put("admin"         , new AuthInfo(      "candice",      "candice",      "candice", "user"));
     }
     
     public static Map<String, AuthInfo> getUsers() {

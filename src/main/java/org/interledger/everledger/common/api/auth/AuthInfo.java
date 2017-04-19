@@ -1,11 +1,11 @@
 package org.interledger.everledger.common.api.auth;
 
 
-public class AuthInfo { // TODO:(0) Recheck. Split in web users and ledger accounts
+public class AuthInfo {
     final String id;
     final String name;
     final String pass;
-    final String roll;
+    final String roll; // TODO:(0) Create ENUM 
 
     public static final AuthInfo ANONYMOUS = new AuthInfo("","","", "none");
     
@@ -30,6 +30,10 @@ public class AuthInfo { // TODO:(0) Recheck. Split in web users and ledger accou
 
     public boolean isAdmin() {
         return "admin".equals(roll);
+    }
+
+    public boolean isConnector() {
+        return "connector".equals(roll);
     }
 
     @Override
