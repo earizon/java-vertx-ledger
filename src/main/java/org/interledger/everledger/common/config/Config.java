@@ -162,13 +162,9 @@ public class Config {
         services.put("message"             , base + "messages"                 );
         services.put("auth_token"          , base + "auth_token"               );
         indexHandlerMap.put("urls", services);
-                try {
         indexHandlerMap.put("condition_sign_public_key", 
-             // TODO:(0) Check is  properly encoded
                 DSAPrivPubKeySupport.savePublicKey(Config.ilpLedgerInfo.getConditionSignPublicKey())); 
-                }catch(Exception e){
-        throw new RuntimeException(e.toString());
-                }
+
         
         /* TODO:(0) Fill connectors with real connected ones */
         ArrayList<Map<String,String>> connectors = new ArrayList<Map<String,String>>();
