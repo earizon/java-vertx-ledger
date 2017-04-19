@@ -11,6 +11,7 @@ import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.common.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
 import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
@@ -80,17 +81,24 @@ public class TransferStateHandler extends RestEndpointHandler {
          */
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
-        boolean transferMatchUser = true; // FIXME: TODO:(0) implement
-        if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+
         String transferId = context.request().getParam(transferUUID);
         TransferID transferID = new TransferID(transferId);
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferStatus status = TransferStatus.PROPOSED; // default value
+        boolean transferMatchUser = false;
         if (tm.transferExists(transferID)) { 
             LedgerTransfer transfer = tm.getTransferById(transferID);
             status = transfer.getTransferStatus();
+            transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getName())
+                            ||  ai.getId().equals(transfer.getCredits()[0].account.getName());
+        } else {
+            //TODO:(0) ???? Continue with status equal proposed if transfer not found ???
+        }
+
+        
+        if (!ai.isAdmin() && !transferMatchUser) {
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         // REF: getStateResource @ transfers.js
 
@@ -112,7 +120,7 @@ public class TransferStateHandler extends RestEndpointHandler {
             jo.put("type", RECEIPT_TYPE_ED25519);
             jo.put("message", message);
             jo.put("signer", signer);
-            jo.put("public_key", Config.ilpLedgerInfo.getNotificationSignPublicKey().toString()/*TODO:(0) Check toString format*/);
+            jo.put("public_key", DSAPrivPubKeySupport.savePublicKey(Config.ilpLedgerInfo.getNotificationSignPublicKey()));
             jo.put("signature", signature);
         } else {
             // REF: makeSha256Receipt(transferId, transferState, conditionState) @
