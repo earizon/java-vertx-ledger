@@ -48,6 +48,9 @@ Generate random Private/Public keys used in application.conf:
 ```
 Create HTTPS TLS certificates:
 copy create_tls_certificate_example.sh, adjust parameters (DOMAIN, SUBJ, DAYS_TO_EXPIRE) to suits your setup and finally execute it.
+
+The files $DOMAIN.key and $DOMAIN.cert will be created. Update 'server.tls_key' and 'server.tls_cert' parameters 
+  at application.conf  accordingly.
 ```
 
 ## iConfiguration
