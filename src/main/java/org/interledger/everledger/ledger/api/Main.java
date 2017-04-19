@@ -5,7 +5,6 @@ import io.vertx.ext.web.Router;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 
 import org.interledger.everledger.common.api.AbstractMainEntrypointVerticle;
@@ -14,7 +13,6 @@ import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
-import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccountManager;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
@@ -71,52 +69,6 @@ public class Main extends AbstractMainEntrypointVerticle {
     @Override
     protected void initIndexHandler(Router router, IndexHandler indexHandler) {
         super.initIndexHandler(router, indexHandler); // TODO:(0) Update and sync with JS version
-        indexHandler
-                .put("ilp_prefix", Config.ilpPrefix)
-                .put("currency_code", Config.ledgerCurrencyCode)
-                .put("currency_symbol", Config.ledgerCurrencySymbol)
-                .put("precision", Config.ledgerPrecision)
-                .put("scale", Config.ledgerScale);
-
-        Map<String, String > services = new HashMap<String, String >();
-
-        // REF: 
-        //   - five-bells-ledger/src/controllers/metadata.js
-        //   - plugin.js (REQUIRED_LEDGER_URLS) @ five-bells-plugin
-        //   The conector five-bells-plugin of the js-ilp-connector expect a 
-        //   map urls { health:..., transfer: ..., 
-        String base = Config.publicURL.toString();
-        // Required by wallet
-        services.put("health"              , base + "health"                   );
-        services.put("accounts"            , base + "accounts"                 );
-        services.put("transfer_state"      , base + "transfers/:id/state"      );
-        services.put("account"             , base + "accounts/:name"           );
-        services.put("account_transfers"   , base.replace("http://", "ws://")
-                .replace("https://", "ws://") + "accounts/:name/transfers" );
-        // Required by wallet & ilp (ilp-plugin-bells) connector
-        services.put("transfer"            , base + "transfers/:id"            );
-        services.put("transfer_fulfillment", base + "transfers/:id/fulfillment");
-        services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
-        services.put("message"             , base + "messages"                 );
-
-        indexHandler.put("urls", services);
-        
-        indexHandler.put("condition_sign_public_key", 
-                Config.ilpLedgerInfo.getConditionSignPublicKey().toString()); // TODO:(0) Check is  properly encoded
-        
-
-//        Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
-//        Set<String> keyUsers = mapUsers.keySet();
-//        List<Map<String,String>> connectors = new ArrayList<Map<String,String>>();
-//        
-//        for (String accountId : keyUsers) {
-//            Map<String, String > connector1 = new HashMap<String, String >();
-//                connector1.put("id", base +"accounts/"+accountId);
-//                connector1.put("name", accountId);
-//                connector1.put("connector", "localhost:4000"); // TODO:(0) Hardcoded
-//             connectors.add(connector1);
-//        }
-//        indexHandler.put("connectors", connectors);
     }
 
     private static void configureDevelopmentEnvirontment() { // TODO:(0) Remove once everything is properly setup

@@ -36,6 +36,11 @@ public class DSAPrivPubKeySupport {
  }
 
  public static String savePublicKey(PublicKey publ) throws GeneralSecurityException {
+     // TODO:(0) FIXME:
+     // It's supposed to return something similar to
+     //    2A5PxZUtFUuoL64r8oxzrsV73Y5ma76NZLUV8P2DG1M=
+     // but it's actually returning something like:
+     //    MIIBtzCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdSPO9EAMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVClpJ+f6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith1yrv8iIDGZ3RSAHHAhUAl2BQjxUjC8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoDgYQAAoGAARbabwyUW4v/xtnQjbRd4iEPvHnOCQpZx5d1RbaNe1XkmYj4JNdD1kmqjBhIDD8nKSdBk2oPWpujzjPs+T//7xWxixZ6BFrhAQ8qNWXF4tZKkmjtHqxo3JWhBe5OvGwNmBR9VJ4K7Xyk/YbZX2dK6o/Gl87yh/zWiUXfGAkua7A=
      KeyFactory fact = KeyFactory.getInstance("DSA");
      X509EncodedKeySpec spec = fact.getKeySpec(publ,
              X509EncodedKeySpec.class);

@@ -4,8 +4,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.interledger.everledger.common.config.Config;
 
 /**
  * Handler for the index route.
@@ -13,26 +12,14 @@ import java.util.Map;
  * @author mrmx
  */
 public class IndexHandler implements Handler<RoutingContext> {
-    private final Map<String, Object> index;
 
-    IndexHandler() {
-        index = new HashMap<>();
-    }
-
-    public static IndexHandler create() {
-        return new IndexHandler();
-    }
-
-    public IndexHandler put(String key, Object value) {
-        index.put(key, value);
-        return this;
-    }
+    // public IndexHandler() {}
 
     @Override
     public void handle(RoutingContext context) {
         context.response()
         .putHeader("content-type", "application/json; charset=utf-8")
-        .end(Json.encodePrettily(index));
+        .end(Json.encodePrettily(Config.indexHandlerMap));
     }
 
 }

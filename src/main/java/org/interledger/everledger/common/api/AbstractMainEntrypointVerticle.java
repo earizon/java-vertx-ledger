@@ -45,7 +45,6 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected static final String SELFSIGNED_JKS_PASSWORD = "changeit";
 
     private HttpServer server;
-    private String prefixUri;
 //    private AuthHandler authHandler;
 
     @Override
@@ -104,7 +103,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             router.route("/*").handler(new DebugRequestHandler());
             router.route("/*").handler(LoggerHandler.create(false, LoggerFormat.TINY)); //Log used time of request execution
         }
-        initIndexHandler(router, IndexHandler.create());
+        initIndexHandler(router, new IndexHandler());
     }
 
     protected void initServer(Router router, HttpServerOptions serverOptions) {
@@ -133,7 +132,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
     protected void initIndexHandler(Router router, IndexHandler indexHandler) {
         List<EndpointHandler> endpointHandlers = getEndpointHandlers();
         publish(router, endpointHandlers);
-        router.route(HttpMethod.GET, prefixUri).handler(indexHandler);
+        router.route(HttpMethod.GET, Config.ledgerPathPrefix).handler(indexHandler);
     }
 
     private Map<String, EndpointHandler> publish(Router router, List<EndpointHandler> handlers) {
@@ -163,10 +162,10 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
             String[] uriList = handler.getUriList();
             List<String> result = new LinkedList<String>();
             for (String uri : uriList) {
-                URL url = new URL(Config.publicURL, paths(prefixUri, uri));
+                URL url = new URL(Config.publicURL, paths(Config.ledgerPathPrefix, uri));
                 handler.setUrl(url);
                 result.add(url.getPath());
-                result.add(new URL(Config.publicURL, paths(prefixUri, uri.toUpperCase())).getPath());
+                result.add(new URL(Config.publicURL, paths(Config.ledgerPathPrefix, uri.toUpperCase())).getPath());
             }
             return result;
         } catch (MalformedURLException ex) {

@@ -6,14 +6,18 @@ import java.net.URL;
 import java.security.PublicKey;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.format.MonetaryAmountFormat;
 
+import org.interledger.everledger.common.util.DSAPrivPubKeySupport;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.ledger.model.LedgerInfo;
@@ -49,6 +53,8 @@ public class Config {
     public static final String ilpPrefix=getString("ledger.ilp.prefix");
     public static final String ledgerCurrencyCode=getString("ledger.currency.code");
     public static final String ledgerCurrencySymbol=getString("ledger.currency.symbol");
+    public static final String ledgerPathPrefix = getString("ledger.path.prefix");
+
 
     public static final String serverHost=getString("server.host");
     public static final int    serverPort=getInteger("server.port");
@@ -110,9 +116,8 @@ public class Config {
         int pubPort    = getInteger("server.public.port");
         String prefixUri = getString("ledger.ilp.prefix");
         if (!prefixUri.startsWith("/")) { prefixUri = "/" + prefixUri; } // sanitize
-        URL serverPublicURL;
         try {
-            serverPublicURL = new URL("http" + (pubSsl ? "s" : ""), pubHost, pubPort, prefixUri);
+            publicURL = new URL("http" + (pubSsl ? "s" : ""), pubHost, pubPort, ledgerPathPrefix);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could NOT create URL with {"
                     + "pubHost='"+pubHost+"', "
@@ -120,12 +125,62 @@ public class Config {
                     + "prefixUri='"+prefixUri+"'}."
                     + " recheck server config");
         }
-        log.debug("serverPublicURL: {}", serverPublicURL);
-        publicURL = serverPublicURL;
+        log.debug("serverPublicURL: {}", publicURL);
                         } catch(Exception e){
         throw new RuntimeException("Can not read application.conf due to "+ e.toString());
                         }
     }
+    
+    public static final Map<String, Object> indexHandlerMap = new HashMap<>();
+    static {
+        indexHandlerMap.put("ilp_prefix", Config.ilpPrefix);
+        indexHandlerMap.put("currency_code", Config.ledgerCurrencyCode);
+        indexHandlerMap.put("currency_symbol", Config.ledgerCurrencySymbol);
+        indexHandlerMap.put("precision", Config.ledgerPrecision);
+        indexHandlerMap.put("scale", Config.ledgerScale);
+
+        Map<String, String > services = new HashMap<String, String >();
+        
+        // REF: 
+        //   - five-bells-ledger/src/controllers/metadata.js
+        //   - plugin.js (REQUIRED_LEDGER_URLS) @ five-bells-plugin
+        //   The conector five-bells-plugin of the js-ilp-connector expect a 
+        //   map urls { health:..., transfer: ...,
+        String base = Config.publicURL.toString();
+        // Required by wallet
+        services.put("health"              , base + "health"                   );
+        services.put("accounts"            , base + "accounts"                 );
+        services.put("transfer_state"      , base + "transfers/:id/state"      );
+        services.put("account"             , base + "accounts/:name"           );
+        services.put("websocket"           , base.replace("http://", "ws://")
+                                                 .replace("https://", "ws://") + "websocket" );
+        // Required by wallet & ilp (ilp-plugin-bells) connector
+        services.put("transfer"            , base + "transfers/:id"            );
+        services.put("transfer_fulfillment", base + "transfers/:id/fulfillment");
+        services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
+        services.put("message"             , base + "messages"                 );
+        services.put("auth_token"          , base + "auth_token"               );
+
+        indexHandlerMap.put("urls", services);
+                try {
+        indexHandlerMap.put("condition_sign_public_key", 
+             // TODO:(0) Check is  properly encoded
+                DSAPrivPubKeySupport.savePublicKey(Config.ilpLedgerInfo.getConditionSignPublicKey())); 
+                }catch(Exception e){
+        throw new RuntimeException(e.toString());
+                }
+        
+        /* TODO:(0) Fill connectors with real connected ones */
+        ArrayList<Map<String,String>> connectors = new ArrayList<Map<String,String>>();
+        /* Formato connector ???
+           ilp: "us.usd.red."
+           "account":"https://red.ilpdemo.org/ledger/accounts/connector"
+           "currency":"USD",
+           ...
+         */
+        indexHandlerMap.put("connectors", connectors);
+    }
+
 
     private static String getString(final String key){
         final String result = prop.getProperty(key);
