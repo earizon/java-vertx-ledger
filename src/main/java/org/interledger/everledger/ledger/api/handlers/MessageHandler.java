@@ -47,12 +47,9 @@ public class MessageHandler extends RestEndpointHandler {
          */
         
         AuthInfo ai = AuthManager.authenticate(context);
-        JsonObject jsonMessageReceived = getBodyAsJson(context); // TODO:(0) Tainted object
+        JsonObject jsonMessageReceived = getBodyAsJson(context); // TODO:(?) Mark as Tainted object
         LedgerAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
-        boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+
         log.debug("handlePost context.getBodyAsString():\n   "+context.getBodyAsString());
 
         /*
@@ -110,6 +107,10 @@ public class MessageHandler extends RestEndpointHandler {
             jsonMessageReceived.put("from", Config.publicURL + "accounts/" + ai.getId());
         }
         LedgerAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
+        boolean transferMatchUser = ai.getId().equals(fromAccount.getName()) || ai.getId().equals(recipient.getName());
+        if (!ai.isAdmin() && !transferMatchUser) {
+            ILPExceptionSupport.launchILPForbiddenException();
+        }
 
         String URIAccount = accountManager.getPublicURIForAccount(fromAccount).toString();
         /*
