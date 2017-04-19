@@ -1,5 +1,7 @@
 package org.interledger.everledger.ledger.impl.simple;
 
+import java.util.Objects;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -71,16 +73,16 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
         // TODO: FIXME: Check debit_list SUM of amounts equals credit_list SUM  of amounts.
 
         // FIXME: TODO: If fromAccount.ledger != "our ledger" throw RuntimeException.
-        this.transferID         = transferID        ;
-        this.credit_list        = credit_list       ;
-        this.debit_list         = debit_list        ;
-        this.data               = data              ;
-        this.noteToSelf         = noteToSelf        ;
-        this.executionCond      = executionCond  ;
-        this.cancelationCond    = cancelationCond;
-        this.DTTM_expires       = DTTM_expires      ;
-        this.DTTM_proposed      = DTTM_proposed     ;
-        this.DTTM_prepared      = DTTM.getNow()     ;
+        this.transferID         = Objects.requireNonNull(transferID     );
+        this.credit_list        = Objects.requireNonNull(credit_list    );
+        this.debit_list         = Objects.requireNonNull(debit_list     );
+        this.data               = Objects.requireNonNull(data           );
+        this.noteToSelf         = Objects.requireNonNull(noteToSelf     );
+        this.executionCond      = Objects.requireNonNull(executionCond  );
+        this.cancelationCond    = Objects.requireNonNull(cancelationCond);
+        this.DTTM_expires       = Objects.requireNonNull(DTTM_expires   );
+        this.DTTM_proposed      = Objects.requireNonNull(DTTM_proposed  );
+        this.DTTM_prepared      = Objects.requireNonNull(DTTM.getNow()  );
         if (transferStatus.equals(TransferStatus.PROPOSED) /* && !ExecutionCond.equals(ConditionURI.EMPTY) TODO:(0)*/){
             transferStatus = TransferStatus.PREPARED;
         }
