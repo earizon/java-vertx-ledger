@@ -45,6 +45,11 @@ Generate random Private/Public keys used in application.conf:
 ./gradlew printRandomDSAEd25519PrivPubKey
 ``` 
 
+```
+Create HTTPS TLS certificates:
+copy create_tls_certificate_example.sh, adjust parameters (DOMAIN, SUBJ, DAYS_TO_EXPIRE) to suits your setup and finally execute it.
+```
+
 ## iConfiguration
 
  * application.conf is the main configuration file. app.conf can be used to overload and customize the setup.
