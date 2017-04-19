@@ -138,6 +138,7 @@ public class Config {
         indexHandlerMap.put("currency_symbol", Config.ledgerCurrencySymbol);
         indexHandlerMap.put("precision", Config.ledgerPrecision);
         indexHandlerMap.put("scale", Config.ledgerScale);
+        indexHandlerMap.put("version"             , "java-vertx-ledger 1.0-SNAPSHOT");
 
         Map<String, String > services = new HashMap<String, String >();
         
@@ -160,7 +161,6 @@ public class Config {
         services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
         services.put("message"             , base + "messages"                 );
         services.put("auth_token"          , base + "auth_token"               );
-
         indexHandlerMap.put("urls", services);
                 try {
         indexHandlerMap.put("condition_sign_public_key", 
