@@ -63,10 +63,8 @@ public class TransfersHandler extends RestEndpointHandler {
          */
         log.trace(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
-        boolean transferMatchUser = true; // FIXME: TODO: implement
-        if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        }
+        boolean transferMatchUser = false;
+        
         LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
@@ -77,9 +75,19 @@ public class TransfersHandler extends RestEndpointHandler {
             throw new RuntimeException("'"+ sExecCond + "' can't be parsed as URI");
         }
         List<LedgerTransfer> transferList = tm.getTransfersByExecutionCondition(executionCondition);
+        
         JsonArray ja = new JsonArray();
         for (LedgerTransfer transfer : transferList) {
-            ja.add(((SimpleLedgerTransfer)transfer).toILPJSONStringifiedFormat());
+            if (ai.isAdmin() 
+                 || transfer.getDebits ()[0].account.getName().equals(ai.getId())
+                 || transfer.getCredits()[0].account.getName().equals(ai.getId())
+               ) {
+                ja.add(((SimpleLedgerTransfer)transfer).toILPJSONStringifiedFormat());
+                transferMatchUser = true;
+            }
+        }
+        if (!ai.isAdmin() && !transferMatchUser) {
+            ILPExceptionSupport.launchILPForbiddenException();
         }
         String response = ja.encode();
         context.response()
