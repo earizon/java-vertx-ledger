@@ -1,5 +1,8 @@
 package org.interledger.everledger.ledger.impl.simple;
 
+
+import java.util.Objects;
+
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
 
@@ -30,10 +33,7 @@ public class SimpleLedgerAccount implements LedgerAccount {
     private String connector;
 
     public SimpleLedgerAccount(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name         null at SimpleLedgerAccount constructor");
-        }
-
+        Objects.nonNull(name);
         this.name = name;
         this.balance = Money.of(0, currencyCode);
         this.minimumAllowedBalance = Money.of(0, currencyCode);
@@ -88,13 +88,13 @@ public class SimpleLedgerAccount implements LedgerAccount {
 
     @Override
     public SimpleLedgerAccount setBalance(Number balance) {
-        // TODO: FIXME: Check balance > 0
+        Objects.nonNull(balance);
         return setBalance(Money.of(balance, currencyCode));
     }
 
     @Override
     public SimpleLedgerAccount setBalance(MonetaryAmount balance) {
-        // TODO: FIXME: Check balance > 0
+        Objects.nonNull(balance);
         this.balance = balance;
         return this;
     }
@@ -141,7 +141,7 @@ public class SimpleLedgerAccount implements LedgerAccount {
 
     @Override
     public SimpleLedgerAccount debit(MonetaryAmount amount) {
-        // TODO: FIXME: Check amount > 0
+        Objects.nonNull(amount);
         setBalance(getBalance().subtract(amount));
         return this;
     }

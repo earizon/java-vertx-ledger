@@ -56,11 +56,12 @@ public class FulfillmentHandler extends RestEndpointHandler {
 
     @Override
     protected void handlePut(RoutingContext context) {
-        // FIXME: If debit's account owner != request credentials throw exception.
         // PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
         // PUT /transfers/4e36fe38-8171-4aab-b60e-08d4b56fbbf1/rejection
+        AuthInfo ai = AuthManager.authenticate(context);
+
         log.trace(this.getClass().getName() + "handlePut invoqued ");
-        // boolean isFulfillment = false, isRejection   = false;
+
         /**********************
          * PUT/GET fulfillment (FROM ILP-CONNECTOR)
          *********************
@@ -99,11 +100,18 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     conditions (which append a prefix to this empty message)
          **/
         LedgerTransfer transfer = tm.getTransferById(transferID);
-        if ( transfer.getExecutionCondition() == null /* TODO:(0) Replace by DOESNT_EXITS */ ) {
+        if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
             ILPExceptionSupport.launchILPException(
                     InterledgerError.ErrorCode.F00_BAD_REQUEST,
                     this.getClass().getName() + "Transfer is not conditional");
         }
+        boolean transferMatchUser = // TODO:(?) Recheck 
+            ai.getId().equals(transfer.getDebits ()[0].account.getName())
+         || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
+        if ( !ai.isAdmin()  &&  !transferMatchUser) {
+            ILPExceptionSupport.launchILPForbiddenException();
+        }
+
         String hexFulfillment = context.getBodyAsString();
         // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
         byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(hexFulfillment);
@@ -145,7 +153,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         }
         log.trace("ffExisted:"+ffExisted);
 
-        String response = ff.toString(); /*TODO:(0) Recheck. It was fulfillmentURI previously */
+        String response = ff.toString();
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
@@ -198,23 +206,17 @@ public class FulfillmentHandler extends RestEndpointHandler {
         if ( !ai.isAdmin()  &&  !(ai.isConnector() && transferMatchUser)  ){
             ILPExceptionSupport.launchILPForbiddenException();
         }
-        if (transfer.getExecutionCondition()==null){
-            // TODO:(0) This could mean a crytical security error. At some point the condition was "lost"
-            //   while the already-registered-transfer is supposed to have it attached to "lock" the execution.
-            ILPExceptionSupport.launchILPException(
-                    InterledgerError.ErrorCode.F05_WRONG_CONDITION,
-                    this.getClass().getName());
-        }
+
         Fulfillment fulfillment= (isFulfillment) 
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
-        if ( fulfillment == null /* TODO:(0) Fix null */) {
+        if ( fulfillment == SimpleLedgerTransfer.FF_NOT_PROVIDED) {
             ILPExceptionSupport.launchILPException(
                     InterledgerError.ErrorCode.F99_APPLICATION_ERROR,
                 this.getClass().getName() + "This transfer has not yet been fulfilled");
         }
 
-        String response  = fulfillment.toString(); // TODO:(0)  previously fulfillmentURI
+        String response  = fulfillment.toString();
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())

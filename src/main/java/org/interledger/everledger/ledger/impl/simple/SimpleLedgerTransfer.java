@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.cryptoconditions.types.PreimageSha256Condition;
+import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
@@ -26,6 +28,9 @@ import org.javamoney.moneta.Money;
 
 public class SimpleLedgerTransfer implements LedgerTransfer {
 
+    public static final Fulfillment FF_NOT_PROVIDED = new PreimageSha256Fulfillment(new byte[]{});
+    public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(new byte[]{}, 1000);
+    
     static  final SimpleLedgerAccountManager  ledgerAccountManager = 
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
     // TODO: IMPROVEMENT. Mix of local/remote transactions not contemplated. Either all debit_list are remote or local

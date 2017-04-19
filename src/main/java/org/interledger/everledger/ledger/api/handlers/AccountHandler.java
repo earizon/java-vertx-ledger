@@ -107,7 +107,6 @@ public class AccountHandler extends RestEndpointHandler {
 
 
     private JsonObject accountToJsonObject(LedgerAccount account, boolean isAdmin) {
-        isAdmin = true; // TODO:(0) FIXME deleteme
         String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
@@ -118,8 +117,8 @@ public class AccountHandler extends RestEndpointHandler {
         if (isAdmin){ 
             build
                 .put("balance", account.getBalanceAsString())
-                .put("connector", "localhost:4000" /* TODO: FIXME Hardcoded . Use data from connector connected event */)
-                .put("is_disabled", false /* FIXME Hardcoded*/)
+                // .put("connector", "??????" /* TODO:(?) Recheck */)
+                .put("is_disabled", account.isDisabled())
                 .put("minimum_allowed_balance", account.getMinimumAllowedBalance().getNumber().toString());
         }
 
