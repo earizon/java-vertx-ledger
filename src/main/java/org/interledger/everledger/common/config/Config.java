@@ -4,10 +4,7 @@ import java.io.FileInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.PublicKey;
-import java.security.KeyFactory;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,24 +66,11 @@ public class Config {
     public static final String tls_crt=getString("server.tls_cert");
 
 
+    // Note: DSAPrivPubKeySupport.main support is used to configure pub/priv.key
 //    private static final String sConditionSignPrivateKey = getString("ledger.ed25519.conditionSignPrivateKey");
     private static final String sConditionSignPublicKey  = getString("ledger.ed25519.conditionSignPublicKey" );
 //    private static final String sNoticificationSignPrivateKey = getString("ledger.ed25519.notificationSignPrivateKey");
     private static final String sNoticificationSignPublicKey  = getString("ledger.ed25519.notificationSignPublicKey" );
-
-    private static PublicKey bas642PubKey(String stored) {
-        // TODO:(?) move to java-ilp-core (Priv/Pub Key support)
-        // REF: http://stackoverflow.com/questions/19743851/base64-java-encode-and-decode-a-string
-        byte[] data = Base64.getDecoder().decode(stored);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(data);
-                try {
-        KeyFactory fact = KeyFactory.getInstance("DSA");
-        return fact.generatePublic(spec);
-                }catch(Exception e){
-        throw new RuntimeException("Couldn't convert Base64 String '"+stored+"' to PublicKey "+e.toString());
-                }
-    }
-
 
     public static LedgerInfo ilpLedgerInfo = new Config.SimpleLedgerInfo(
             InterledgerAddressBuilder.builder().value(ilpPrefix).build(),
@@ -95,8 +79,8 @@ public class Config {
             Monetary.getCurrency(ledgerCurrencyCode),
             (MonetaryAmountFormat)new LedgerSpecificDecimalMonetaryAmountFormat(
                  Monetary.getCurrency(ledgerCurrencyCode), ledgerPrecision,ledgerScale),
-            bas642PubKey(sConditionSignPublicKey),
-            bas642PubKey(sNoticificationSignPublicKey)
+                 DSAPrivPubKeySupport.loadPublicKey(sConditionSignPublicKey),
+                 DSAPrivPubKeySupport.loadPublicKey(sNoticificationSignPublicKey)
              );
     
 

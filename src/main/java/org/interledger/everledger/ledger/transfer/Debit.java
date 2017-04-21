@@ -5,7 +5,7 @@ import javax.money.MonetaryAmount;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 
 public class Debit extends LedgerPartialEntry {
-    public Debit(LedgerAccount account, MonetaryAmount amount, boolean authorized){
+    public Debit(LedgerAccount account, MonetaryAmount amount){
         super(account, amount);
     }
 

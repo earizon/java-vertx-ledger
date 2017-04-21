@@ -60,16 +60,7 @@ public abstract class RestEndpointHandler extends EndpointHandler {
             }
         } catch (InterledgerException ex ) {
             log.error("{} -> {}\n{}", ex.getMessage() , ex.getCause().getMessage()); // TODO:(0) Recheck
-            /*
-             *  REF: https://github.com/mDuo13/rfcs/blob/7b9937a5e481d6ad54b135db6e8627a861f859db/0012-common-ledger-api/0012-common-ledger-api.md#api-error-codes
-             *  The Common Ledger API may return errors using HTTP codes in the range 400-599, depending on the type of error.
-             *   The message body of the error response is a JSON object with additional information about the nature of the error.
-             *   Every error response contains at least the following fields:
-             *   Field   Type    Description
-             *   error_id    String  A unique error code for this specific type of error, such as UnmetConditionError.
-             *   message     String  A longer, human-readable description for the cause of the error.
-             */
-            // 
+            // TODO:(0)
             response(context, HttpResponseStatus.INTERNAL_SERVER_ERROR /* TODO:(0) compare with RFCs */,
                     buildJSON("01" /* TODO:(0) FIXME */, ex.getMessage()));
         } catch (RestEndpointException rex) {
