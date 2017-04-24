@@ -109,7 +109,7 @@ public class MessageHandler extends RestEndpointHandler {
         LedgerAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
         boolean transferMatchUser = ai.getId().equals(fromAccount.getName()) || ai.getId().equals(recipient.getName());
         if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
 
         String URIAccount = accountManager.getPublicURIForAccount(fromAccount).toString();

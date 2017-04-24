@@ -2,6 +2,7 @@ package org.interledger.everledger.common.api.util;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -28,6 +29,7 @@ public class JsonObjectBuilder implements Supplier<JsonObject> {
         return new JsonObject(beanMap);
     }
 
+    @SuppressWarnings("unchecked") // TODO:(1) recheck SuppressWarnings
     public JsonObjectBuilder from(Object value) {
         beanMap = Json.mapper.convertValue(value, Map.class);
         return this;

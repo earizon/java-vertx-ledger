@@ -98,7 +98,7 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         
         if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
         // REF: getStateResource @ transfers.js
 

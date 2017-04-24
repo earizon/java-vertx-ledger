@@ -119,11 +119,11 @@ public class TransferHandler extends RestEndpointHandler {
         JsonArray debits = requestBody.getJsonArray("debits");
 
         if (debits == null) {
-            ILPExceptionSupport.launchILPException(
+            ILPExceptionSupport.createILPException(
                 ErrorCode.F00_BAD_REQUEST,"debits not found");
         }
         if (debits.size()!=1) {
-            ILPExceptionSupport.launchILPException(
+            ILPExceptionSupport.createILPException(
                 ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
         }
         Debit[] debitList = new Debit[debits.size()];
@@ -149,7 +149,7 @@ public class TransferHandler extends RestEndpointHandler {
             debitList[idx] = new Debit(debitor, debit_ammount);
         }
         if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
         // REF: JsonArray ussage:
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
@@ -310,7 +310,7 @@ public class TransferHandler extends RestEndpointHandler {
             log.error("transferMatchUser false: "
                     + "\n    ai.getId()    :" + ai.getId()
                     + "\n    debit0_account:" + debit0_account );
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
         response(
                 context,

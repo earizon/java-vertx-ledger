@@ -19,36 +19,64 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.interledger.everledger.common.api.auth.AuthInfo;
+import org.interledger.everledger.common.api.auth.AuthManager;
 //import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.DebugRequestHandler;
 import org.interledger.everledger.common.api.handlers.EndpointHandler;
-import org.interledger.everledger.common.api.handlers.IndexHandler;
+import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
-
+import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.common.api.handlers.IndexHandler;
+import org.interledger.everledger.ledger.api.handlers.AccountHandler;
+import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
+import org.interledger.everledger.ledger.api.handlers.ConnectorsHandler;
+import org.interledger.everledger.ledger.api.handlers.FulfillmentHandler;
+import org.interledger.everledger.ledger.api.handlers.HealthHandler;
+import org.interledger.everledger.ledger.api.handlers.MessageHandler;
+import org.interledger.everledger.ledger.api.handlers.TransferHandler;
+import org.interledger.everledger.ledger.api.handlers.TransferStateHandler;
+import org.interledger.everledger.ledger.api.handlers.TransferWSEventHandler;
+import org.interledger.everledger.ledger.api.handlers.TransfersHandler;
+import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Vertx main entry point base verticle.
  */
-public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
-    private static final Logger log = LoggerFactory.getLogger(AbstractMainEntrypointVerticle.class);
-
-    protected static final String KEY_INDEX_URLS = "urls";
-
-    protected static final String SELFSIGNED_JKS_FILENAME = ".selfsigned.jks";
-    protected static final String SELFSIGNED_JKS_PASSWORD = "changeit";
+public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
+    private static final Logger log = LoggerFactory.getLogger(ILPLedgerAPIBootUpVerticle.class);
 
     private HttpServer server;
-//    private AuthHandler authHandler;
+
+    private static void configureDevelopmentEnvirontment() { // TODO:(0) Remove once everything is properly setup
+        log.info("Preparing development environment");
+        Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
+        Set<String> keyUsers = mapUsers.keySet();
+        LedgerAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        for (String accountId : keyUsers) {
+            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(accountId);
+            account.setBalance(10000);
+            if (accountId.equals("admin")) {
+                account.setAdmin(true);
+            }
+            account.setMinimumAllowedBalance(0);
+            ledgerAccountManager.store(account);
+        }
+    }
 
     @Override
     public void start(final Future<Void> startFuture) throws Exception {
+        log.info("Starting ILP ledger api server");
         vertx.executeBlocking(init -> {
             try {
                 initConfig(init);
@@ -66,6 +94,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
                 startFuture.fail(result.cause());
             }
         });
+//        VertxRunner.run(AbstractMainEntrypointVerticle.class);
     }
 
     @Override
@@ -76,8 +105,21 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         }
     }
 
-    protected abstract List<EndpointHandler> getEndpointHandlers();
-
+    private List<EndpointHandler> getEndpointHandlers() {
+        return Arrays.asList(
+                HealthHandler.create(),
+                ConnectorsHandler.create(),
+                AccountsHandler.create(),
+                AccountHandler.create(),
+                TransferHandler.create(),
+                TransferWSEventHandler.create(),
+                TransfersHandler.create(),
+                TransferStateHandler.create(),
+                FulfillmentHandler.create(),
+                MessageHandler.create()
+        );
+    }
+    
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
         HttpServerOptions serverOptions = new HttpServerOptions().setHost(Config.serverHost).setPort(Config.serverPort);
         if (Config.serverUseHTTPS) {
@@ -92,7 +134,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         result.complete(serverOptions);
     }
 
-    protected void initRouter(Router router) {
+    private void initRouter(Router router) {
         log.debug("Init router");
         router.route()
                 .handler(BodyHandler.create().setBodyLimit(2 * 1024 /* TODO:(0) hardcoded Use Config.*/));
@@ -106,7 +148,7 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         initIndexHandler(router, new IndexHandler());
     }
 
-    protected void initServer(Router router, HttpServerOptions serverOptions) {
+    private void initServer(Router router, HttpServerOptions serverOptions) {
         log.debug("Init server");
         server = vertx.createHttpServer(serverOptions);
         server.requestHandler(router::accept);
@@ -129,20 +171,14 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     }
 
-    protected void initIndexHandler(Router router, IndexHandler indexHandler) {
-        List<EndpointHandler> endpointHandlers = getEndpointHandlers();
-        publish(router, endpointHandlers);
-        router.route(HttpMethod.GET, Config.ledgerPathPrefix).handler(indexHandler);
-    }
-
     private Map<String, EndpointHandler> publish(Router router, List<EndpointHandler> handlers) {
         Map<String, EndpointHandler> endpoints = new LinkedHashMap<>();
         for (EndpointHandler handler : handlers) {
             endpoints.put(handler.getName(), handler);
             for (String path : handlerPath(handler)) {
-//                checkProtectedEndpoint(router, handler, path);
+                // checkProtectedEndpoint(router, handler, path); // TODO:(0) Recheck
                 for (HttpMethod httpMethod : handler.getHttpMethods()) {
-                    log.debug("publishing {} endpoint {} at {}", httpMethod, handler.getClass().getName(), getEndpointUrl(path));
+                    log.info("publishing {} endpoint {} at {}", httpMethod, handler.getClass().getName(), getEndpointUrl(path));
                     router.route(httpMethod, path).handler(handler);
                 }
             }
@@ -150,6 +186,13 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
         return endpoints;
     }
 
+    private void initIndexHandler(Router router, IndexHandler indexHandler) {
+        List<EndpointHandler> endpointHandlers = getEndpointHandlers();
+        publish(router, endpointHandlers);
+        router.route(HttpMethod.GET, Config.ledgerPathPrefix).handler(indexHandler);
+    }
+
+//    TODO:(0) Recheck
 //    private void checkProtectedEndpoint(Router router, EndpointHandler handler, String path) {
 //        if (ProtectedResource.class.isAssignableFrom(handler.getClass())) {
 //            log.debug("protecting endpoint {} at {}", handler, getEndpointUrl(path));
@@ -206,6 +249,13 @@ public abstract class AbstractMainEntrypointVerticle extends AbstractVerticle {
 
     private File getCWD() {
         return Paths.get(".").toAbsolutePath().normalize().toFile();
+    }
+    
+    
+
+    public static void main(String[] args) {
+        configureDevelopmentEnvirontment();
+        VertxRunner.run(ILPLedgerAPIBootUpVerticle.class);
     }
 
 }

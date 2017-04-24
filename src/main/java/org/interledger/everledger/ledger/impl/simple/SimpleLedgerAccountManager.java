@@ -31,7 +31,7 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
     @Override
     public LedgerAccount create(String name) throws InterledgerException {
         if (accountMap.containsKey(name)) {
-            ILPExceptionSupport.launchILPException(
+            throw ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() +  "account '"+name+"' already exists");
         }
         return new SimpleLedgerAccount(name);
@@ -50,7 +50,7 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
     @Override
     public LedgerAccount getAccountByName(String name) throws InterledgerException {
         if (!hasAccount(name)) {
-            ILPExceptionSupport.launchILPException(
+            throw ILPExceptionSupport.createILPInternalException(
                 this.getClass().getName() +  "local account '"+name+"' not found");
         }
         return accountMap.get(name);

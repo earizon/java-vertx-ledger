@@ -15,17 +15,28 @@ public class ILPExceptionSupport {
     private static InterledgerAddress triggeredBy = InterledgerAddressBuilder
             .builder().value(Config.ilpPrefix).build();
 
-    public static void launchILPException(ErrorCode errCode , String data){
-        throw new InterledgerException(new InterledgerError(errCode, triggeredBy, data));
+    /**
+     * Well known ILP Errors as defined in the RFCs
+     * @param errCode
+     * @param data
+     */
+    public static InterledgerException createILPException(ErrorCode errCode , String data){
+        return new InterledgerException(new InterledgerError(errCode, triggeredBy, data));
          
     }
 
-    public static void launchILPException(String data) {
-        throw new InterledgerException(new InterledgerError(ErrorCode.T00_INTERNAL_ERROR, triggeredBy, data));
+    /**
+     * Shortcut for Non-ILP-related/Non-Expected Errors that will be returned
+     * as ILP Error TOO Internal Errors
+     * 
+     * @param data
+     */
+    public static InterledgerException createILPInternalException(String data) {
+        return new InterledgerException(new InterledgerError(ErrorCode.T00_INTERNAL_ERROR, triggeredBy, data));
     }
 
-    public static void launchILPForbiddenException() {
-        launchILPException("Forbidden");
+    public static InterledgerException createILPForbiddenException() {
+        return createILPInternalException("Forbidden"); // TODO:(0) Use new ErrorCode.??_FORBIDDEN
     }
 
 }

@@ -62,7 +62,7 @@ public class AccountHandler extends RestEndpointHandler {
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
         if(exists && !accountName.equalsIgnoreCase(data.getString(PARAM_NAME))) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
         log.debug("Put data: {} to account {}", data,accountName);
         Number balance = null;

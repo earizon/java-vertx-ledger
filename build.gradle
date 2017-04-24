@@ -46,7 +46,7 @@ dependencies {
 task launchServer(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 
-  main = 'org.interledger.everledger.ledger.api.Main'
+  main = 'org.interledger.everledger.common.api.ILPLedgerAPIBootUpVerticle'
 
   // arguments to pass to the application
   // args 'appArg1'

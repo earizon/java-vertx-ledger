@@ -3,7 +3,6 @@ package org.interledger.everledger.common.api.handlers;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.function.Supplier;
@@ -12,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.api.util.VertxUtils;
+import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,33 +42,44 @@ public abstract class RestEndpointHandler extends EndpointHandler {
         log.debug("In handler {}", handlerName);
         log.debug("context.request().method():"+context.request().method());
         try {
-            switch (context.request().method()) {
-                case HEAD:
-                    handleHead(context);
-                break;
-                case GET:
-                    handleGet(context);
+            try {
+                switch (context.request().method()) {
+                    case HEAD:
+                        handleHead(context);
                     break;
-                case POST:
-                    handlePost(context);
-                    break;
-                case PUT:
-                    handlePut(context);
-                    break;
-                default: // CONNECT, DELETE, HEAD, OPTIONS, OTHER, PATCH, TRACE:
-                    break;
+                    case GET:
+                        handleGet(context);
+                        break;
+                    case POST:
+                        handlePost(context);
+                        break;
+                    case PUT:
+                        handlePut(context);
+                        break;
+                    default: // CONNECT, DELETE, HEAD, OPTIONS, OTHER, PATCH, TRACE:
+                        break;
+                }
+            } catch (Exception t) {
+                ILPExceptionSupport.createILPException(
+                        InterledgerError.ErrorCode.T00_INTERNAL_ERROR,
+                        "Java UnhandledException: {\n"
+                        + "    Description    : " + t.toString()+"\n"
+                        + "}");
             }
+            
         } catch (InterledgerException ex ) {
-            log.error("{} -> {}\n{}", ex.getMessage() , ex.getCause().getMessage()); // TODO:(0) Recheck
-            // TODO:(0)
-            response(context, HttpResponseStatus.INTERNAL_SERVER_ERROR /* TODO:(0) compare with RFCs */,
-                    buildJSON("01" /* TODO:(0) FIXME */, ex.getMessage()));
-        } catch (RestEndpointException rex) {
-            log.error("RestEndpointException {} -> {}\n", rex.getResponseStatus(), rex.getResponse(), rex.toString());
-            response(context, rex.getResponseStatus(), rex.getResponse());
-        } catch (Throwable t) {
-            log.error("Handle exception " + t.toString(), t);
-            response(context, HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), HttpResponseStatus.INTERNAL_SERVER_ERROR.toString(), t);
+            InterledgerError err = ex.getInterledgerError();
+            log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData()); // TODO:(0) Recheck
+
+            response(
+                context, 
+                HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                buildJSONWith/* TODO:(0) FIXME Launch Binary Packet. Not JSON */(
+                    "errCode"    , err.getErrCode().getCode(), 
+                    "triggeredBy", err.getTriggeredBy().getValue().toString(),
+                    "data"       , err.getData() )
+                );
+
         }
     }
 
@@ -92,46 +103,43 @@ public abstract class RestEndpointHandler extends EndpointHandler {
         response(context, HttpResponseStatus.NOT_IMPLEMENTED);
     }
 
-    /**
-     * Check if calling user is authorized and calls handleAuthorized, else
-     * returns forbidden.
-     *
-     * @param context {@code RoutingContext}
-     * @param authority the authority - what this really means is determined by
-     * the specific implementation. It might represent a permission to access a
-     * resource e.g. `printers:printer34` or it might represent authority to a
-     * role in a roles based model, e.g. `role:admin`.
-     */
-    protected void checkAuth(RoutingContext context, String authority) {
-        User user = context.user();
-        if (user == null) {
-            ILPExceptionSupport.launchILPForbiddenException();
-        } else {
-            user.isAuthorised(authority, res -> {
-                if (res.succeeded()) {
-                    handleAuthorized(context);
-                } else {
-                    ILPExceptionSupport.launchILPForbiddenException();
-                }
-            });
-        }
-    }
+//    /**
+//     * Check if calling user is authorized and calls handleAuthorized, else
+//     * returns forbidden.
+//     *
+//     * @param context {@code RoutingContext}
+//     * @param authority the authority - what this really means is determined by
+//     * the specific implementation. It might represent a permission to access a
+//     * resource e.g. `printers:printer34` or it might represent authority to a
+//     * role in a roles based model, e.g. `role:admin`.
+//     */
+//    protected void checkAuth(RoutingContext context, String authority) {
+//        User user = context.user();
+//        if (user == null) {
+//            ILPExceptionSupport.createILPForbiddenException();
+//        } else {
+//            user.isAuthorised(authority, res -> {
+//                if (res.succeeded()) {
+//                    handleAuthorized(context);
+//                } else {
+//                    throw ILPExceptionSupport.createILPForbiddenException();
+//                }
+//            });
+//        }
+//    }
 
-    protected void handleAuthorized(RoutingContext context) {
-        response(context, HttpResponseStatus.NOT_IMPLEMENTED);
-    }
 
 //    protected void handleUnAuthorized(RoutingContext context) {
 //        throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
 //    }
 
     protected static Supplier<JsonObject> buildJSON(CharSequence id, CharSequence message) {
-        // See also five-bells-ledger implementation:
-        
+        // TODO:(0) move to JSONSupport (Do not inherit)
         return buildJSONWith("id", id, "message", message);
     }
 
     protected static Supplier<JsonObject> buildJSONWith(Object... pairs) {
+     // TODO:(0) move to JSONSupport (Do not inherit)
         return JsonObjectBuilder.create().with(pairs);
     }
 

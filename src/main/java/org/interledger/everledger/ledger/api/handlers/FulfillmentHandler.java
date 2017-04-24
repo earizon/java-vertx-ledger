@@ -101,7 +101,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          **/
         LedgerTransfer transfer = tm.getTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
-            ILPExceptionSupport.launchILPException(
+            ILPExceptionSupport.createILPException(
                     InterledgerError.ErrorCode.F00_BAD_REQUEST,
                     this.getClass().getName() + "Transfer is not conditional");
         }
@@ -109,7 +109,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             ai.getId().equals(transfer.getDebits ()[0].account.getName())
          || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
         if ( !ai.isAdmin()  &&  !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
 
         String hexFulfillment = context.getBodyAsString();
@@ -147,7 +147,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 tm.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
-            ILPExceptionSupport.launchILPException(
+            ILPExceptionSupport.createILPException(
                     InterledgerError.ErrorCode.F05_WRONG_CONDITION,
                     this.getClass().getName() + "Fulfillment does not match any condition");
         }
@@ -204,14 +204,14 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 || ai.getId().equals(transfer.getDebits ()[0].account.getName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
         if ( !ai.isAdmin()  &&  !(ai.isConnector() && transferMatchUser)  ){
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
 
         Fulfillment fulfillment= (isFulfillment) 
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == SimpleLedgerTransfer.FF_NOT_PROVIDED) {
-            ILPExceptionSupport.launchILPException(
+            ILPExceptionSupport.createILPException(
                     InterledgerError.ErrorCode.F99_APPLICATION_ERROR,
                 this.getClass().getName() + "This transfer has not yet been fulfilled");
         }

@@ -87,7 +87,7 @@ public class TransfersHandler extends RestEndpointHandler {
             }
         }
         if (!ai.isAdmin() && !transferMatchUser) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
         String response = ja.encode();
         context.response()

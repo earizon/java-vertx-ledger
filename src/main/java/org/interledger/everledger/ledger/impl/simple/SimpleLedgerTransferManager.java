@@ -61,11 +61,11 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
     public LedgerTransfer getTransferById(TransferID transferId) {
         LedgerTransfer result = transferMap.get(transferId);
         if (result == null) {
-            ILPExceptionSupport.launchILPException(
+            throw ILPExceptionSupport.createILPInternalException(
                 this.getClass().getName() + "This transfer does not exist");
         }
         if (result.getTransferStatus() == TransferStatus.REJECTED) {
-            ILPExceptionSupport.launchILPException(
+            throw ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() + "This transfer has already been rejected");
         }
     

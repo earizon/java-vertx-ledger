@@ -26,11 +26,7 @@ public class AccountsHandler extends RestEndpointHandler {
 
     @Override
     protected void handleGet(RoutingContext context) {
-        checkAuth(context, "admin");
-    }
-
-    @Override
-    protected void handleAuthorized(RoutingContext context) {
+        // TODO:(0) Check user is admin
         JsonObject request = VertxUtils.getBodyAsJson(context);
         int page = request.getInteger("page", 1);
         int pageSize = request.getInteger("pageSize", 10);

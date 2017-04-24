@@ -36,7 +36,7 @@ public class ILPTransfer { // TODO:(0) Divide into InternalTransfer and ILP data
     ILPTransfer(String id, String ledger, Condition condition, Date expirationAt) {
         if (id == null || ledger == null || condition == null
                 || expirationAt == null) {
-            ILPExceptionSupport.launchILPException(this.getClass().getName() + " constructor params can NOT be null"/* data */);
+            throw ILPExceptionSupport.createILPInternalException(this.getClass().getName() + " constructor params can NOT be null"/* data */);
         }
         this.id = id;
         this.ledger = ledger;
@@ -89,24 +89,24 @@ public class ILPTransfer { // TODO:(0) Divide into InternalTransfer and ILP data
         // Note: This logic could be placed in a "higher" level class.
         // For now is enought. (Simple implementation)
         if (new_status == TransferStatus.PROPOSED) {
-            ILPExceptionSupport.launchILPForbiddenException();
+            throw ILPExceptionSupport.createILPForbiddenException();
         }
 
         if (new_status == TransferStatus.PREPARED) {
             if (status != TransferStatus.PROPOSED) {
-                ILPExceptionSupport.launchILPForbiddenException();
+                throw ILPExceptionSupport.createILPForbiddenException();
             }
             this.preparedAt = getCurrentTime();
         }
         if (new_status == TransferStatus.EXECUTED) {
             if (status != TransferStatus.PREPARED) {
-                ILPExceptionSupport.launchILPForbiddenException();
+                throw ILPExceptionSupport.createILPForbiddenException();
             }
             this.executedAt = getCurrentTime();
         }
         if (new_status == TransferStatus.REJECTED) {
             if (status == TransferStatus.EXECUTED) {
-                ILPExceptionSupport.launchILPForbiddenException();
+                throw ILPExceptionSupport.createILPForbiddenException();
             }
             this.rejectedAt = getCurrentTime();
         }

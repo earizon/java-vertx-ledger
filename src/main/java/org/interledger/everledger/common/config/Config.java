@@ -61,7 +61,8 @@ public class Config {
     
     public static final int ledgerPrecision = getInteger("ledger.precision");
     public static final int ledgerScale     = getInteger("ledger.scale");
-    
+    public static final String ledgerVersion   = getString("ledger.version");
+
     public static final String tls_key=getString("server.tls_key");
     public static final String tls_crt=getString("server.tls_cert");
 
@@ -122,7 +123,7 @@ public class Config {
         indexHandlerMap.put("currency_symbol", Config.ledgerCurrencySymbol);
         indexHandlerMap.put("precision", Config.ledgerPrecision);
         indexHandlerMap.put("scale", Config.ledgerScale);
-        indexHandlerMap.put("version"             , "java-vertx-ledger 1.0-SNAPSHOT");
+        indexHandlerMap.put("version" , Config.ledgerVersion);
 
         Map<String, String > services = new HashMap<String, String >();
         
