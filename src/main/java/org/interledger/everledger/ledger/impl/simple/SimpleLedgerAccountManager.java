@@ -10,9 +10,9 @@ import java.util.TreeMap;
 
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.account.ILPAccountSupport;
+import org.interledger.everledger.ledger.account.IfaceILPSpecAccountManager;
 import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.ilp.exceptions.InterledgerException;
 
 /**
@@ -20,10 +20,33 @@ import org.interledger.ilp.exceptions.InterledgerException;
  *
  * @author mrmx
  */
-public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAccountSupport {
+public class SimpleLedgerAccountManager implements IfaceLocalAccountManager, IfaceILPSpecAccountManager {
     private Map<String, LedgerAccount> accountMap;
     private static final String ILP_HOLD_ACCOUNT = "@@HOLD@@";
+    
+    
+    // start IfaceILPSpecAccountManager implementation {
+    @Override
+    public URI getPublicURIForAccount(LedgerAccount account) {
+        String baseURI = Config.publicURL.toString();
+        String sURI = baseURI+"accounts/"+account.getName();
+        try {
+            URI result = new URI(sURI);
+            return result;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Can't create URI from string '"+sURI+"'");
+        }
+    }
 
+    @Override
+    public LedgerAccount getHOLDAccountILP() {
+        if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }
+        return create(ILP_HOLD_ACCOUNT);
+    }
+    // } end IfaceILPSpecAccountManager implementation
+    
+
+    // start IfaceILPSpecAccountManager implementation {
     public SimpleLedgerAccountManager() {
         accountMap = new TreeMap<String, LedgerAccount>();
     }
@@ -56,19 +79,6 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
         return accountMap.get(name);
     }
 
-    @Override
-    public URI getPublicURIForAccount(LedgerAccount account) {
-        String baseURI = Config.publicURL.toString();
-        String sURI = baseURI+"accounts/"+account.getName();
-        try {
-            URI result = new URI(sURI);
-            return result;
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Can't create URI from string '"+sURI+"'");
-        }
-        
-
-    }
 
     @Override
     public Collection<LedgerAccount> getAccounts(int page, int pageSize) {        
@@ -84,12 +94,5 @@ public class SimpleLedgerAccountManager implements LedgerAccountManager, ILPAcco
     public int getTotalAccounts() {
         return accountMap.size();
     }
-
-    @Override
-    public LedgerAccount getHOLDAccountILP() {
-        if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }
-        return create(ILP_HOLD_ACCOUNT);
-    }
-
 
 }

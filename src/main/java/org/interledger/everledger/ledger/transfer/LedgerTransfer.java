@@ -4,12 +4,18 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.ilp.ledger.model.TransferStatus;
 
+/*
+ *  TODO:(0) FIXME Split into LocalTransfer and ILPSpecTransfer
+ *  with a LocalTransfer method getILPSpecTransfer returning all
+ *  ILP related data "linked" to the LocalTransaction. (if any)
+ *   
+ */
 public interface LedgerTransfer {
 
     /*
      * Get the transfer Unique ID
      */
-    TransferID getTransferID();
+    LocalTransferID getTransferID();
 
     /**
      * Get the local account that funds are being debited from.

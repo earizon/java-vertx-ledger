@@ -12,13 +12,14 @@ import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
+import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ilp.ledger.model.TransferStatus;
 //import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
@@ -39,26 +40,35 @@ import org.slf4j.LoggerFactory;
  *    - http://docs.oracle.com/javaee/6/tutorial/doc/bncij.html
  *    - ...
  */
-public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIXME TODO LedgerTransferManagerFactory */{
+public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, IfaceILPSpecTransferManager {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleLedgerTransferManager.class);
 
-    private Map<TransferID, LedgerTransfer> transferMap = 
-        new HashMap<TransferID, LedgerTransfer>();// In-memory database of pending/executed/cancelled transfers
+    private Map<LocalTransferID, LedgerTransfer> transferMap = 
+        new HashMap<LocalTransferID, LedgerTransfer>();// In-memory database of pending/executed/cancelled transfers
 
     private static SimpleLedgerTransferManager singleton = new SimpleLedgerTransferManager();
 
-    private static final LedgerAccount HOLDS_URI = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton().getHOLDAccountILP();
+    private static final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+
+    private static final LedgerAccount HOLDS_URI = accountManager.getHOLDAccountILP();
 
     // Make default constructor private to avoid instantiating new classes.
     private SimpleLedgerTransferManager() {}
 
-    public static LedgerTransferManager getSingleton() {
+    public static IfaceLocalTransferManager getSingleton() {
+        // TODO:(0) Rename as getLocalTransferManager
         return singleton;
     }
 
+    public static IfaceILPSpecTransferManager getIfaceILPSpecTransferManager() {
+        // TODO:(0) Rename as getILPSpecTransferManager
+        return singleton;
+    }
+
+    // START IfaceLocalTransferManager implementation {
     @Override
-    public LedgerTransfer getTransferById(TransferID transferId) {
+    public LedgerTransfer getLocalTransferById(LocalTransferID transferId) {
         LedgerTransfer result = transferMap.get(transferId);
         if (result == null) {
             throw ILPExceptionSupport.createILPInternalException(
@@ -73,10 +83,45 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
     }
 
     @Override
+    public void executeLocalTransfer(LedgerTransfer transfer) {
+        // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
+        transfer.checkBalancedTransaction();
+        Debit[] debit_list = transfer.getDebits();
+        if (debit_list.length > 1) {
+            // STEP 1: Pass all debits to first account.
+            for (int idx=1; idx < debit_list.length ; idx++) {
+                LedgerAccount    sender = debit_list[idx].account;
+                LedgerAccount recipient = debit_list[0].account;
+                MonetaryAmount amount = debit_list[idx].amount;
+                __executeLocalTransfer(sender, recipient, amount);
+            }
+        }
+        // STEP 2: Pay crediters from first account:
+        LedgerAccount sender = debit_list[0].account;
+        for (Credit credit : transfer.getCredits()) {
+            LedgerAccount recipient = credit.account;
+            MonetaryAmount amount = credit.amount;
+            __executeLocalTransfer(sender, recipient, amount);
+        }
+        transfer.setTransferStatus(TransferStatus.PREPARED);
+        transfer.setTransferStatus(TransferStatus.EXECUTED);
+        transfer.setDTTM_prepared(DTTM.getNow());
+        transfer.setDTTM_executed(DTTM.getNow());
+    }
+
+    @Override
+    public boolean doesTransferExists(LocalTransferID transferId) {
+        return transferMap.containsKey(transferId);
+    }
+
+    // } END IfaceLocalTransferManager implementation
+
+    // START IfaceILPSpecTransferManager implementation {
+    @Override
     public java.util.List<LedgerTransfer> getTransfersByExecutionCondition(Condition condition) {
         // For this simple implementation just run over existing transfers until 
         List<LedgerTransfer> result = new ArrayList<LedgerTransfer>();
-        for ( TransferID transferId : transferMap.keySet()) {
+        for ( LocalTransferID transferId : transferMap.keySet()) {
             LedgerTransfer transfer = transferMap.get(transferId);
             if (transfer.getExecutionCondition().equals(condition)) {
                 result.add(transfer);
@@ -85,18 +130,11 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
         return result;
     }
 
-
-    @Override
-    public boolean transferExists(TransferID transferId) {
-        boolean result = transferMap.containsKey(transferId);
-        return result;
-    }
-
     @Override
     public void createNewRemoteILPTransfer(LedgerTransfer newTransfer) {
         log.debug("createNewRemoteILPTransfer");
 
-        if (transferExists(newTransfer.getTransferID())) {
+        if (doesTransferExists(newTransfer.getTransferID())) {
             throw new RuntimeException("trying to create new transfer "
                     + "but transferID '"+newTransfer.getTransferID()+"'already registrered. "
                     + "Check transfer with SimpleLedgerTransferManager.transferExists before invoquing this function");
@@ -117,51 +155,17 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
 
         // PUT Money on-hold:
         for (Debit debit : newTransfer.getDebits()) {
-            executeLocalTransfer(debit.account, HOLDS_URI, debit.amount);
+            __executeLocalTransfer(debit.account, HOLDS_URI, debit.amount);
         }
         // TODO: Next line commented to make tests pass, but looks to be sensible to do so.
         // newTransfer.setTransferStatus(TransferStatus.PROPOSED);
-    }
-
-    private void executeLocalTransfer(LedgerAccount sender, LedgerAccount recipient, MonetaryAmount amount) {
-        // FIXME: LOG local transfer execution.
-        LedgerAccountManager accManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
-        accManager.getAccountByName(sender   .getName()).debit (amount);
-        accManager.getAccountByName(recipient.getName()).credit(amount);
-    }
-
-    @Override
-    public void executeLocalTransfer(LedgerTransfer transfer) {
-        // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
-        transfer.checkBalancedTransaction();
-        Debit[] debit_list = transfer.getDebits();
-        if (debit_list.length > 1) {
-            // STEP 1: Pass all debits to first account.
-            for (int idx=1; idx < debit_list.length ; idx++) {
-                LedgerAccount    sender = debit_list[idx].account;
-                LedgerAccount recipient = debit_list[0].account;
-                MonetaryAmount amount = debit_list[idx].amount;
-                executeLocalTransfer(sender, recipient, amount);
-            }
-        }
-        // STEP 2: Pay crediters from first account:
-        LedgerAccount sender = debit_list[0].account;
-        for (Credit credit : transfer.getCredits()) {
-            LedgerAccount recipient = credit.account;
-            MonetaryAmount amount = credit.amount;
-            executeLocalTransfer(sender, recipient, amount);
-        }
-        transfer.setTransferStatus(TransferStatus.PREPARED);
-        transfer.setTransferStatus(TransferStatus.EXECUTED);
-        transfer.setDTTM_prepared(DTTM.getNow());
-        transfer.setDTTM_executed(DTTM.getNow());
     }
 
     @Override
     public void executeRemoteILPTransfer(LedgerTransfer transfer, Fulfillment executionFulfillment) {
         // DisburseFunds:
         for (Credit debit : transfer.getCredits()) {
-            executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
+            __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
         }
         transfer.setTransferStatus(TransferStatus.EXECUTED);
         transfer.setExecutionFulfillment(executionFulfillment);
@@ -171,15 +175,31 @@ public class SimpleLedgerTransferManager implements LedgerTransferManager /* FIX
     public void abortRemoteILPTransfer(LedgerTransfer transfer, Fulfillment cancellationFulfillment) {
         // Return Held Funds
         for (Debit debit : transfer.getDebits()) {
-            executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
+            __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
         }
         transfer.setTransferStatus(TransferStatus.REJECTED);
         transfer.setCancelationFulfillment(cancellationFulfillment);
     }
 
+    @Override
+    public boolean doesTransferExists(ILPSpecTransferID transferId) {
+        return doesTransferExists(LocalTransferID.ILPSpec2LocalTransferID(transferId));
+    }
+
+    // } END IfaceILPSpecTransferManager implementation
+    
+
+    private void __executeLocalTransfer(LedgerAccount sender, LedgerAccount recipient, MonetaryAmount amount) {
+        // TODO: LOG local transfer execution.
+        log.info("executeLocalTransfer {");
+        accountManager.getAccountByName(sender   .getName()).debit (amount);
+        accountManager.getAccountByName(recipient.getName()).credit(amount);
+        log.info("} executeLocalTransfer");
+    }
+
     // UnitTest / function test realated code
     public void unitTestsResetTransactionDDBB() {
-        transferMap = new HashMap<TransferID, LedgerTransfer>();
+        transferMap = new HashMap<LocalTransferID, LedgerTransfer>();
     }
     
     public String unitTestsGetTotalTransactions() {

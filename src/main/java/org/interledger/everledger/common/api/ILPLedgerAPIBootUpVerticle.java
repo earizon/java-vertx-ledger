@@ -34,7 +34,7 @@ import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
@@ -62,7 +62,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
         log.info("Preparing development environment");
         Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
         Set<String> keyUsers = mapUsers.keySet();
-        LedgerAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        IfaceLocalAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
         for (String accountId : keyUsers) {
             SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(accountId);
             account.setBalance(10000);

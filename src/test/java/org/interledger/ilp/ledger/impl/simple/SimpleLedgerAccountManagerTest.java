@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +20,7 @@ import org.junit.Test;
  */
 public class SimpleLedgerAccountManagerTest {
 
-    LedgerAccountManager instance;
+    IfaceLocalAccountManager instance;
     
     final static String URI_LEDGER_A = "ledger1.example";
     final static String URI_LEDGER_B = "ledger2.example";

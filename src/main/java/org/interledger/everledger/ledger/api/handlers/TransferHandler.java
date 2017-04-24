@@ -28,15 +28,17 @@ import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerPacketHeader;
@@ -57,7 +59,7 @@ public class TransferHandler extends RestEndpointHandler {
             .getLogger(TransferHandler.class);
     private final static String transferUUID = "transferUUID";
 
-    private static final LedgerAccountManager ledgerAccountManager = LedgerAccountManagerFactory
+    private static final IfaceLocalAccountManager ledgerAccountManager = LedgerAccountManagerFactory
             .getLedgerAccountManagerSingleton();
 
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
@@ -108,8 +110,9 @@ public class TransferHandler extends RestEndpointHandler {
          * "timeline":{"proposed_at":"2015-06-16T00:00:00.000Z"} }
          */
         
-        TransferID transferID = new TransferID(context.request().getParam(
+        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
+        LocalTransferID transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
         // TODO: Check requestBody.getString("ledger") match ledger host/port
 
@@ -214,7 +217,8 @@ public class TransferHandler extends RestEndpointHandler {
                     dstAddress, ammount, ilp_ph_condition, zdt);
             creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
         }
-        LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        IfaceILPSpecTransferManager ilpTM   = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton(); // TODO:(0) The ILP handler must not be aware of LocalTransfers.
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         DTTM DTTM_proposed = DTTM.getNow();
@@ -247,10 +251,12 @@ public class TransferHandler extends RestEndpointHandler {
                 debitList, creditList, URIExecutionCond, URICancelationCond,
                 DTTM_expires, DTTM_proposed, data, noteToSelf, status);
 
-        boolean isNewTransfer = !tm.transferExists(transferID);
+        // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
+        boolean isNewTransfer = !ilpTM.doesTransferExists(ilpTransferID);
         log.debug("is new transfer?: " + isNewTransfer);
+
         LedgerTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
-                : tm.getTransferById(transferID);
+                : localTM.getLocalTransferById(transferID);
         if (!isNewTransfer) {
             // Check that received json data match existing transaction.
             // TODO: Recheck (Multitransfer active now)
@@ -262,7 +268,7 @@ public class TransferHandler extends RestEndpointHandler {
                         "data for credits and/or debits doesn't match existing registry");
             }
         } else {
-            tm.createNewRemoteILPTransfer(receivedTransfer);
+            ilpTM.createNewRemoteILPTransfer(receivedTransfer);
         }
         try { // TODO: Refactor Next code for notification (next two loops) are
               // duplicated in FulfillmentHandler
@@ -299,10 +305,11 @@ public class TransferHandler extends RestEndpointHandler {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
         
-        LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
-        TransferID transferID = new TransferID(context.request().getParam(
+        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
-        LedgerTransfer transfer = tm.getTransferById(transferID);
+        LedgerTransfer transfer = tm.getLocalTransferById(
+                LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
         String debit0_account = transfer.getDebits()[0].account.getName();
         boolean transferMatchUser = ai.getId().equals(debit0_account);

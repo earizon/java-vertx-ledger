@@ -14,8 +14,8 @@ import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ilp.ledger.model.TransferStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class TransferStateHandler extends RestEndpointHandler {
         return new TransferStateHandler(); // TODO: return singleton?
     }
     
-    private static JsonObject makeTransferStateMessage(TransferID transferId, TransferStatus state, String receiptType) {
+    private static JsonObject makeTransferStateMessage(LocalTransferID transferId, TransferStatus state, String receiptType) {
         JsonObject jo = new JsonObject();
         // <-- TODO:(0) Move URI logic to Iface ILPTransferSupport and add iface to SimpleLedgerTransferManager
         jo.put("id", Config.publicURL + "transfers/" + transferId.transferID);
@@ -83,12 +83,12 @@ public class TransferStateHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
 
         String transferId = context.request().getParam(transferUUID);
-        TransferID transferID = new TransferID(transferId);
-        LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        LocalTransferID transferID = new LocalTransferID(transferId);
+        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getSingleton();
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
-        if (tm.transferExists(transferID)) { 
-            LedgerTransfer transfer = tm.getTransferById(transferID);
+        if (tm.doesTransferExists(transferID)) { 
+            LedgerTransfer transfer = tm.getLocalTransferById(transferID);
             status = transfer.getTransferStatus();
             transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getName())
                             ||  ai.getId().equals(transfer.getCredits()[0].account.getName());

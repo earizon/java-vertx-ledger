@@ -17,7 +17,7 @@ import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.LedgerPartialEntry;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
 import javax.money.MonetaryAmount;
 
@@ -34,7 +34,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     static  final SimpleLedgerAccountManager  ledgerAccountManager = 
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
     // TODO: IMPROVEMENT. Mix of local/remote transactions not contemplated. Either all debit_list are remote or local
-    final TransferID transferID;
+    final LocalTransferID transferID;
     final LedgerAccount fromAccount;
     final Credit[] credit_list;
     final Debit []  debit_list;
@@ -60,7 +60,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     DTTM DTTM_executed = DTTM.future;
     DTTM DTTM_rejected = DTTM.future;
 
-    public SimpleLedgerTransfer(TransferID transferID,
+    public SimpleLedgerTransfer(LocalTransferID transferID,
         Debit[] debit_list, Credit[] credit_list, 
         Condition executionCond, 
         Condition cancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
@@ -118,7 +118,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
     }
 
     @Override
-    public TransferID getTransferID() {
+    public LocalTransferID getTransferID() {
         return transferID;
     }
     

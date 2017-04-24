@@ -1,15 +1,14 @@
 package org.interledger.everledger.ledger.api.handlers;
 
 import javax.xml.bind.DatatypeConverter;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
-//import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.ext.web.RoutingContext;
 import static io.vertx.core.http.HttpMethod.GET;
 import static io.vertx.core.http.HttpMethod.PUT;
 
 import org.interledger.cryptoconditions.Fulfillment;
-//import org.interledger.cryptoconditions.HexDump;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.everledger.common.api.auth.AuthInfo;
@@ -20,9 +19,11 @@ import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
+import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.LedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.TransferID;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,8 +75,11 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     HTTP 1.1 200 OK
          *     cf:0:ZXhlY3V0ZQ
          */
-        TransferID transferID = new TransferID(context.request().getParam(transferUUID));
-        LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
+        LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
+        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton();
+
         /*
          * REF: https://gitter.im/interledger/Lobby
          * Enrique Arizon Benito @earizon 17:51 2016-10-17
@@ -99,7 +103,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     Note that the actual cryptographic signature might still be against a message - via prefix 
          *     conditions (which append a prefix to this empty message)
          **/
-        LedgerTransfer transfer = tm.getTransferById(transferID);
+        LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
             ILPExceptionSupport.createILPException(
                     InterledgerError.ErrorCode.F00_BAD_REQUEST,
@@ -135,7 +139,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("execution fulfillment doesn't validate");
                 }
-                tm.executeRemoteILPTransfer(transfer, ff);
+                ilpTM.executeRemoteILPTransfer(transfer, ff);
 
             }
         } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
@@ -144,7 +148,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("cancelation fulfillment doesn't validate");
                 }
-                tm.abortRemoteILPTransfer(transfer, ff);
+                ilpTM.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
             ILPExceptionSupport.createILPException(
@@ -197,9 +201,12 @@ public class FulfillmentHandler extends RestEndpointHandler {
         } else {
             throw new RuntimeException("path doesn't match /fulfillment | /rejection");
         }
-        LedgerTransferManager tm = SimpleLedgerTransferManager.getSingleton();
-        TransferID transferID = new TransferID(context.request().getParam(transferUUID));
-        LedgerTransfer transfer = tm.getTransferById(transferID);
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton();
+
+        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
+        LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
+
+        LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         transferMatchUser = false 
                 || ai.getId().equals(transfer.getDebits ()[0].account.getName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
@@ -223,6 +230,4 @@ public class FulfillmentHandler extends RestEndpointHandler {
             .setStatusCode(HttpResponseStatus.OK.code())
             .end(response);
     }
-    
 }
-

@@ -2,7 +2,7 @@ package org.interledger.everledger.ledger.transfer;
 
 import java.util.regex.Pattern;
 
-public class TransferID {
+public class ILPSpecTransferID {
     // TODO:(0) Recheck. It was created to indicate ILP transferIDs in old rfcs. Now is just an internal Ledger class with free implementation
 
     final private static String SREGEX
@@ -11,7 +11,7 @@ public class TransferID {
     final private static Pattern regex = Pattern.compile(SREGEX);
     public final String transferID;
 
-    public TransferID(String transferID) {
+    public ILPSpecTransferID(String transferID) {
         if (transferID == null) {
             throw new RuntimeException("transferID can't be null");
         }
@@ -41,7 +41,7 @@ public class TransferID {
     public boolean equals(Object other) {
         if (other == null) return false;
         if (other == this) return true;
-        if (!(other instanceof TransferID))return false;
-        return transferID.equals(((TransferID)other).transferID);
+        if (!(other instanceof ILPSpecTransferID))return false;
+        return transferID.equals(((ILPSpecTransferID)other).transferID);
     }
 }

@@ -7,7 +7,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.VertxUtils;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccountManager;
+import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 
 /**
  * Accounts handler
@@ -30,7 +30,7 @@ public class AccountsHandler extends RestEndpointHandler {
         JsonObject request = VertxUtils.getBodyAsJson(context);
         int page = request.getInteger("page", 1);
         int pageSize = request.getInteger("pageSize", 10);
-        LedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        IfaceLocalAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
         context.response()
                 .putHeader("content-type", "application/json; charset=utf-8") //TODO create decorator
                 .end(Json.encode(accountManager.getAccounts(page, pageSize)));
