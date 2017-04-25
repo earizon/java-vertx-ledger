@@ -4,9 +4,8 @@ import javax.xml.bind.DatatypeConverter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
-import static io.vertx.core.http.HttpMethod.GET;
-import static io.vertx.core.http.HttpMethod.PUT;
 
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
@@ -43,12 +42,13 @@ public class FulfillmentHandler extends RestEndpointHandler {
 
     public FulfillmentHandler() {
        // REF: _makeRouter @ five-bells-ledger/src/lib/app.js
-        super("transfer", new String[] 
-            {
-                "transfers/:" + transferUUID + "/fulfillment",
-                "transfers/:" + transferUUID + "/rejection",
-            });
-        accept(GET, PUT);
+        super(
+                new HttpMethod[] {HttpMethod.GET, HttpMethod.PUT},
+                new String[] {
+                        "transfers/:" + transferUUID + "/fulfillment",
+                        "transfers/:" + transferUUID + "/rejection"
+                }
+            );
     }
 
     public static FulfillmentHandler create() {

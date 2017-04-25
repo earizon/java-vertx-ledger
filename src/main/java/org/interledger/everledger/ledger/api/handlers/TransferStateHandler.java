@@ -1,8 +1,8 @@
 package org.interledger.everledger.ledger.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import static io.vertx.core.http.HttpMethod.GET;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -45,11 +45,9 @@ public class TransferStateHandler extends RestEndpointHandler {
     // GET /transfers/25644640-d140-450e-b94b-badbe23d3389/state|state?type=sha256 
     public TransferStateHandler() {
         // REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
-        super("transfer", new String[] 
-            {
-                "transfers/:" + transferUUID + "/state", 
-            });
-        accept(GET);
+        super( new HttpMethod[] {HttpMethod.GET} ,
+                new String[] { "transfers/:" + transferUUID + "/state" }
+            );
     }
     
 

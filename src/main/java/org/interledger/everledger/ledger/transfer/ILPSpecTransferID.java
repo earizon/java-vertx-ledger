@@ -3,7 +3,8 @@ package org.interledger.everledger.ledger.transfer;
 import java.util.regex.Pattern;
 
 public class ILPSpecTransferID {
-    // TODO:(0) Recheck. It was created to indicate ILP transferIDs in old rfcs. Now is just an internal Ledger class with free implementation
+    // TODO:(0) Recheck. It was created to indicate ILP transferIDs in old rfcs.
+    // Now is just an internal Ledger class with free implementation. Recheck java-ilp-core and RFCs
 
     final private static String SREGEX
             = // Must be similar to 3a2a1d9e-8640-4d2d-b06c-84f2cd613204

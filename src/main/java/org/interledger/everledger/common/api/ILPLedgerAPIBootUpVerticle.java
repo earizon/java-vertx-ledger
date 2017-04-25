@@ -20,17 +20,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-//import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.DebugRequestHandler;
-import org.interledger.everledger.common.api.handlers.EndpointHandler;
+import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
@@ -38,7 +35,6 @@ import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
-import org.interledger.everledger.ledger.api.handlers.ConnectorsHandler;
 import org.interledger.everledger.ledger.api.handlers.FulfillmentHandler;
 import org.interledger.everledger.ledger.api.handlers.HealthHandler;
 import org.interledger.everledger.ledger.api.handlers.MessageHandler;
@@ -94,32 +90,18 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
                 startFuture.fail(result.cause());
             }
         });
-//        VertxRunner.run(AbstractMainEntrypointVerticle.class);
     }
 
     @Override
     public void stop() throws Exception {
-        log.info("Stopped {}", this);
-        if (server != null) {
-            server.close();
+        if (server == null) {
+            log.info("server already stopped");
+            return; 
         }
+        log.info("shutting down server");
+        server.close();
     }
 
-    private List<EndpointHandler> getEndpointHandlers() {
-        return Arrays.asList(
-                HealthHandler.create(),
-                ConnectorsHandler.create(),
-                AccountsHandler.create(),
-                AccountHandler.create(),
-                TransferHandler.create(),
-                TransferWSEventHandler.create(),
-                TransfersHandler.create(),
-                TransferStateHandler.create(),
-                FulfillmentHandler.create(),
-                MessageHandler.create()
-        );
-    }
-    
     private void initConfig(Future<HttpServerOptions> result) throws Exception {
         HttpServerOptions serverOptions = new HttpServerOptions().setHost(Config.serverHost).setPort(Config.serverPort);
         if (Config.serverUseHTTPS) {
@@ -130,7 +112,6 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
                     .setCertValue(readRelativeFile(Config.tls_crt))
             );
         }
-//        authHandler = AuthManager.getInstance().getAuthHandler(); //Init auth
         result.complete(serverOptions);
     }
 
@@ -145,7 +126,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
             router.route("/*").handler(new DebugRequestHandler());
             router.route("/*").handler(LoggerHandler.create(false, LoggerFormat.TINY)); //Log used time of request execution
         }
-        initIndexHandler(router, new IndexHandler());
+        __publishRestHandlers(router);
     }
 
     private void initServer(Router router, HttpServerOptions serverOptions) {
@@ -168,51 +149,29 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
 
             }
         });
-
     }
 
-    private Map<String, EndpointHandler> publish(Router router, List<EndpointHandler> handlers) {
-        Map<String, EndpointHandler> endpoints = new LinkedHashMap<>();
-        for (EndpointHandler handler : handlers) {
-            endpoints.put(handler.getName(), handler);
-            for (String path : handlerPath(handler)) {
+    private void __publishRestHandlers(Router router) {
+        List<RestEndpointHandler> handlers = Arrays.asList(
+                      IndexHandler.create(),
+                     HealthHandler.create(),
+                   AccountsHandler.create(),
+                    AccountHandler.create(),
+                   TransferHandler.create(),
+            TransferWSEventHandler.create(),
+                  TransfersHandler.create(),
+              TransferStateHandler.create(),
+                FulfillmentHandler.create(),
+                    MessageHandler.create()
+        );
+        for (RestEndpointHandler handler : handlers) {
+            for (String path : handler.getRoutePaths()) {
                 // checkProtectedEndpoint(router, handler, path); // TODO:(0) Recheck
                 for (HttpMethod httpMethod : handler.getHttpMethods()) {
                     log.info("publishing {} endpoint {} at {}", httpMethod, handler.getClass().getName(), getEndpointUrl(path));
                     router.route(httpMethod, path).handler(handler);
                 }
             }
-        }
-        return endpoints;
-    }
-
-    private void initIndexHandler(Router router, IndexHandler indexHandler) {
-        List<EndpointHandler> endpointHandlers = getEndpointHandlers();
-        publish(router, endpointHandlers);
-        router.route(HttpMethod.GET, Config.ledgerPathPrefix).handler(indexHandler);
-    }
-
-//    TODO:(0) Recheck
-//    private void checkProtectedEndpoint(Router router, EndpointHandler handler, String path) {
-//        if (ProtectedResource.class.isAssignableFrom(handler.getClass())) {
-//            log.debug("protecting endpoint {} at {}", handler, getEndpointUrl(path));
-//            router.route(path).handler(authHandler);
-//        }
-//    }
-
-    private List<String> handlerPath(EndpointHandler handler) {
-        try {
-            String[] uriList = handler.getUriList();
-            List<String> result = new LinkedList<String>();
-            for (String uri : uriList) {
-                URL url = new URL(Config.publicURL, paths(Config.ledgerPathPrefix, uri));
-                handler.setUrl(url);
-                result.add(url.getPath());
-                result.add(new URL(Config.publicURL, paths(Config.ledgerPathPrefix, uri.toUpperCase())).getPath());
-            }
-            return result;
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
@@ -224,34 +183,17 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
         return fileBuffer;
     }
 
-
-
-    private String paths(String parent, String... childs) {
-        StringBuilder path = new StringBuilder();
-        if (!"/".equals(parent)) {
-            path.append(parent);
-        }
-        for (String child : childs) {
-            path.append("/");
-            path.append(child);
-        }
-        return path.toString();
-    }
-
     private String getEndpointUrl(String path) {
         try {
             return new URL(Config.publicURL, path).toString();
         } catch (MalformedURLException ex) {
-            log.error(path, ex);
+            throw new RuntimeException(ex.toString());
         }
-        return null;
     }
 
     private File getCWD() {
         return Paths.get(".").toAbsolutePath().normalize().toFile();
     }
-    
-    
 
     public static void main(String[] args) {
         configureDevelopmentEnvirontment();

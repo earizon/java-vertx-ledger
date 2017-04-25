@@ -1,11 +1,9 @@
 package org.interledger.everledger.ledger.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
-import static io.vertx.core.http.HttpMethod.GET;
-import static io.vertx.core.http.HttpMethod.HEAD;
 
-import org.interledger.everledger.common.api.handlers.EndpointHandler;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 
 /**
@@ -16,11 +14,13 @@ import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 public class HealthHandler extends RestEndpointHandler {
 
     public HealthHandler() {
-        super("health");
-        accept(GET, HEAD);
+        super(
+                new HttpMethod[] {HttpMethod.GET, HttpMethod.HEAD},
+                new String[] {"health"}
+            );
     }
 
-    public static EndpointHandler create() {
+    public static RestEndpointHandler create() {
         return new HealthHandler();
     }
 

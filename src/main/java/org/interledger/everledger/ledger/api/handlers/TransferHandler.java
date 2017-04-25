@@ -5,10 +5,8 @@ import java.net.URI;
 import java.time.ZonedDateTime;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import static io.vertx.core.http.HttpMethod.GET;
-import static io.vertx.core.http.HttpMethod.POST;
-import static io.vertx.core.http.HttpMethod.PUT;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -75,8 +73,10 @@ public class TransferHandler extends RestEndpointHandler {
     public TransferHandler() {
         // REF:
         // https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/app.js
-        super("transfer", new String[] { "transfers/:" + transferUUID, });
-        accept(GET, POST, PUT);
+        super(
+                new HttpMethod[] {HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT},
+                new String[] { "transfers/:" + transferUUID }
+            );
     }
 
     public static TransferHandler create() {

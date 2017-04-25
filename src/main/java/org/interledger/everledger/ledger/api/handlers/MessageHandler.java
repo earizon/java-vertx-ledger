@@ -1,8 +1,9 @@
 package org.interledger.everledger.ledger.api.handlers;
 
+import io.vertx.core.http.HttpMethod;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
-import static io.vertx.core.http.HttpMethod.POST;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -28,9 +29,10 @@ public class MessageHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
 
     private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+
     public MessageHandler() {
-        super("messages", "messages");
-        accept(POST);
+        super(new HttpMethod[] {HttpMethod.POST},
+              new String[] {"messages"});
     }
 
     public static MessageHandler create() {

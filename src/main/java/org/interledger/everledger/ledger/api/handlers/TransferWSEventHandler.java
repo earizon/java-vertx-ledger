@@ -3,7 +3,7 @@ package org.interledger.everledger.ledger.api.handlers;
 // TESTING FROM COMMAND LINE: https://blogs.oracle.com/PavelBucek/entry/websocket_command_line_client
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import static io.vertx.core.http.HttpMethod.GET;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.RoutingContext;
 
@@ -42,8 +42,10 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     private final static String PARAM_NAME = "name";
 
     public TransferWSEventHandler() {
-        super("transfer", "accounts/:" + PARAM_NAME + "/transfers");
-        accept(GET);
+        super(
+                new HttpMethod[] {HttpMethod.GET},
+                new String[] {"accounts/:" + PARAM_NAME + "/transfers"}
+            );
     }
 
     public static TransferWSEventHandler create() {

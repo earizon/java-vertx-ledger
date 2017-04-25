@@ -4,8 +4,8 @@ import java.net.URI;
 import java.util.List;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import static io.vertx.core.http.HttpMethod.GET;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
 
@@ -36,11 +36,9 @@ public class TransfersHandler extends RestEndpointHandler {
 
     public TransfersHandler() {
         // REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
-        super("transfer", new String[] 
-            {
-                "transfers/byExecutionCondition/:" + execCondition
-            });
-        accept(GET);
+        super( new HttpMethod[] {HttpMethod.GET} ,
+                new String[] { "transfers/byExecutionCondition/:" + execCondition }
+            );
     }
 
     public static TransfersHandler create() {

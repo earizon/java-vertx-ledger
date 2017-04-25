@@ -1,11 +1,11 @@
 package org.interledger.everledger.ledger.api.handlers;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 
-import static io.vertx.core.http.HttpMethod.*;
+import io.vertx.core.http.HttpMethod;
+
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-
 
 import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.common.api.auth.AuthInfo;
@@ -31,15 +31,16 @@ public class AccountHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(AccountHandler.class);
     private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
 
-
     private final static String PARAM_NAME = "name";
     private final static String PARAM_BALANCE = "balance";
     private final static String PARAM_MIN_ALLOWED_BALANCE = "minimum_allowed_balance";
     private final static String PARAM_DISABLED = "is_disabled";
 
-    public AccountHandler() {
-        super("account","accounts/:" + PARAM_NAME);
-        accept(GET, PUT);
+    private AccountHandler() {
+        super(
+            new HttpMethod[] {HttpMethod.GET, HttpMethod.PUT},
+            new String[] {"accounts/:" + PARAM_NAME}
+        );
     }
 
     public static AccountHandler create() {

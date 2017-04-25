@@ -1,39 +1,87 @@
 package org.interledger.everledger.common.api.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.api.util.VertxUtils;
+import org.interledger.everledger.common.config.Config;
 import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Rest endpoint handler
- *
- * @author mrmx
  */
-public abstract class RestEndpointHandler extends EndpointHandler {
+public abstract class RestEndpointHandler implements Handler<RoutingContext> {
 
     private static final Logger log = LoggerFactory.getLogger(RestEndpointHandler.class);
+
+    private final List<String> routePaths;
+    private final List<HttpMethod> httpMethods;
 
     private final static String PARAM_ENCODE_PLAIN_JSON = "plainjson";
     private final static String MIME_JSON_WITH_ENCODING = "application/json; charset=utf-8";
 
-    public RestEndpointHandler(String name) {
-        this(name, name);
+    private static String __paths(String parent, String... childs) {
+        StringBuilder path = new StringBuilder();
+        if (!"/".equals(parent)) {
+            path.append(parent);
+        }
+        for (String child : childs) {
+            path.append("/");
+            path.append(child);
+        }
+        return path.toString();
     }
 
-    public RestEndpointHandler(String name, String... uriList) {
-        super(name, uriList);
+    private static List<String> handlerPath(String... uriList) {
+                        try {
+            List<String> result = new LinkedList<String>();
+            for (String uri : uriList) {
+                URL url = new URL(Config.publicURL, __paths(Config.ledgerPathPrefix, uri));
+                result.add(url.getPath());
+            }
+            return result;
+                        } catch (MalformedURLException ex) {
+            throw new RuntimeException(ex);
+                        }
+    }
+
+    public List<String> getRoutePaths(){
+        return this.routePaths;
+    }
+
+    public RestEndpointHandler(HttpMethod[] httpMethods, String[] uriList) {
+        this.httpMethods = Arrays.asList(httpMethods);
+        this.routePaths = handlerPath(uriList);
+    }
+
+
+// TODO:(0)
+//    @JsonValue
+//    public URL getUrl() {
+//        return url;
+//    }
+
+    public final List<HttpMethod> getHttpMethods() {
+        return httpMethods;
     }
 
     @Override
@@ -69,12 +117,11 @@ public abstract class RestEndpointHandler extends EndpointHandler {
             
         } catch (InterledgerException ex ) {
             InterledgerError err = ex.getInterledgerError();
-            log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData()); // TODO:(0) Recheck
-
+            log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData());
             response(
                 context, 
-                HttpResponseStatus.INTERNAL_SERVER_ERROR,
-                buildJSONWith/* TODO:(0) FIXME Launch Binary Packet. Not JSON */(
+                HttpResponseStatus.INTERNAL_SERVER_ERROR, /* TODO:(0) map err.getErrCode() to proper HTTP exception status */
+                buildJSONWith/* TODO:(0) FIXME Launch Binary Packet. Not JSON. Pending fixes in JS five-bells-ledger implementation */(
                     "errCode"    , err.getErrCode().getCode(), 
                     "triggeredBy", err.getTriggeredBy().getValue().toString(),
                     "data"       , err.getData() )
@@ -88,50 +135,20 @@ public abstract class RestEndpointHandler extends EndpointHandler {
     }
 
     protected void handleGet(RoutingContext context) {
-        response(context, HttpResponseStatus.NOT_IMPLEMENTED);
+        throw ILPExceptionSupport.createILPInternalException("Not implemented");
     }
     
     protected void handleHead(RoutingContext context) {
-        response(context, HttpResponseStatus.NOT_IMPLEMENTED);
+        throw ILPExceptionSupport.createILPInternalException("Not implemented");
     }
 
     protected void handlePost(RoutingContext context) {
-        response(context, HttpResponseStatus.NOT_IMPLEMENTED);
+        throw ILPExceptionSupport.createILPInternalException("Not implemented");
     }
 
     protected void handlePut(RoutingContext context) {
-        response(context, HttpResponseStatus.NOT_IMPLEMENTED);
+        throw ILPExceptionSupport.createILPInternalException("Not implemented");
     }
-
-//    /**
-//     * Check if calling user is authorized and calls handleAuthorized, else
-//     * returns forbidden.
-//     *
-//     * @param context {@code RoutingContext}
-//     * @param authority the authority - what this really means is determined by
-//     * the specific implementation. It might represent a permission to access a
-//     * resource e.g. `printers:printer34` or it might represent authority to a
-//     * role in a roles based model, e.g. `role:admin`.
-//     */
-//    protected void checkAuth(RoutingContext context, String authority) {
-//        User user = context.user();
-//        if (user == null) {
-//            ILPExceptionSupport.createILPForbiddenException();
-//        } else {
-//            user.isAuthorised(authority, res -> {
-//                if (res.succeeded()) {
-//                    handleAuthorized(context);
-//                } else {
-//                    throw ILPExceptionSupport.createILPForbiddenException();
-//                }
-//            });
-//        }
-//    }
-
-
-//    protected void handleUnAuthorized(RoutingContext context) {
-//        throw new InterledgerException(InterledgerException.RegisteredException.ForbiddenError);
-//    }
 
     protected static Supplier<JsonObject> buildJSON(CharSequence id, CharSequence message) {
         // TODO:(0) move to JSONSupport (Do not inherit)
@@ -205,5 +222,8 @@ public abstract class RestEndpointHandler extends EndpointHandler {
 
     }
 
-
+    @Override
+    public String toString() {
+        return this.getClass().getName();
+    }
 }
