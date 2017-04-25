@@ -84,7 +84,7 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         String transferId = context.request().getParam(transferUUID);
         LocalTransferID transferID = new LocalTransferID(transferId);
-        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
         if (tm.doesTransferExists(transferID)) { 

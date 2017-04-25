@@ -218,7 +218,7 @@ public class TransferHandler extends RestEndpointHandler {
             creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
         }
         IfaceILPSpecTransferManager ilpTM   = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton(); // TODO:(0) The ILP handler must not be aware of LocalTransfers.
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager(); // TODO:(0) The ILP handler must not be aware of LocalTransfers.
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         DTTM DTTM_proposed = DTTM.getNow();
@@ -305,7 +305,7 @@ public class TransferHandler extends RestEndpointHandler {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
         
-        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getSingleton();
+        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
         LedgerTransfer transfer = tm.getLocalTransferById(

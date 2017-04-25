@@ -56,13 +56,15 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     // Make default constructor private to avoid instantiating new classes.
     private SimpleLedgerTransferManager() {}
 
-    public static IfaceLocalTransferManager getSingleton() {
-        // TODO:(0) Rename as getLocalTransferManager
+    public static IfaceLocalTransferManager getLocalTransferManager() {
+        // TODO:(0) Move function to factory
+        //      similar to LedgerAccountManagerFactory
         return singleton;
     }
 
-    public static IfaceILPSpecTransferManager getIfaceILPSpecTransferManager() {
-        // TODO:(0) Rename as getILPSpecTransferManager
+    public static IfaceILPSpecTransferManager getILPSpecTransferManager() {
+        // TODO:(0) Move function to factory
+        //      similar to LedgerAccountManagerFactory
         return singleton;
     }
 

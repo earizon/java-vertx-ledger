@@ -78,7 +78,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
         IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton();
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
         /*
          * REF: https://gitter.im/interledger/Lobby
@@ -201,7 +201,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         } else {
             throw new RuntimeException("path doesn't match /fulfillment | /rejection");
         }
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getSingleton();
+        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
