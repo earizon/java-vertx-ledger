@@ -77,7 +77,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          */
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
-        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
+        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
         IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
         /*

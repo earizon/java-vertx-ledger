@@ -217,7 +217,7 @@ public class TransferHandler extends RestEndpointHandler {
                     dstAddress, ammount, ilp_ph_condition, zdt);
             creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
         }
-        IfaceILPSpecTransferManager ilpTM   = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
+        IfaceILPSpecTransferManager ilpTM   = SimpleLedgerTransferManager.getILPSpecTransferManager();
         IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager(); // TODO:(0) The ILP handler must not be aware of LocalTransfers.
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used

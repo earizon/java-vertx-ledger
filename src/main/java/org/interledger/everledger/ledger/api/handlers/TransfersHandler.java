@@ -65,7 +65,7 @@ public class TransfersHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
         boolean transferMatchUser = false;
         
-        IfaceILPSpecTransferManager tm = SimpleLedgerTransferManager.getIfaceILPSpecTransferManager();
+        IfaceILPSpecTransferManager tm = SimpleLedgerTransferManager.getILPSpecTransferManager();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
         Condition executionCondition;
