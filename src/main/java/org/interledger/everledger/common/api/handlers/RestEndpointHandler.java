@@ -7,6 +7,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -108,7 +110,16 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                         break;
                 }
             } catch (Exception t) {
-                ILPExceptionSupport.createILPException(
+                // TODO:(?) Improve logging
+                StringWriter writer = new StringWriter();
+                PrintWriter printWriter = new PrintWriter( writer );
+                t.printStackTrace( printWriter );
+                printWriter.flush();
+                log.warn("Captured exception { \n"+writer.toString()+ "\n}");
+
+                if (t instanceof InterledgerException) throw t; // ILP contemplated exception
+
+                throw ILPExceptionSupport.createILPException(
                         InterledgerError.ErrorCode.T00_INTERNAL_ERROR,
                         "Java UnhandledException: {\n"
                         + "    Description    : " + t.toString()+"\n"

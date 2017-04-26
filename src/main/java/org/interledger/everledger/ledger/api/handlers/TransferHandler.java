@@ -304,7 +304,7 @@ public class TransferHandler extends RestEndpointHandler {
     protected void handleGet(RoutingContext context) {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
-        
+
         IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
