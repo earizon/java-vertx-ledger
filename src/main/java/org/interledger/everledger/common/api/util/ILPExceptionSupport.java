@@ -44,4 +44,8 @@ public class ILPExceptionSupport {
         return createILPException(403, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
     }
 
+    public static InterledgerException createILPNotFoundException() {
+        return createILPException(404, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
+    }
+
 }

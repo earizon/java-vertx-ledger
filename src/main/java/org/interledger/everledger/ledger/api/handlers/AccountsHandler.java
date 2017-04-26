@@ -34,6 +34,7 @@ public class AccountsHandler extends RestEndpointHandler {
     protected void handleGet(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context);
         if (!ai.isAdmin()) {
+            log.info("fail due to '"+ai.getId()+"' not having admin roll");
             throw ILPExceptionSupport.createILPForbiddenException();
         }
         JsonObject request = VertxUtils.getBodyAsJson(context);

@@ -30,7 +30,6 @@ public class AuthManager {
         users.put("ilpconnector"  , new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector"));
         users.put("alice"         , new AuthInfo(        "alice",        "alice",        "alice", "user"));
         users.put("bob"           , new AuthInfo(          "bob",          "bob",          "bob", "user"));
-        users.put("admin"         , new AuthInfo(      "candice",      "candice",      "candice", "user"));
     }
     
     public static Map<String, AuthInfo> getUsers() {
@@ -62,12 +61,12 @@ public class AuthManager {
             }
             boolean isAdmin = authInfo.getRoll().equals("admin");
             if (!isAdmin && !authInfo.pass.equals(spass)  ) {
-                log.error("authInfo null or pass doesn't match");
+                log.error("user "+authInfo.id+" is not admin and pass doesn't match");
                 throw ILPExceptionSupport.createILPUnauthorizedException();
             }
             return authInfo;
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("Unhandled Auth Exception: " + e.toString());
             throw ILPExceptionSupport.createILPUnauthorizedException();
         }
     }

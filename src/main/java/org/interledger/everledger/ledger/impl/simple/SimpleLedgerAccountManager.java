@@ -8,12 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.account.IfaceILPSpecAccountManager;
 import org.interledger.everledger.ledger.account.LedgerAccount;
 import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.ilp.exceptions.InterledgerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple in-memory {@code LedgerAccountManager}.
@@ -24,6 +27,7 @@ public class SimpleLedgerAccountManager implements IfaceLocalAccountManager, Ifa
     private Map<String, LedgerAccount> accountMap;
     private static final String ILP_HOLD_ACCOUNT = "@@HOLD@@";
     
+    private static final Logger log = LoggerFactory.getLogger(SimpleLedgerAccountManager.class);
     
     // start IfaceILPSpecAccountManager implementation {
     @Override
@@ -73,8 +77,8 @@ public class SimpleLedgerAccountManager implements IfaceLocalAccountManager, Ifa
     @Override
     public LedgerAccount getAccountByName(String name) throws InterledgerException {
         if (!hasAccount(name)) {
-            throw ILPExceptionSupport.createILPInternalException(
-                this.getClass().getName() +  "local account '"+name+"' not found");
+            log.warn("'"+ name + "' account not found");
+            throw ILPExceptionSupport.createILPNotFoundException();
         }
         return accountMap.get(name);
     }
