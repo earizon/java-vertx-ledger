@@ -63,11 +63,14 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
 
     @Override
     public void store(IfaceAccount account) {
-        accountMap.put(account.getLocalName(), account);
+        log.info(">>>>>>>>>>>>>>>>>>>>>deleteme: store account.getName():"+account.getName());
+        accountMap.put(account.getName(), account);
     }
 
     @Override
     public boolean hasAccount(String name) {
+        log.info(">>>>>>>>>>>>>>>>>>>>>deleteme: hasAccount account. name:"+name);
+
         return accountMap.containsKey(name);
     }
 

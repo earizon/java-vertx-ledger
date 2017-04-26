@@ -33,11 +33,11 @@ public class AuthManager {
         AuthInfo bob          = new AuthInfo(          "bob",          "bob",          "bob", "user");
         AuthInfo noBalance    = new AuthInfo(    "noBalance",    "noBalance",    "noBalance", "noBalance"); 
 
-        users.put("admin"       , admin       ); result.put(admin, 10000);
-        users.put("ilpconnector", ilpconnector); result.put(admin,   100);
-        users.put("alice"       , alice       ); result.put(admin,   100);
-        users.put("bob"         , bob         ); result.put(admin,   100);
-        users.put("noBalance"   , noBalance   ); result.put(admin,     0);
+        users.put("admin"       , admin       ); result.put(admin       , 10000);
+        users.put("ilpconnector", ilpconnector); result.put(ilpconnector,   100);
+        users.put("alice"       , alice       ); result.put(alice       ,   100);
+        users.put("bob"         , bob         ); result.put(bob         ,   100);
+        users.put("noBalance"   , noBalance   ); result.put(noBalance   ,     0);
         return result;
     }
     
