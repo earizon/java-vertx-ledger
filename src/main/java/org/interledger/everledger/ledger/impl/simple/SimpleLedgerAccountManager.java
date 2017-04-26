@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.account.IfaceILPSpecAccountManager;
@@ -73,7 +72,7 @@ public class SimpleLedgerAccountManager implements IfaceLocalAccountManager, Ifa
     public boolean hasAccount(String name) {
         return accountMap.containsKey(name);
     }
-    
+
     @Override
     public LedgerAccount getAccountByName(String name) throws InterledgerException {
         if (!hasAccount(name)) {
@@ -82,7 +81,6 @@ public class SimpleLedgerAccountManager implements IfaceLocalAccountManager, Ifa
         }
         return accountMap.get(name);
     }
-
 
     @Override
     public Collection<LedgerAccount> getAccounts(int page, int pageSize) {        

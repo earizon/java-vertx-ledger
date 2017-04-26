@@ -25,11 +25,12 @@ public class AuthManager {
 
     private static final Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
     static {
-        // TODO:(0) Hardcoded
+        // TODO:(0) FIXME Hardcoded test accounts
         users.put("admin"         , new AuthInfo(        "admin",        "admin",        "admin", "admin"));
         users.put("ilpconnector"  , new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector"));
         users.put("alice"         , new AuthInfo(        "alice",        "alice",        "alice", "user"));
         users.put("bob"           , new AuthInfo(          "bob",          "bob",          "bob", "user"));
+        users.put("noBalance"     , new AuthInfo(    "noBalance",    "noBalance",    "noBalance", "noBalance"));
     }
     
     public static Map<String, AuthInfo> getUsers() {

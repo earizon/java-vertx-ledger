@@ -49,7 +49,7 @@ public class AccountHandler extends RestEndpointHandler {
 
     @Override
     protected void handleGet(RoutingContext context) {
-        AuthInfo ai = AuthManager.authenticate(context);
+        AuthInfo ai = AuthManager.authenticate(context, true);
         LedgerAccount account = getAccountByName(context);
         JsonObject result = accountToJsonObject(account, ai.isAdmin());
         response(context, HttpResponseStatus.OK, result);
