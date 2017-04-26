@@ -77,8 +77,8 @@ public class TransfersHandler extends RestEndpointHandler {
         JsonArray ja = new JsonArray();
         for (LedgerTransfer transfer : transferList) {
             if (ai.isAdmin() 
-                 || transfer.getDebits ()[0].account.getName().equals(ai.getId())
-                 || transfer.getCredits()[0].account.getName().equals(ai.getId())
+                 || transfer.getDebits ()[0].account.getLocalName().equals(ai.getId())
+                 || transfer.getCredits()[0].account.getLocalName().equals(ai.getId())
                ) {
                 ja.add(((SimpleLedgerTransfer)transfer).toILPJSONStringifiedFormat());
                 transferMatchUser = true;

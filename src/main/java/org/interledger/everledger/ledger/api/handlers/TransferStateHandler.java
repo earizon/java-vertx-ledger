@@ -88,8 +88,8 @@ public class TransferStateHandler extends RestEndpointHandler {
         if (tm.doesTransferExists(transferID)) { 
             LedgerTransfer transfer = tm.getLocalTransferById(transferID);
             status = transfer.getTransferStatus();
-            transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getName())
-                            ||  ai.getId().equals(transfer.getCredits()[0].account.getName());
+            transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
+                            ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());
         } else {
             //TODO:(0) ???? Continue with status equal proposed if transfer not found ???
         }

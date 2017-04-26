@@ -25,7 +25,7 @@ import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;
@@ -142,7 +142,7 @@ public class TransferHandler extends RestEndpointHandler {
             if (ai.getId().equals(account_name)) { 
                 transferMatchUser = true; 
             }
-            LedgerAccount debitor = ledgerAccountManager
+            IfaceLocalAccount debitor = ledgerAccountManager
                     .getAccountByName(account_name);
             MonetaryAmount debit_ammount = Money.of(
                     Double.parseDouble(jsonDebit.getString("amount")),
@@ -189,7 +189,7 @@ public class TransferHandler extends RestEndpointHandler {
                                                                    // receive an
                                                                    // URL, not
                                                                    // an "ID"
-            LedgerAccount creditor = ledgerAccountManager
+            IfaceLocalAccount creditor = ledgerAccountManager
                     .getAccountByName(account_name);
             MonetaryAmount credit_ammount = Money.of(
                     Double.parseDouble(jsonCredit.getString("amount")),
@@ -311,7 +311,7 @@ public class TransferHandler extends RestEndpointHandler {
         LedgerTransfer transfer = tm.getLocalTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
-        String debit0_account = transfer.getDebits()[0].account.getName();
+        String debit0_account = transfer.getDebits()[0].account.getLocalName();
         boolean transferMatchUser = ai.getId().equals(debit0_account);
         if (!transferMatchUser) {
             log.error("transferMatchUser false: "

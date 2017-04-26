@@ -31,7 +31,7 @@ import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
+import org.interledger.everledger.ledger.account.IfaceAccountManager;
 import org.interledger.everledger.common.api.handlers.IndexHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
@@ -54,17 +54,15 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
 
     private HttpServer server;
 
-    private static void configureDevelopmentEnvirontment() { // TODO:(0) Remove once everything is properly setup
+    private static void configureDevelopmentEnvironment() { // TODO:(0) Remove once everything is properly setup
         log.info("Preparing development environment");
-        Map<String, AuthInfo> mapUsers = AuthManager.getUsers();
-        Set<String> keyUsers = mapUsers.keySet();
-        IfaceLocalAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
-        for (String accountId : keyUsers) {
-            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(accountId);
-            account.setBalance(10000);
-            if (accountId.equals("admin")) {
-                account.setAdmin(true);
-            }
+        
+        Map<AuthInfo, Integer /*blance*/> devUsers = AuthManager.configureDevelopmentEnvironment();
+        Set<AuthInfo> users = devUsers.keySet();
+        IfaceAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        for (AuthInfo ai : users) {
+            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(ai.getId());
+            account.setBalance(devUsers.get(ai).intValue());
             account.setMinimumAllowedBalance(0);
             ledgerAccountManager.store(account);
         }
@@ -196,7 +194,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
     }
 
     public static void main(String[] args) {
-        configureDevelopmentEnvirontment();
+        configureDevelopmentEnvironment();
         VertxRunner.run(ILPLedgerAPIBootUpVerticle.class);
     }
 

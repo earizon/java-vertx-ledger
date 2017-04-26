@@ -17,17 +17,15 @@ import java.util.Collection;
  */
 public interface IfaceLocalAccountManager {
 
-    LedgerAccount create(String name);
+    IfaceAccount create(String name);
 
     int getTotalAccounts();
 
-    void store(LedgerAccount account);
-
     boolean hasAccount(String name);
 
-    LedgerAccount getAccountByName(String name);
+    IfaceLocalAccount getAccountByName(String name);
 
-    Collection<LedgerAccount> getAccounts(int page, int pageSize);
+    Collection<IfaceLocalAccount> getAccounts(int page, int pageSize);
 
 
 }

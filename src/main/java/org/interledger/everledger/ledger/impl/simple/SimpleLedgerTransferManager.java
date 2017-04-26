@@ -11,7 +11,7 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
@@ -51,7 +51,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
 
     private static final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
 
-    private static final LedgerAccount HOLDS_URI = accountManager.getHOLDAccountILP();
+    private static final IfaceLocalAccount HOLDS_URI = accountManager.getHOLDAccountILP();
 
     // Make default constructor private to avoid instantiating new classes.
     private SimpleLedgerTransferManager() {}
@@ -92,16 +92,16 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
         if (debit_list.length > 1) {
             // STEP 1: Pass all debits to first account.
             for (int idx=1; idx < debit_list.length ; idx++) {
-                LedgerAccount    sender = debit_list[idx].account;
-                LedgerAccount recipient = debit_list[0].account;
+                IfaceLocalAccount    sender = debit_list[idx].account;
+                IfaceLocalAccount recipient = debit_list[0].account;
                 MonetaryAmount amount = debit_list[idx].amount;
                 __executeLocalTransfer(sender, recipient, amount);
             }
         }
         // STEP 2: Pay crediters from first account:
-        LedgerAccount sender = debit_list[0].account;
+        IfaceLocalAccount sender = debit_list[0].account;
         for (Credit credit : transfer.getCredits()) {
-            LedgerAccount recipient = credit.account;
+            IfaceLocalAccount recipient = credit.account;
             MonetaryAmount amount = credit.amount;
             __executeLocalTransfer(sender, recipient, amount);
         }
@@ -191,11 +191,11 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     // } END IfaceILPSpecTransferManager implementation
     
 
-    private void __executeLocalTransfer(LedgerAccount sender, LedgerAccount recipient, MonetaryAmount amount) {
+    private void __executeLocalTransfer(IfaceLocalAccount sender, IfaceLocalAccount recipient, MonetaryAmount amount) {
         // TODO: LOG local transfer execution.
         log.info("executeLocalTransfer {");
-        accountManager.getAccountByName(sender   .getName()).debit (amount);
-        accountManager.getAccountByName(recipient.getName()).credit(amount);
+        accountManager.getAccountByName(sender   .getLocalName()).debit (amount);
+        accountManager.getAccountByName(recipient.getLocalName()).credit(amount);
         log.info("} executeLocalTransfer");
     }
 

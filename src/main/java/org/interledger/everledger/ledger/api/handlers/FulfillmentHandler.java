@@ -109,8 +109,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
                     this.getClass().getName() + "Transfer is not conditional");
         }
         boolean transferMatchUser = // TODO:(?) Recheck 
-            ai.getId().equals(transfer.getDebits ()[0].account.getName())
-         || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
+            ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
+         || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;
         if ( !ai.isAdmin()  &&  !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
@@ -208,8 +208,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
 
         LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         transferMatchUser = false 
-                || ai.getId().equals(transfer.getDebits ()[0].account.getName())
-                || ai.getId().equals(transfer.getCredits()[0].account.getName()) ;
+                || ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
+                || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;
         if ( !ai.isAdmin()  &&  !(ai.isConnector() && transferMatchUser)  ){
             throw ILPExceptionSupport.createILPForbiddenException();
         }

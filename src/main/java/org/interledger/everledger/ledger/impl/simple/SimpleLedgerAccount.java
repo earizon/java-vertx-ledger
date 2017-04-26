@@ -2,24 +2,29 @@ package org.interledger.everledger.ledger.impl.simple;
 
 
 import java.util.Objects;
+import java.security.PublicKey;
 
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
 
+import org.interledger.ilp.InterledgerAddress;
+import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.NumberConversionUtil;
-import org.interledger.everledger.ledger.MoneyUtils;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.javamoney.moneta.Money;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents a simple ledger account.
  *
- * @author mrmx
  */
 // TODO:(0) Fixme must implement org.interledger.ilp.ledger.model.AccountInfo,
 //    (not custom org.interledger.everledger.ledger.account.LedgerAccount)
-public class SimpleLedgerAccount implements LedgerAccount {
+public class SimpleLedgerAccount implements IfaceAccount {
 
     public static final String currencyCode = Config.ledgerCurrencyCode;
     // TODO:(0) Convert to "inmutable" object. 
@@ -28,7 +33,6 @@ public class SimpleLedgerAccount implements LedgerAccount {
     private final String name; 
     private MonetaryAmount balance;
     private MonetaryAmount minimumAllowedBalance;
-    private Boolean admin;
     private boolean disabled;
     private String connector;
 
@@ -40,48 +44,31 @@ public class SimpleLedgerAccount implements LedgerAccount {
         this.disabled = false;
     }
 
+    // START IMPLEMENTATION IfaceLocalAccount {
+
     @Override
-    public String getName() {
+    public String getLocalName() {
         return name;
     }
 
-    public LedgerAccount setAdmin(boolean admin) {
-        this.admin = admin;
-        return this;
-    }
-
     @Override
-    public Boolean isAdmin() {
-        return admin;
-    }
-
-    public LedgerAccount setDisabled(boolean disabled) {
-        this.disabled = disabled;
-        return this;
-    }
-
-    @Override
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    @Override
-    public LedgerAccount setMinimumAllowedBalance(Number balance) {
+    public IfaceLocalAccount setMinimumAllowedBalance(Number balance) {
         return setMinimumAllowedBalance(Money.of(balance, currencyCode));
     }
 
     @Override
-    public LedgerAccount setMinimumAllowedBalance(MonetaryAmount balance) {
+    public IfaceLocalAccount setMinimumAllowedBalance(MonetaryAmount balance) {
         this.minimumAllowedBalance = balance;
         return this;
     }
 
     @Override
+    @JsonIgnore
     public MonetaryAmount getMinimumAllowedBalance() {
         return minimumAllowedBalance;
     }
 
-    @Override
+    @JsonProperty("minimum_allowed_balance")
     public String getMinimumAllowedBalanceAsString() {
         return NumberConversionUtil.toString(getMinimumAllowedBalance().getNumber());
     }
@@ -100,7 +87,7 @@ public class SimpleLedgerAccount implements LedgerAccount {
     }
 
     @Override
-    public MonetaryAmount getBalance() {
+    public MonetaryAmount getLocalBalance() {
         return balance;
     }
 
@@ -146,6 +133,55 @@ public class SimpleLedgerAccount implements LedgerAccount {
         return this;
     }
 
+    // END   IMPLEMENTATION IfaceLocalAccount {
+
+    
+    // START IMPLEMENTATION IfaceLocalAccount {
+    @Override
+    public InterledgerAddress getLedger() {
+        return new InterledgerAddressBuilder().value(Config.ilpPrefix).build();
+    }
+
+    @Override
+    public String getId() {
+        return Config.publicURL+"/accounts/"+name;
+    }
+    
+    @Override
+    public String getName() {
+        return getLocalName();
+    }
+    
+    @Override
+    public InterledgerAddress getAddress() {
+        return new InterledgerAddressBuilder().value(Config.ilpPrefix).build();
+    }
+    
+    @Override
+    public MonetaryAmount getBalance() {
+        return getLocalBalance();
+    }
+
+    @Override
+    @JsonProperty("is_disabled")
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    @Override
+    public byte[] getCertificateFingerprint() {
+        return new byte[]{}; // TODO:(0) FIXME
+    }
+
+    @Override
+    public PublicKey getPublicKey() {
+        return null; // TODO:(0) FIXME
+    }
+
+    // END   IMPLEMENTATION IfaceLocalAccount {
+
+    // START OVERRIDING Object {
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof SimpleLedgerAccount)) {
@@ -169,11 +205,5 @@ public class SimpleLedgerAccount implements LedgerAccount {
         sb.append("balance:").append(getBalance());
         sb.append("]");
         return sb.toString();
-
     }
-
-    protected MonetaryAmount toMonetaryAmount(String amount) {
-        return MoneyUtils.toMonetaryAmount(amount, currencyCode);
-    }
-
 }

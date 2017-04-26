@@ -22,7 +22,7 @@ import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.api.util.VertxUtils;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.ilp.InterledgerError;
-import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.everledger.common.api.HTTPInterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                 printWriter.flush();
                 log.warn("Captured exception { \n"+writer.toString()+ "\n}");
 
-                if (t instanceof InterledgerException) throw t; // ILP contemplated exception
+                if (t instanceof HTTPInterledgerException) throw t; // ILP contemplated exception
 
                 throw ILPExceptionSupport.createILPInternalException(
                         "Java UnhandledException: {\n"
@@ -125,7 +125,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                         + "}");
             }
             
-        } catch (InterledgerException ex ) {
+        } catch (HTTPInterledgerException ex ) {
             InterledgerError err = ex.getInterledgerError();
             log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData());
             response(

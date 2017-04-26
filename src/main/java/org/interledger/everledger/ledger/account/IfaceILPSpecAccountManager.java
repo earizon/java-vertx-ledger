@@ -11,7 +11,7 @@ import java.net.URI;
 public interface IfaceILPSpecAccountManager { 
 
     // TODO:(0) Could it be possible to have different HOLD accounts for different type of users/sub-ledgers?
-    LedgerAccount getHOLDAccountILP();
-    URI getPublicURIForAccount(LedgerAccount name);
+    IfaceLocalAccount getHOLDAccountILP();
+    URI getPublicURIForAccount(IfaceLocalAccount name);
 
 }

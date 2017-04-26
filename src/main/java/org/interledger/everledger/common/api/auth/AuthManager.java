@@ -24,13 +24,21 @@ public class AuthManager {
 //    public final AuthHandler authHandler = BasicAuthHandler.create(authProvider, realm);
 
     private static final Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
-    static {
-        // TODO:(0) FIXME Hardcoded test accounts
-        users.put("admin"         , new AuthInfo(        "admin",        "admin",        "admin", "admin"));
-        users.put("ilpconnector"  , new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector"));
-        users.put("alice"         , new AuthInfo(        "alice",        "alice",        "alice", "user"));
-        users.put("bob"           , new AuthInfo(          "bob",          "bob",          "bob", "user"));
-        users.put("noBalance"     , new AuthInfo(    "noBalance",    "noBalance",    "noBalance", "noBalance"));
+
+    public static Map<AuthInfo, Integer /*blance*/> configureDevelopmentEnvironment() {
+        Map<AuthInfo, Integer /*blance*/> result = new HashMap<AuthInfo, Integer /*blance*/>();
+        AuthInfo admin        = new AuthInfo(        "admin",        "admin",        "admin", "admin");
+        AuthInfo ilpconnector = new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector");
+        AuthInfo alice        = new AuthInfo(        "alice",        "alice",        "alice", "user");
+        AuthInfo bob          = new AuthInfo(          "bob",          "bob",          "bob", "user");
+        AuthInfo noBalance    = new AuthInfo(    "noBalance",    "noBalance",    "noBalance", "noBalance"); 
+
+        users.put("admin"       , admin       ); result.put(admin, 10000);
+        users.put("ilpconnector", ilpconnector); result.put(admin,   100);
+        users.put("alice"       , alice       ); result.put(admin,   100);
+        users.put("bob"         , bob         ); result.put(admin,   100);
+        users.put("noBalance"   , noBalance   ); result.put(admin,     0);
+        return result;
     }
     
     public static Map<String, AuthInfo> getUsers() {

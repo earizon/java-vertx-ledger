@@ -12,7 +12,7 @@ import java.io.StringWriter;
 
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     @Override
     protected void handleGet(RoutingContext context) {
         String accountName = context.request().getParam(PARAM_NAME);
-        LedgerAccount account = accountManager.getAccountByName(accountName);
+        IfaceLocalAccount account = accountManager.getAccountByName(accountName);
         // GET /accounts/alice/transfers -> Upgrade to websocket
         log.debug("TransferWSEventHandler Connected. Upgrading HTTP GET to WebSocket!");
         ServerWebSocket sws = context.request().upgrade();
@@ -78,7 +78,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         registerServerWebSocket(context, account, sws);
     }
 
-    private static void registerServerWebSocket(RoutingContext context, LedgerAccount account, ServerWebSocket sws) {
+    private static void registerServerWebSocket(RoutingContext context, IfaceLocalAccount account, ServerWebSocket sws) {
 
         log.debug("registering WS connection: "+account);
 
@@ -90,7 +90,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         EventBus eventBus = context.vertx().eventBus();
 
         io.vertx.core.eventbus.MessageConsumer<String> mc = 
-                eventBus.consumer("message-" + account.getName(), message -> { 
+                eventBus.consumer("message-" + account.getLocalName(), message -> { 
             log.debug("received '"+message.body()+"' from internal *Manager:");
             sws.writeFinalTextFrame(message.body());
             log.debug("message forwarded to websocket peer through websocket");
@@ -99,7 +99,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         sws.closeHandler(new Handler<Void>() {
             @Override
             public void handle(final Void event) {
-                log.debug("un-registering WS connection: "+account.getName());
+                log.debug("un-registering WS connection: "+account.getLocalName());
                 mc.unregister();
             }
         });
@@ -110,7 +110,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             throwable.printStackTrace( printWriter );
             printWriter.flush();
             String stackTrace = writer.toString();
-            log.warn("There was an exception in the ws "+account.getName()+ ":"+throwable.toString()+ "\n" +stackTrace );
+            log.warn("There was an exception in the ws "+account.getLocalName()+ ":"+throwable.toString()+ "\n" +stackTrace );
         });
     }
 
@@ -120,10 +120,10 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
      * @param context
      * @param message
      */
-    public static void notifyListener(RoutingContext context, LedgerAccount account, String message) {
+    public static void notifyListener(RoutingContext context, IfaceLocalAccount account, String message) {
         // Send notification to all existing webSockets
         log.debug("notifyListener to account:"+account + ", message:'''" + message + "'''\n");
-        context.vertx().eventBus().send("message-"+account.getName(), message); // will be sent to handler "@bookmark1"
+        context.vertx().eventBus().send("message-"+account.getLocalName(), message); // will be sent to handler "@bookmark1"
         
     }
 

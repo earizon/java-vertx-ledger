@@ -1,13 +1,14 @@
 package org.interledger.everledger.ledger.api.handlers;
 
 
-import io.vertx.core.http.HttpMethod;
 
+import io.vertx.core.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.apache.commons.lang3.StringUtils;
+import org.interledger.everledger.ledger.account.IfaceAccount;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
@@ -16,8 +17,6 @@ import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.NumberConversionUtil;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
-import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,7 @@ public class AccountHandler extends RestEndpointHandler {
     private final static String PARAM_NAME = "name";
     private final static String PARAM_BALANCE = "balance";
     private final static String PARAM_MIN_ALLOWED_BALANCE = "minimum_allowed_balance";
-    private final static String PARAM_DISABLED = "is_disabled";
+    // private final static String PARAM_DISABLED = "is_disabled";
 
     private AccountHandler() {
         super(
@@ -50,7 +49,7 @@ public class AccountHandler extends RestEndpointHandler {
     @Override
     protected void handleGet(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context, true);
-        LedgerAccount account = getAccountByName(context);
+        IfaceAccount account = getAccountByName(context);
         JsonObject result = accountToJsonObject(account, ai.isAdmin());
         response(context, HttpResponseStatus.OK, result);
     }
@@ -69,7 +68,7 @@ public class AccountHandler extends RestEndpointHandler {
         Number balance = null;
         Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
 
-        LedgerAccount account = exists
+        IfaceAccount account = exists
                 ? accountManager.getAccountByName(accountName)
                 : accountManager.create(accountName);
         if(data.containsKey(PARAM_BALANCE)) {
@@ -77,16 +76,16 @@ public class AccountHandler extends RestEndpointHandler {
             account.setBalance(balance);
         }        
         account.setMinimumAllowedBalance(minAllowedBalance);
-        if(data.containsKey(PARAM_DISABLED)) {
-            ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
-        }
+        // if(data.containsKey(PARAM_DISABLED)) {
+        //     ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
+        // }
         log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
     }
 
-    private LedgerAccount getAccountByName(RoutingContext context) {
+    private IfaceAccount getAccountByName(RoutingContext context) {
         String accountName = getAccountNameOrThrowException(context);
         log.debug("Get account {}", accountName);
         return LedgerAccountManagerFactory.getLedgerAccountManagerSingleton().getAccountByName(accountName);
@@ -107,13 +106,13 @@ public class AccountHandler extends RestEndpointHandler {
 
 
 
-    private JsonObject accountToJsonObject(LedgerAccount account, boolean isAdmin) {
+    private JsonObject accountToJsonObject(IfaceAccount account, boolean isAdmin) {
         String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
         JsonObjectBuilder build = JsonObjectBuilder.create()
                 .put("id", accountManager.getPublicURIForAccount(account))
-                .put("name", account.getName())
+                .put("name", account.getLocalName())
                 .put("ledger", ledger);
         if (isAdmin){ 
             build

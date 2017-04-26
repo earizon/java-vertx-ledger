@@ -1,6 +1,6 @@
 package org.interledger.everledger.ledger;
 
-import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
+import org.interledger.everledger.ledger.account.IfaceAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 
 /**
@@ -21,7 +21,7 @@ public class LedgerAccountManagerFactory {
         return instance;
     }
     
-    public static IfaceLocalAccountManager createLedgerAccountManager() {
+    public static IfaceAccountManager createLedgerAccountManager() {
         return new SimpleLedgerAccountManager();
     }
 }

@@ -13,7 +13,7 @@ import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class MessageHandler extends RestEndpointHandler {
         
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject jsonMessageReceived = getBodyAsJson(context); // TODO:(?) Mark as Tainted object
-        LedgerAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
+        IfaceLocalAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
 
         log.debug("handlePost context.getBodyAsString():\n   "+context.getBodyAsString());
 
@@ -108,8 +108,8 @@ public class MessageHandler extends RestEndpointHandler {
             jsonMessageReceived.put("to",jsonMessageReceived.getString("account"));
             jsonMessageReceived.put("from", Config.publicURL + "accounts/" + ai.getId());
         }
-        LedgerAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
-        boolean transferMatchUser = ai.getId().equals(fromAccount.getName()) || ai.getId().equals(recipient.getName());
+        IfaceLocalAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
+        boolean transferMatchUser = ai.getId().equals(fromAccount.getLocalName()) || ai.getId().equals(recipient.getLocalName());
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }

@@ -2,7 +2,7 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 
 import org.javamoney.moneta.Money;
@@ -23,8 +23,8 @@ public class SimpleLedgerAccountTest {
     SimpleLedgerAccount instance;
     final String sTestURI = "http://ledgerTest";
     final String sOtherURI = "http://ledgerOther";
-    LedgerAccount testURI = new SimpleLedgerAccount(sTestURI);
-    LedgerAccount otherURI = new SimpleLedgerAccount(sOtherURI);
+    IfaceLocalAccount testURI = new SimpleLedgerAccount(sTestURI);
+    IfaceLocalAccount otherURI = new SimpleLedgerAccount(sOtherURI);
 
     @BeforeClass
     public static void init() throws Exception {

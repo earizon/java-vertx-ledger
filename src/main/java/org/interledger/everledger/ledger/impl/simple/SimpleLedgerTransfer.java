@@ -11,7 +11,7 @@ import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
@@ -35,7 +35,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
     // TODO: IMPROVEMENT. Mix of local/remote transactions not contemplated. Either all debit_list are remote or local
     final LocalTransferID transferID;
-    final LedgerAccount fromAccount;
+    final IfaceLocalAccount fromAccount;
     final Credit[] credit_list;
     final Debit []  debit_list;
     // URI encoded execution & cancelation crypto-conditions
@@ -100,7 +100,7 @@ public class SimpleLedgerTransfer implements LedgerTransfer {
          */
 
         this.fromAccount = ledgerAccountManager.
-                    getAccountByName(credit_list[0].account.getName());
+                    getAccountByName(credit_list[0].account.getLocalName());
     }
     
     public void checkBalancedTransaction(){

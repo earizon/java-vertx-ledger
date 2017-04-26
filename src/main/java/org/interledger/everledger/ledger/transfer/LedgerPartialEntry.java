@@ -2,7 +2,7 @@ package org.interledger.everledger.ledger.transfer;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 
 
 /*
@@ -11,9 +11,9 @@ import org.interledger.everledger.ledger.account.LedgerAccount;
  * clear whether its a Debit or a Credit
  */
 public abstract class LedgerPartialEntry {
-    public final LedgerAccount account;
+    public final IfaceLocalAccount account;
     public final MonetaryAmount amount;
-    public LedgerPartialEntry(LedgerAccount account, MonetaryAmount amount){
+    public LedgerPartialEntry(IfaceLocalAccount account, MonetaryAmount amount){
         this.account = account;
         this.amount = amount;
     }

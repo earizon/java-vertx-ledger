@@ -2,10 +2,10 @@ package org.interledger.everledger.ledger.transfer;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ledger.account.LedgerAccount;
+import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 
 public class Debit extends LedgerPartialEntry {
-    public Debit(LedgerAccount account, MonetaryAmount amount){
+    public Debit(IfaceLocalAccount account, MonetaryAmount amount){
         super(account, amount);
     }
 
