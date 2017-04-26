@@ -42,14 +42,14 @@ public class AuthManager {
         String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
         if (authorization == null) {
             if (allowAnonymous) { return AuthInfo.ANONYMOUS; }
-            throw ILPExceptionSupport.createILPForbiddenException();
+            throw ILPExceptionSupport.createILPUnauthorizedException();
         }
         try {
             String[] parts = authorization.split(" ");
             String sscheme = parts[0];
             if (!"Basic".equals(sscheme)) {
                 log.error("Only Basic Authorization support supported.");
-                throw ILPExceptionSupport.createILPForbiddenException();
+                throw ILPExceptionSupport.createILPUnauthorizedException();
             }
             String decoded = new String(Base64.getDecoder().decode(parts[1]));
             int colonIdx = decoded.indexOf(":");
@@ -58,17 +58,17 @@ public class AuthManager {
             AuthInfo authInfo = users.get(suser);
             if (authInfo == null){
                 log.error("authInfo null. (User not int AuthManager.users lists)");
-                throw ILPExceptionSupport.createILPForbiddenException();
+                throw ILPExceptionSupport.createILPUnauthorizedException();
             }
             boolean isAdmin = authInfo.getRoll().equals("admin");
             if (!isAdmin && !authInfo.pass.equals(spass)  ) {
                 log.error("authInfo null or pass doesn't match");
-                throw ILPExceptionSupport.createILPForbiddenException();
+                throw ILPExceptionSupport.createILPUnauthorizedException();
             }
             return authInfo;
         } catch (Exception e) {
             log.error(e.toString());
-            throw ILPExceptionSupport.createILPForbiddenException();
+            throw ILPExceptionSupport.createILPUnauthorizedException();
         }
     }
 

@@ -123,11 +123,11 @@ public class TransferHandler extends RestEndpointHandler {
 
         if (debits == null) {
             ILPExceptionSupport.createILPException(
-                ErrorCode.F00_BAD_REQUEST,"debits not found");
+                    403, ErrorCode.F00_BAD_REQUEST,"debits not found");
         }
         if (debits.size()!=1) {
             ILPExceptionSupport.createILPException(
-                ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
+                500, ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
         }
         Debit[] debitList = new Debit[debits.size()];
         CurrencyUnit currencyUnit /* local ledger currency */= Monetary

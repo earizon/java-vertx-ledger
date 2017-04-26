@@ -119,8 +119,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
 
                 if (t instanceof InterledgerException) throw t; // ILP contemplated exception
 
-                throw ILPExceptionSupport.createILPException(
-                        InterledgerError.ErrorCode.T00_INTERNAL_ERROR,
+                throw ILPExceptionSupport.createILPInternalException(
                         "Java UnhandledException: {\n"
                         + "    Description    : " + t.toString()+"\n"
                         + "}");
@@ -131,7 +130,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
             log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData());
             response(
                 context, 
-                HttpResponseStatus.INTERNAL_SERVER_ERROR, /* TODO:(0) map err.getErrCode() to proper HTTP exception status */
+                HttpResponseStatus.valueOf(ex.getHTTPErrorCode()),
                 buildJSONWith/* TODO:(0) FIXME Launch Binary Packet. Not JSON. Pending fixes in JS five-bells-ledger implementation */(
                     "errCode"    , err.getErrCode().getCode(), 
                     "triggeredBy", err.getTriggeredBy().getValue().toString(),

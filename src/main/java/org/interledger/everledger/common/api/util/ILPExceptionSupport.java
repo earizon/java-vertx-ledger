@@ -20,9 +20,8 @@ public class ILPExceptionSupport {
      * @param errCode
      * @param data
      */
-    public static InterledgerException createILPException(ErrorCode errCode , String data){
-        return new InterledgerException(new InterledgerError(errCode, triggeredBy, data));
-         
+    public static InterledgerException createILPException(int httpErrCode, ErrorCode errCode , String data){
+        return new InterledgerException(httpErrCode, new InterledgerError(errCode, triggeredBy, data));
     }
 
     /**
@@ -32,12 +31,17 @@ public class ILPExceptionSupport {
      * @param data
      */
     public static InterledgerException createILPInternalException(String data) {
-        return new InterledgerException(new InterledgerError(ErrorCode.T00_INTERNAL_ERROR, triggeredBy, data));
+        return new InterledgerException(500, new InterledgerError(ErrorCode.T00_INTERNAL_ERROR /* Looks Internal error is not Temporal */, triggeredBy, data));
+    }
+
+    public static InterledgerException createILPUnauthorizedException() {
+        // TODO:(0) Use new ErrorCode.??_FORBIDDEN
+        return createILPException(401, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
     }
 
     public static InterledgerException createILPForbiddenException() {
         // TODO:(0) Use new ErrorCode.??_FORBIDDEN
-        return createILPInternalException("Forbidden"); 
+        return createILPException(403, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
     }
 
 }

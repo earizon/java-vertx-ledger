@@ -105,8 +105,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          **/
         LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
-            ILPExceptionSupport.createILPException(
-                    InterledgerError.ErrorCode.F00_BAD_REQUEST,
+            ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() + "Transfer is not conditional");
         }
         boolean transferMatchUser = // TODO:(?) Recheck 
@@ -152,6 +151,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             }
         } else {
             ILPExceptionSupport.createILPException(
+                    403,
                     InterledgerError.ErrorCode.F05_WRONG_CONDITION,
                     this.getClass().getName() + "Fulfillment does not match any condition");
         }
@@ -219,6 +219,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == SimpleLedgerTransfer.FF_NOT_PROVIDED) {
             ILPExceptionSupport.createILPException(
+                    500,
                     InterledgerError.ErrorCode.F99_APPLICATION_ERROR,
                 this.getClass().getName() + "This transfer has not yet been fulfilled");
         }
