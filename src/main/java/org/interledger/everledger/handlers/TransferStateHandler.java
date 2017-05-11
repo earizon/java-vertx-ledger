@@ -10,9 +10,9 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
+import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -86,7 +86,7 @@ public class TransferStateHandler extends RestEndpointHandler {
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
         if (tm.doesTransferExists(transferID)) { 
-            LedgerTransfer transfer = tm.getLocalTransferById(transferID);
+            ILedgerTransfer transfer = tm.getLocalTransferById(transferID);
             status = transfer.getTransferStatus();
             transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                             ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());

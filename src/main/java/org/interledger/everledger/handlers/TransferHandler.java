@@ -26,14 +26,14 @@ import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccountManager;
+import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
 import org.interledger.everledger.impl.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
-import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -247,7 +247,7 @@ public class TransferHandler extends RestEndpointHandler {
             log.debug("transfer status " + status);
         }
 
-        LedgerTransfer receivedTransfer = new SimpleLedgerTransfer(transferID,
+        ILedgerTransfer receivedTransfer = new SimpleLedgerTransfer(transferID,
                 debitList, creditList, URIExecutionCond, URICancelationCond,
                 DTTM_expires, DTTM_proposed, data, noteToSelf, status);
 
@@ -255,7 +255,7 @@ public class TransferHandler extends RestEndpointHandler {
         boolean isNewTransfer = !ilpTM.doesTransferExists(ilpTransferID);
         log.debug("is new transfer?: " + isNewTransfer);
 
-        LedgerTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
+        ILedgerTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
                 : localTM.getLocalTransferById(transferID);
         if (!isNewTransfer) {
             // Check that received json data match existing transaction.
@@ -308,7 +308,7 @@ public class TransferHandler extends RestEndpointHandler {
         IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
-        LedgerTransfer transfer = tm.getLocalTransferById(
+        ILedgerTransfer transfer = tm.getLocalTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
         String debit0_account = transfer.getDebits()[0].account.getLocalName();

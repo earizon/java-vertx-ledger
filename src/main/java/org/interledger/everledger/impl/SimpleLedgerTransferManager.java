@@ -11,13 +11,13 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
-import org.interledger.everledger.ledger.transfer.LedgerTransfer;
-import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
-import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.model.TransferStatus;
@@ -44,8 +44,8 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
 
     private static final Logger log = LoggerFactory.getLogger(SimpleLedgerTransferManager.class);
 
-    private Map<LocalTransferID, LedgerTransfer> transferMap = 
-        new HashMap<LocalTransferID, LedgerTransfer>();// In-memory database of pending/executed/cancelled transfers
+    private Map<LocalTransferID, ILedgerTransfer> transferMap = 
+        new HashMap<LocalTransferID, ILedgerTransfer>();// In-memory database of pending/executed/cancelled transfers
 
     private static SimpleLedgerTransferManager singleton = new SimpleLedgerTransferManager();
 
@@ -70,8 +70,8 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
 
     // START IfaceLocalTransferManager implementation {
     @Override
-    public LedgerTransfer getLocalTransferById(LocalTransferID transferId) {
-        LedgerTransfer result = transferMap.get(transferId);
+    public ILedgerTransfer getLocalTransferById(LocalTransferID transferId) {
+        ILedgerTransfer result = transferMap.get(transferId);
         if (result == null) {
             throw ILPExceptionSupport.createILPInternalException(
                 this.getClass().getName() + "This transfer does not exist");
@@ -85,7 +85,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     }
 
     @Override
-    public void executeLocalTransfer(LedgerTransfer transfer) {
+    public void executeLocalTransfer(ILedgerTransfer transfer) {
         // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
         transfer.checkBalancedTransaction();
         Debit[] debit_list = transfer.getDebits();
@@ -120,11 +120,11 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
 
     // START IfaceILPSpecTransferManager implementation {
     @Override
-    public java.util.List<LedgerTransfer> getTransfersByExecutionCondition(Condition condition) {
+    public java.util.List<ILedgerTransfer> getTransfersByExecutionCondition(Condition condition) {
         // For this simple implementation just run over existing transfers until 
-        List<LedgerTransfer> result = new ArrayList<LedgerTransfer>();
+        List<ILedgerTransfer> result = new ArrayList<ILedgerTransfer>();
         for ( LocalTransferID transferId : transferMap.keySet()) {
-            LedgerTransfer transfer = transferMap.get(transferId);
+            ILedgerTransfer transfer = transferMap.get(transferId);
             if (transfer.getExecutionCondition().equals(condition)) {
                 result.add(transfer);
             }
@@ -133,7 +133,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     }
 
     @Override
-    public void createNewRemoteILPTransfer(LedgerTransfer newTransfer) {
+    public void createNewRemoteILPTransfer(ILedgerTransfer newTransfer) {
         log.debug("createNewRemoteILPTransfer");
 
         if (doesTransferExists(newTransfer.getTransferID())) {
@@ -164,7 +164,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     }
 
     @Override
-    public void executeRemoteILPTransfer(LedgerTransfer transfer, Fulfillment executionFulfillment) {
+    public void executeRemoteILPTransfer(ILedgerTransfer transfer, Fulfillment executionFulfillment) {
         // DisburseFunds:
         for (Credit debit : transfer.getCredits()) {
             __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
@@ -174,7 +174,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     }
 
     @Override
-    public void abortRemoteILPTransfer(LedgerTransfer transfer, Fulfillment cancellationFulfillment) {
+    public void abortRemoteILPTransfer(ILedgerTransfer transfer, Fulfillment cancellationFulfillment) {
         // Return Held Funds
         for (Debit debit : transfer.getDebits()) {
             __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
@@ -201,7 +201,7 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
 
     // UnitTest / function test realated code
     public void unitTestsResetTransactionDDBB() {
-        transferMap = new HashMap<LocalTransferID, LedgerTransfer>();
+        transferMap = new HashMap<LocalTransferID, ILedgerTransfer>();
     }
     
     public String unitTestsGetTotalTransactions() {

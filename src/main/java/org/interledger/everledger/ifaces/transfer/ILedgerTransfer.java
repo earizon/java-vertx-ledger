@@ -1,7 +1,11 @@
-package org.interledger.everledger.ledger.transfer;
+package org.interledger.everledger.ifaces.transfer;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.everledger.ledger.transfer.Credit;
+import org.interledger.everledger.ledger.transfer.DTTM;
+import org.interledger.everledger.ledger.transfer.Debit;
+import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ilp.ledger.model.TransferStatus;
 
 /*
@@ -10,7 +14,7 @@ import org.interledger.ilp.ledger.model.TransferStatus;
  *  ILP related data "linked" to the LocalTransaction. (if any)
  *   
  */
-public interface LedgerTransfer {
+public interface ILedgerTransfer {
 
     /*
      * Get the transfer Unique ID

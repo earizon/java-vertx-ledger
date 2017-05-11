@@ -12,11 +12,11 @@ import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.LedgerPartialEntry;
-import org.interledger.everledger.ledger.transfer.LedgerTransfer;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
 import javax.money.MonetaryAmount;
@@ -26,7 +26,7 @@ import org.javamoney.moneta.Money;
 
 // FIXME: Allow multiple debit/credits (Remove all code related to index [0]
 
-public class SimpleLedgerTransfer implements LedgerTransfer {
+public class SimpleLedgerTransfer implements ILedgerTransfer {
 
     public static final Fulfillment FF_NOT_PROVIDED = new PreimageSha256Fulfillment(new byte[]{});
     public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(new byte[]{}, 1000);

@@ -13,14 +13,14 @@ import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
+import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
 import org.interledger.everledger.impl.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
-import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
-import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
-import org.interledger.everledger.ledger.transfer.LedgerTransfer;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.InterledgerError;
@@ -103,7 +103,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     Note that the actual cryptographic signature might still be against a message - via prefix 
          *     conditions (which append a prefix to this empty message)
          **/
-        LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
+        ILedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
             ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() + "Transfer is not conditional");
@@ -206,7 +206,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
-        LedgerTransfer transfer = localTM.getLocalTransferById(transferID);
+        ILedgerTransfer transfer = localTM.getLocalTransferById(transferID);
         transferMatchUser = false 
                 || ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;
