@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger;
+package org.interledger.everledger;
 
 import java.math.BigDecimal;
 import javax.money.MonetaryAmount;

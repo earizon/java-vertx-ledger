@@ -2,7 +2,7 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import java.util.Collection;
 
-import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.IfaceAccount;
 import org.interledger.everledger.ledger.account.IfaceAccountManager;
 import org.interledger.everledger.ledger.account.IfaceLocalAccount;

@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import java.net.URI;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;

@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger;
+package org.interledger.everledger;
 
 import org.interledger.everledger.ledger.account.IfaceAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;

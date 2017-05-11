@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -19,12 +19,12 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
+import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.account.IfaceLocalAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;

@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -12,7 +12,7 @@ import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerTransferManager;

@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;

@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 // TESTING FROM COMMAND LINE: https://blogs.oracle.com/PavelBucek/entry/websocket_command_line_client
 import io.vertx.core.Handler;
@@ -10,8 +10,8 @@ import io.vertx.ext.web.RoutingContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
-import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;

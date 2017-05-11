@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;

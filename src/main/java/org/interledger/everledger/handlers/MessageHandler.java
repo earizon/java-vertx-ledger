@@ -1,18 +1,17 @@
-package org.interledger.everledger.ledger.api.handlers;
+package org.interledger.everledger.handlers;
 
 import io.vertx.core.http.HttpMethod;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
