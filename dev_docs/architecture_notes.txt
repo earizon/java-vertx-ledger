@@ -1,0 +1,101 @@
+- Coding Style:
+---------------
+
+
+
+   
+   - Inmutable by default code makes code much more resiliant to errors.
+     class instances are defined at contruction time, and internal members declared final.
+     The compiler will neglect to compile if it detects that a class member can be 
+     un-initialized.
+
+   - Avoid nulls everywhere. No variable takes a null value unless a very good reason
+     exists for that (note: there is never a good reason).
+     - Never ever return null!!!. Launch exception if the code can't return a valid sensible
+       value.
+     - Never ever use null to mark a variable as un-initialized. Think twice and use
+       a sensible default value or declare the variable later on when the code has all the
+       data to initialize it properly. If at the time of writting we don't know what to
+       assign except a null mark the code with // FIXME, TODO:(0) Remove null
+
+   - Fail fast: As soon as the code notices something abnormal an (Interledger) Exception
+     is raised. Code doesn't try to continue in case of any minor/major error. 
+   
+   - Use TODO:(0) to mark tasks in code that must be fixed.
+   - Use TODO:(1) to mark tasks in code that can be left as improvements.
+
+   
+
+Data flow Summary:
+------------------
+
+  remote client <- (HTTP) -> everledger.handlers.*  <-> "Entity"*manager <-> DDBB
+                             ^                          ^                    ^
+                             parses http input          Contains the         Contains the
+                             data from client.          bussiness logic.     persistence
+                             Return data to clients                          related code
+                             in an uniform way.                              (Not implemented as
+                                                                             2017-05)
+
+SubPackages of org.interledger.everledger:
+------------------------------------------
+   
+   - ...everledger.handlers:
+     Contains the handle classes in charge of parsing input 
+     HTTP request from clients.
+     
+   - ...everledger.ifaces:
+     Contains interfaces that must be implemented by concrete clases.
+     For each entity (informally speaking an entity is anything that
+     can be mentally mapped to a row in a database, that is, it contains
+     an unique id) we will define varios interfaces:
+     - "Entity"Interface: Defines the getters with data that can be
+       stored in the entity. Notice that since we use inmutable code
+       there will ussually not be getters. All initialization must
+       be done in the constructor (or fail-fast and throw an exception
+       if the constructor fails).
+
+     - IfaceLocal"Entity"Manager  : Declares the handling methods for the 
+       bussiness logic of a local ledger that is not aware of the
+       Interledger ILP protocol. That is, a ledger handling local transfer.
+       This Local interface is free and independent of any other project appart
+       of java-vertx-ledger. It can be changed and modified at will by
+       developers. It will not be reused anywhere in any other project.
+
+     - IfaceILPSpec"Entity"Manager: Declares the handling methods for the bussiness
+       logic of a ledger connected and able to process the Intereldger 
+       ILP protocol.
+       >>IMPORTANT<<: Ideally all the IfaceILPSpec"Entity"Manager must be moved to
+       java-ilp-core so that they can be reused by any other 
+       non java-vertx-ledger related project.
+
+     - Iface"Entity"Manager: IfaceLocal"Entity"Manager + IfaceILPSpec"Entity"Manager
+
+   - ...everledger.managers:
+      - Contains concrete managers clases implementing the 
+      Iface"Entity"Manager. That means it will support all specs defined by
+      local and ILP interfaces.
+
+- Start-up sequence (REF: ILPLedgerAPIBootUpVerticle.main): 
+----------------------------------------------------------
+
+  - STEP 1: Init configuration:
+    - (org.interledger.everledger.Config is a read-only/inmutable class 
+      used "everywhere". 
+    - It's intialized from "application.conf" and from there on, 
+      it's always inmutable. (Thread-safe). All ilp-related parameters
+      will be contained in the "application.conf" and used by code in 
+      a way similar to:
+         System.output.println(Config.ilpPrefix);
+    - The application neglects to start if Config fails to initialize
+      (See fail-fast in coding style).
+
+  - STEP 2: Execute ILPLedgerAPIBootUpVerticle as a VertX verticle.
+     (VertxRunner.run(ILPLedgerAPIBootUpVerticle.class);
+     
+    - VertX will initialize its internal engine and finally invoque and
+      ILPLedgerAPIBootUpVerticle.start 
+      
+      - Will create the "http" routes mapping paths to handlers.
+
+
