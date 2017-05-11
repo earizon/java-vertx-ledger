@@ -45,7 +45,6 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
         return create(ILP_HOLD_ACCOUNT);
     }
     // } end IfaceILPSpecAccountManager implementation
-    
 
     // start IfaceILPSpecAccountManager implementation {
     public SimpleLedgerAccountManager() {

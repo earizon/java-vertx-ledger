@@ -74,26 +74,13 @@ public class AccountHandler extends RestEndpointHandler {
         if(data.containsKey(PARAM_BALANCE)) {
             balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
             account.setBalance(balance);
-        }        
+        }
         account.setMinimumAllowedBalance(minAllowedBalance);
         // if(data.containsKey(PARAM_DISABLED)) {
         //     ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         // }
         log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         accountManager.store(account);
-        /*
-         * -  "address": {
-           -    "ledgerPrefix": true
-           -    "value": "g.eur.everis.ledger1."
-           -  }
-           -  "certificateFingerprint": ""
-           -  "ledger": {
-           -    "ledgerPrefix": true
-           -    "value": "g.eur.everis.ledger1."
-           -  }
-           -  "localName": "candice"
-
-         */
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
     }
