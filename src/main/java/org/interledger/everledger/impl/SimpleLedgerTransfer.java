@@ -11,7 +11,7 @@ import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;

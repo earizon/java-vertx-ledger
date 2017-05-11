@@ -1,4 +1,4 @@
-package org.interledger.everledger.account;
+package org.interledger.everledger.ifaces.account;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

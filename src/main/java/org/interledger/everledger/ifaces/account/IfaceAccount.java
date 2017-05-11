@@ -1,4 +1,4 @@
-package org.interledger.everledger.account;
+package org.interledger.everledger.ifaces.account;
 
 import org.interledger.ilp.ledger.model.AccountInfo;
 

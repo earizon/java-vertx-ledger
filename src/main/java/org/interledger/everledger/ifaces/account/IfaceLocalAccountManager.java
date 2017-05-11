@@ -1,4 +1,4 @@
-package org.interledger.everledger.account;
+package org.interledger.everledger.ifaces.account;
 
 import java.util.Collection;
 

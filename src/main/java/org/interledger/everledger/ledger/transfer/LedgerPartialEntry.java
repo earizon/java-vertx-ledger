@@ -2,7 +2,7 @@ package org.interledger.everledger.ledger.transfer;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 
 
 /*

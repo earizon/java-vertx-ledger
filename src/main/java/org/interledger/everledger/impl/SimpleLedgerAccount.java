@@ -10,8 +10,8 @@ import javax.money.NumberValue;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.account.IfaceAccount;
-import org.interledger.everledger.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.account.IfaceAccount;
+import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.util.NumberConversionUtil;
 import org.javamoney.moneta.Money;
 

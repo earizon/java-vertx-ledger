@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.interledger.everledger.Config;
-import org.interledger.everledger.account.IfaceAccount;
-import org.interledger.everledger.account.IfaceAccountManager;
-import org.interledger.everledger.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.account.IfaceAccount;
+import org.interledger.everledger.ifaces.account.IfaceAccountManager;
+import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;
