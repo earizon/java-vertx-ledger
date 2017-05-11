@@ -1,4 +1,4 @@
-package org.interledger.everledger.common.api.util;
+package org.interledger.everledger.util;
 
 
 

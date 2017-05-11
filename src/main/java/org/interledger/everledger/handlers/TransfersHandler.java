@@ -17,9 +17,9 @@ import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
 import org.interledger.everledger.impl.SimpleLedgerTransferManager;
-import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.ledger.transfer.IfaceILPSpecTransferManager;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
+import org.interledger.everledger.util.ILPExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

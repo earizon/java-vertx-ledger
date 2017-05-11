@@ -13,7 +13,7 @@ import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.impl.SimpleLedgerAccountManager;
-import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.util.ILPExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,7 +3,7 @@ package org.interledger.ilp.common.api.util;
 import io.vertx.core.json.JsonObject;
 import static org.junit.Assert.assertEquals;
 
-import org.interledger.everledger.common.api.util.JsonObjectBuilder;
+import org.interledger.everledger.util.JsonObjectBuilder;
 import org.junit.Before;
 import org.junit.Test;
 

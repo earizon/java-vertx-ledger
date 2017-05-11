@@ -14,7 +14,7 @@ import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.format.MonetaryAmountFormat;
 
-import org.interledger.everledger.common.util.DSAPrivPubKeySupport;
+import org.interledger.everledger.util.DSAPrivPubKeySupport;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.ledger.model.LedgerInfo;

@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.model.TransferStatus;
 
 // TODO:(0) Use java-ilp-core interface.

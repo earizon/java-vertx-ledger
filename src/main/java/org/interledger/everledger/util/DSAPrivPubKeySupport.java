@@ -1,4 +1,4 @@
-package org.interledger.everledger.common.util;
+package org.interledger.everledger.util;
 
 //REF: http://stackoverflow.com/questions/9755057/converting-strings-to-encryption-keys-and-vice-versa-java
 

@@ -12,7 +12,7 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.account.IfaceAccount;
 import org.interledger.everledger.account.IfaceAccountManager;
 import org.interledger.everledger.account.IfaceLocalAccount;
-import org.interledger.everledger.common.api.util.ILPExceptionSupport;
+import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
