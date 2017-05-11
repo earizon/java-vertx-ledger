@@ -2,9 +2,8 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ledger.account.IfaceLocalAccount;
+import org.interledger.everledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
-
 import org.javamoney.moneta.Money;
 
 import static org.junit.Assert.*;

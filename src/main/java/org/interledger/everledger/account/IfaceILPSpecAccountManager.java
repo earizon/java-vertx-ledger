@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.account;
+package org.interledger.everledger.account;
 
 import java.net.URI;
 

@@ -3,7 +3,7 @@ package org.interledger.everledger.ledger.transfer;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ledger.account.IfaceLocalAccount;
+import org.interledger.everledger.account.IfaceLocalAccount;
 import org.interledger.ilp.InterledgerPacketHeader;
 
 public class Credit extends LedgerPartialEntry {

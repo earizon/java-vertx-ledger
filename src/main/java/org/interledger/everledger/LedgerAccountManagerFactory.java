@@ -1,6 +1,6 @@
 package org.interledger.everledger;
 
-import org.interledger.everledger.ledger.account.IfaceAccountManager;
+import org.interledger.everledger.account.IfaceAccountManager;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;
 
 /**
