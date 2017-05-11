@@ -110,7 +110,7 @@ public class Config {
                     + "prefixUri='"+prefixUri+"'}."
                     + " recheck server config");
         }
-        log.debug("serverPublicURL: {}", publicURL);
+        log.info("serverPublicURL: {}", publicURL);
                         } catch(Exception e){
         throw new RuntimeException("Can not read application.conf due to "+ e.toString());
                         }
@@ -230,5 +230,12 @@ public class Config {
         @Override public PublicKey getConditionSignPublicKey(){ return conditionSignPublicKey; }
 
         @Override public PublicKey getNotificationSignPublicKey(){ return notificationSignPublicKey; }
+    }
+
+    /**
+     * Execute this Config.main as java application to check that config is OK!
+     */
+    public static void main(String[] args) {
+        System.out.println(Config.debug);
     }
 }

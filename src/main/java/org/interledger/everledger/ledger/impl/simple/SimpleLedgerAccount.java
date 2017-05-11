@@ -47,6 +47,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
     // START IMPLEMENTATION IfaceLocalAccount {
 
     @Override
+    @JsonIgnore
     public String getLocalName() {
         return name;
     }
@@ -138,13 +139,14 @@ public class SimpleLedgerAccount implements IfaceAccount {
     
     // START IMPLEMENTATION IfaceLocalAccount {
     @Override
+    @JsonIgnore
     public InterledgerAddress getLedger() {
         return new InterledgerAddressBuilder().value(Config.ilpPrefix).build();
     }
 
     @Override
     public String getId() {
-        return Config.publicURL+"/accounts/"+name;
+        return Config.publicURL+"accounts/"+name;
     }
     
     @Override
@@ -153,6 +155,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
     }
     
     @Override
+    @JsonIgnore
     public InterledgerAddress getAddress() {
         return new InterledgerAddressBuilder().value(Config.ilpPrefix).build();
     }
@@ -169,6 +172,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
     }
 
     @Override
+    @JsonIgnore
     public byte[] getCertificateFingerprint() {
         return new byte[]{}; // TODO:(0) FIXME
     }

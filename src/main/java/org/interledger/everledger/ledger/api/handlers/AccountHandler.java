@@ -81,6 +81,19 @@ public class AccountHandler extends RestEndpointHandler {
         // }
         log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         accountManager.store(account);
+        /*
+         * -  "address": {
+           -    "ledgerPrefix": true
+           -    "value": "g.eur.everis.ledger1."
+           -  }
+           -  "certificateFingerprint": ""
+           -  "ledger": {
+           -    "ledgerPrefix": true
+           -    "value": "g.eur.everis.ledger1."
+           -  }
+           -  "localName": "candice"
+
+         */
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
     }
@@ -111,6 +124,7 @@ public class AccountHandler extends RestEndpointHandler {
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
         JsonObjectBuilder build = JsonObjectBuilder.create()
+                // .put("id", accountManager.getPublicURIForAccount(account))
                 .put("id", accountManager.getPublicURIForAccount(account))
                 .put("name", account.getLocalName())
                 .put("ledger", ledger);
