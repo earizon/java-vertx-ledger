@@ -2,13 +2,12 @@ package org.interledger.everledger.common.api.util;
 
 
 
-import org.interledger.everledger.common.config.Config;
-
+import org.interledger.everledger.Config;
+import org.interledger.everledger.HTTPInterledgerException;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.InterledgerError.ErrorCode;
-import org.interledger.everledger.common.api.HTTPInterledgerException;
 
 // TODO:(?) Move "somewhere else". This util has dependencies in config. Ummmm,...
 public class ILPExceptionSupport {

@@ -6,6 +6,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.account.IfaceLocalAccount;
 import org.interledger.everledger.common.api.auth.AuthInfo;
@@ -13,7 +14,6 @@ import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.impl.SimpleLedgerAccountManager;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
-import org.interledger.everledger.common.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

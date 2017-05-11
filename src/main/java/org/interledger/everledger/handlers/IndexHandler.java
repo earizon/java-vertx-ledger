@@ -4,7 +4,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.everledger.common.config.Config;
+import org.interledger.everledger.Config;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 
 /**

@@ -1,4 +1,4 @@
-package org.interledger.everledger.common.config;
+package org.interledger.everledger;
 
 import java.io.FileInputStream;
 import java.net.MalformedURLException;

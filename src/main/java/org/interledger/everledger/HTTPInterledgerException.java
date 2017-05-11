@@ -1,4 +1,4 @@
-package org.interledger.everledger.common.api;
+package org.interledger.everledger;
 
 import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.exceptions.InterledgerException;

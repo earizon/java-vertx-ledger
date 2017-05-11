@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
+import org.interledger.everledger.Config;
+import org.interledger.everledger.HTTPInterledgerException;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.api.util.VertxUtils;
-import org.interledger.everledger.common.config.Config;
 import org.interledger.ilp.InterledgerError;
-import org.interledger.everledger.common.api.HTTPInterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

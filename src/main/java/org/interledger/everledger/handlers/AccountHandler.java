@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.apache.commons.lang3.StringUtils;
+import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.impl.SimpleLedgerAccountManager;
@@ -16,7 +17,6 @@ import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
-import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.NumberConversionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

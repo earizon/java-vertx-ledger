@@ -6,12 +6,12 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import org.interledger.everledger.Config;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.impl.SimpleLedgerTransferManager;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
-import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.common.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.ledger.transfer.LedgerTransfer;
 import org.interledger.everledger.ledger.transfer.IfaceLocalTransferManager;
