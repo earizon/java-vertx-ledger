@@ -6,7 +6,7 @@ import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.account.IfaceAccount;
 import org.interledger.everledger.account.IfaceAccountManager;
 import org.interledger.everledger.account.IfaceLocalAccount;
-import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
+import org.interledger.everledger.impl.SimpleLedgerAccount;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

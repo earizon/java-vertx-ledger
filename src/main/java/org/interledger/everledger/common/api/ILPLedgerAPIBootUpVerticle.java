@@ -40,9 +40,9 @@ import org.interledger.everledger.handlers.TransferHandler;
 import org.interledger.everledger.handlers.TransferStateHandler;
 import org.interledger.everledger.handlers.TransferWSEventHandler;
 import org.interledger.everledger.handlers.TransfersHandler;
+import org.interledger.everledger.impl.SimpleLedgerAccount;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
-import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

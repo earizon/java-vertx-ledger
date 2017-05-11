@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.impl.simple;
+package org.interledger.everledger.impl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
