@@ -13,7 +13,7 @@ import java.io.StringWriter;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

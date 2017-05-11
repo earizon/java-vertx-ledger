@@ -12,13 +12,13 @@ import io.vertx.ext.web.RoutingContext;
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
-import org.interledger.everledger.common.api.auth.AuthInfo;
-import org.interledger.everledger.common.api.auth.AuthManager;
+import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
-import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
-import org.interledger.everledger.impl.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +63,7 @@ public class TransfersHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
         boolean transferMatchUser = false;
         
-        IfaceILPSpecTransferManager tm = SimpleLedgerTransferManager.getILPSpecTransferManager();
+        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
         Condition executionCondition;
@@ -72,7 +72,7 @@ public class TransfersHandler extends RestEndpointHandler {
         } catch (URIEncodingException e) {
             throw new RuntimeException("'"+ sExecCond + "' can't be parsed as URI");
         }
-        List<ILedgerTransfer> transferList = tm.getTransfersByExecutionCondition(executionCondition);
+        List<ILedgerTransfer> transferList = TM.getTransfersByExecutionCondition(executionCondition);
         
         JsonArray ja = new JsonArray();
         for (ILedgerTransfer transfer : transferList) {

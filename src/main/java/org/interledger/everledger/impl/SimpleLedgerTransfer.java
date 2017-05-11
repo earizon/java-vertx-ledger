@@ -13,6 +13,7 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;

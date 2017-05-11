@@ -1,4 +1,4 @@
-package org.interledger.everledger.impl;
+package org.interledger.everledger.impl.manager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,8 +12,7 @@ import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
-import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
-import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
@@ -40,7 +39,7 @@ import org.slf4j.LoggerFactory;
  *    - http://docs.oracle.com/javaee/6/tutorial/doc/bncij.html
  *    - ...
  */
-public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, IfaceILPSpecTransferManager {
+public class SimpleLedgerTransferManager implements IfaceTransferManager {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleLedgerTransferManager.class);
 
@@ -56,17 +55,23 @@ public class SimpleLedgerTransferManager implements IfaceLocalTransferManager, I
     // Make default constructor private to avoid instantiating new classes.
     private SimpleLedgerTransferManager() {}
 
-    public static IfaceLocalTransferManager getLocalTransferManager() {
+    public static IfaceTransferManager getTransferManager() {
         // TODO:(0) Move function to factory
         //      similar to LedgerAccountManagerFactory
-        return singleton;
+        return (IfaceTransferManager) singleton;
     }
 
-    public static IfaceILPSpecTransferManager getILPSpecTransferManager() {
-        // TODO:(0) Move function to factory
-        //      similar to LedgerAccountManagerFactory
-        return singleton;
-    }
+//    public static IfaceLocalTransferManager _getLocalTransferManager() {
+//        // TODO:(0) Move function to factory
+//        //      similar to LedgerAccountManagerFactory
+//        return (IfaceLocalTransferManager) singleton;
+//    }
+//
+//    public static IfaceILPSpecTransferManager _getILPSpecTransferManager() {
+//        // TODO:(0) Move function to factory
+//        //      similar to LedgerAccountManagerFactory
+//        return (IfaceILPSpecTransferManager) singleton;
+//    }
 
     // START IfaceLocalTransferManager implementation {
     @Override

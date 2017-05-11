@@ -1,7 +1,7 @@
 package org.interledger.everledger;
 
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
-import org.interledger.everledger.impl.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 
 /**
  * Ledger factory.

@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.interledger.everledger.common.api.auth.AuthInfo;
-import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.AccountHandler;
 import org.interledger.everledger.handlers.AccountsHandler;
 import org.interledger.everledger.handlers.DebugRequestHandler;
@@ -40,6 +38,7 @@ import org.interledger.everledger.handlers.TransferWSEventHandler;
 import org.interledger.everledger.handlers.TransfersHandler;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
 import org.interledger.everledger.impl.SimpleLedgerAccount;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.VertxRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

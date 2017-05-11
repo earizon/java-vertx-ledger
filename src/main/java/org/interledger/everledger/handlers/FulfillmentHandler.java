@@ -10,18 +10,17 @@ import io.vertx.ext.web.RoutingContext;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
-import org.interledger.everledger.common.api.auth.AuthInfo;
-import org.interledger.everledger.common.api.auth.AuthManager;
+import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
-import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
-import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
-import org.interledger.everledger.impl.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
@@ -77,8 +76,10 @@ public class FulfillmentHandler extends RestEndpointHandler {
          */
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
-        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
+        
+        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+//        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
+//        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
         /*
          * REF: https://gitter.im/interledger/Lobby
@@ -103,7 +104,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     Note that the actual cryptographic signature might still be against a message - via prefix 
          *     conditions (which append a prefix to this empty message)
          **/
-        ILedgerTransfer transfer = localTM.getLocalTransferById(transferID);
+        ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
             ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() + "Transfer is not conditional");
@@ -138,7 +139,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("execution fulfillment doesn't validate");
                 }
-                ilpTM.executeRemoteILPTransfer(transfer, ff);
+                TM.executeRemoteILPTransfer(transfer, ff);
 
             }
         } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
@@ -147,7 +148,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 if (!ff.verify(ff.getCondition(), message)){
                     throw new RuntimeException("cancelation fulfillment doesn't validate");
                 }
-                ilpTM.abortRemoteILPTransfer(transfer, ff);
+                TM.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
             ILPExceptionSupport.createILPException(
@@ -201,12 +202,12 @@ public class FulfillmentHandler extends RestEndpointHandler {
         } else {
             throw new RuntimeException("path doesn't match /fulfillment | /rejection");
         }
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
+        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
 
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
-        ILedgerTransfer transfer = localTM.getLocalTransferById(transferID);
+        ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
         transferMatchUser = false 
                 || ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;

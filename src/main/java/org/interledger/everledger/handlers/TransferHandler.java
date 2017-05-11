@@ -19,23 +19,23 @@ import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
+import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
-import org.interledger.everledger.common.api.auth.AuthInfo;
-import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccountManager;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
-import org.interledger.everledger.ifaces.transfer.IfaceILPSpecTransferManager;
 import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleLedgerTransfer;
-import org.interledger.everledger.impl.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
@@ -217,8 +217,7 @@ public class TransferHandler extends RestEndpointHandler {
                     dstAddress, ammount, ilp_ph_condition, zdt);
             creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
         }
-        IfaceILPSpecTransferManager ilpTM   = SimpleLedgerTransferManager.getILPSpecTransferManager();
-        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager(); // TODO:(0) The ILP handler must not be aware of LocalTransfers.
+        IfaceTransferManager TM   = SimpleLedgerTransferManager.getTransferManager();
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         DTTM DTTM_proposed = DTTM.getNow();
@@ -252,11 +251,11 @@ public class TransferHandler extends RestEndpointHandler {
                 DTTM_expires, DTTM_proposed, data, noteToSelf, status);
 
         // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
-        boolean isNewTransfer = !ilpTM.doesTransferExists(ilpTransferID);
+        boolean isNewTransfer = !TM.doesTransferExists(ilpTransferID);
         log.debug("is new transfer?: " + isNewTransfer);
 
         ILedgerTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
-                : localTM.getLocalTransferById(transferID);
+                : TM.getLocalTransferById(transferID);
         if (!isNewTransfer) {
             // Check that received json data match existing transaction.
             // TODO: Recheck (Multitransfer active now)
@@ -268,7 +267,7 @@ public class TransferHandler extends RestEndpointHandler {
                         "data for credits and/or debits doesn't match existing registry");
             }
         } else {
-            ilpTM.createNewRemoteILPTransfer(receivedTransfer);
+            TM.createNewRemoteILPTransfer(receivedTransfer);
         }
         try { // TODO: Refactor Next code for notification (next two loops) are
               // duplicated in FulfillmentHandler
@@ -305,10 +304,10 @@ public class TransferHandler extends RestEndpointHandler {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
 
-        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
+        IfaceLocalTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
-        ILedgerTransfer transfer = tm.getLocalTransferById(
+        ILedgerTransfer transfer = TM.getLocalTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
         String debit0_account = transfer.getDebits()[0].account.getLocalName();

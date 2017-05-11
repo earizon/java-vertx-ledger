@@ -1,9 +1,11 @@
-package org.interledger.everledger.common.api.auth;
+package org.interledger.everledger.util;
 
 
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 
 //import io.vertx.ext.auth.AuthProvider;
@@ -13,7 +15,9 @@ import io.vertx.ext.web.RoutingContext;
 //import io.vertx.ext.web.handler.AuthHandler;
 
 
-import org.interledger.everledger.util.ILPExceptionSupport;
+
+
+import org.interledger.everledger.AuthInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

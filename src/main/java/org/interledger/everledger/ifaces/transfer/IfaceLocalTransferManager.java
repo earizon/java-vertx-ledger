@@ -2,7 +2,7 @@ package org.interledger.everledger.ifaces.transfer;
 
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
-public  interface IfaceLocalTransferManager {
+public interface IfaceLocalTransferManager {
 
     ILedgerTransfer getLocalTransferById(LocalTransferID transferId);
 

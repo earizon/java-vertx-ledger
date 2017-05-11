@@ -6,14 +6,14 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.common.api.auth.AuthInfo;
-import org.interledger.everledger.common.api.auth.AuthManager;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
-import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
-import org.interledger.everledger.impl.SimpleLedgerTransferManager;
+import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.ledger.model.TransferStatus;
@@ -82,11 +82,11 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         String transferId = context.request().getParam(transferUUID);
         LocalTransferID transferID = new LocalTransferID(transferId);
-        IfaceLocalTransferManager tm = SimpleLedgerTransferManager.getLocalTransferManager();
+        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
-        if (tm.doesTransferExists(transferID)) { 
-            ILedgerTransfer transfer = tm.getLocalTransferById(transferID);
+        if (TM.doesTransferExists(transferID)) { 
+            ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
             status = transfer.getTransferStatus();
             transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                             ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());

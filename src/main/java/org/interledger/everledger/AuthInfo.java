@@ -1,11 +1,11 @@
-package org.interledger.everledger.common.api.auth;
+package org.interledger.everledger;
 
 
 public class AuthInfo {
-    final String id;
-    final String name;
-    final String pass;
-    final String roll; // TODO:(0) Create ENUM 
+    final public String id;
+    final public String name;
+    final public String pass;
+    final public String roll; // TODO:(0) Create ENUM 
 
     public static final AuthInfo ANONYMOUS = new AuthInfo("","","", "none");
     

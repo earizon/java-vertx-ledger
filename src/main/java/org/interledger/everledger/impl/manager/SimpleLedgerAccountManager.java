@@ -1,4 +1,4 @@
-package org.interledger.everledger.impl;
+package org.interledger.everledger.impl.manager;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,6 +12,7 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
+import org.interledger.everledger.impl.SimpleLedgerAccount;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;

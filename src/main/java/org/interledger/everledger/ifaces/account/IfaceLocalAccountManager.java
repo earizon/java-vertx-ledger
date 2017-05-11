@@ -27,5 +27,5 @@ public interface IfaceLocalAccountManager {
 
     Collection<IfaceLocalAccount> getAccounts(int page, int pageSize);
 
-
+    void store(IfaceAccount account);
 }
