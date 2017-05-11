@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.ledger.account.IfaceAccount;
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.ILPExceptionSupport;
 import org.interledger.everledger.common.api.util.JsonObjectBuilder;
 import org.interledger.everledger.common.config.Config;

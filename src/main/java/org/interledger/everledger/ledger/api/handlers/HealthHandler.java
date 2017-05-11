@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
 
 /**
  * Health handler

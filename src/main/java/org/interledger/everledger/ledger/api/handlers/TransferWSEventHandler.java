@@ -10,7 +10,7 @@ import io.vertx.ext.web.RoutingContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.IfaceLocalAccount;
 import org.interledger.everledger.ledger.impl.simple.SimpleLedgerAccountManager;

@@ -45,13 +45,12 @@ public class Config {
                 "due to " + e.toString() +"\n");
                 }
     }
-    
+
     public static final boolean debug = getBoolean("server.debug");
     public static final String ilpPrefix=getString("ledger.ilp.prefix");
     public static final String ledgerCurrencyCode=getString("ledger.currency.code");
     public static final String ledgerCurrencySymbol=getString("ledger.currency.symbol");
     public static final String ledgerPathPrefix = getString("ledger.path.prefix");
-
 
     public static final String serverHost=getString("server.host");
     public static final int    serverPort=getInteger("server.port");

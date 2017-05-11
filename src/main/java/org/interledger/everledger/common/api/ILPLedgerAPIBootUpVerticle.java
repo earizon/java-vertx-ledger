@@ -26,13 +26,13 @@ import java.util.Set;
 
 import org.interledger.everledger.common.api.auth.AuthInfo;
 import org.interledger.everledger.common.api.auth.AuthManager;
-import org.interledger.everledger.common.api.handlers.DebugRequestHandler;
-import org.interledger.everledger.common.api.handlers.RestEndpointHandler;
+import org.interledger.everledger.ledger.api.handlers.DebugRequestHandler;
+import org.interledger.everledger.ledger.api.handlers.RestEndpointHandler;
 import org.interledger.everledger.common.api.util.VertxRunner;
 import org.interledger.everledger.common.config.Config;
 import org.interledger.everledger.ledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ledger.account.IfaceAccountManager;
-import org.interledger.everledger.common.api.handlers.IndexHandler;
+import org.interledger.everledger.ledger.api.handlers.IndexHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountHandler;
 import org.interledger.everledger.ledger.api.handlers.AccountsHandler;
 import org.interledger.everledger.ledger.api.handlers.FulfillmentHandler;
