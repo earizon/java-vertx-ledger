@@ -86,25 +86,18 @@ public class AccountHandler extends RestEndpointHandler {
     }
 
     private IfaceAccount getAccountByName(RoutingContext context) {
-        String accountName = getAccountNameOrThrowException(context);
+        String accountName = getAccountName(context);
         log.debug("Get account {}", accountName);
         return LedgerAccountManagerFactory.getLedgerAccountManagerSingleton().getAccountByName(accountName);
     }
 
     private String getAccountName(RoutingContext context) {
         String accountName = context.request().getParam(PARAM_NAME);
-        return accountName == null ? null : accountName.trim().toLowerCase();
-    }
-
-    private String getAccountNameOrThrowException(RoutingContext context) {
-        String accountName = getAccountName(context);
         if (StringUtils.isBlank(accountName)) {
-            throw new RestEndpointException(HttpResponseStatus.BAD_REQUEST, accountName);
+            throw ILPExceptionSupport.createILPBadRequestException(PARAM_NAME + "not provided");
         }
         return accountName;
     }
-
-
 
     private JsonObject accountToJsonObject(IfaceAccount account, boolean isAdmin) {
         String ledger = Config.publicURL.toString();

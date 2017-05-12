@@ -23,28 +23,44 @@ public class ILPExceptionSupport {
         return new HTTPInterledgerException(httpErrCode, new InterledgerError(errCode, triggeredBy, data));
     }
 
-    /**
-     * Shortcut for Non-ILP-related/Non-Expected Errors that will be returned
-     * as ILP Error TOO Internal Errors
-     * 
-     * @param data
-     */
+    // Next follow some wrappers arount createILPException, more human-readable.
+    // ----------- Internal --------------
     public static HTTPInterledgerException createILPInternalException(String data) {
-        return new HTTPInterledgerException(500, new InterledgerError(ErrorCode.T00_INTERNAL_ERROR /* Looks Internal error is not Temporal */, triggeredBy, data));
+        return createILPException(500, ErrorCode.T00_INTERNAL_ERROR, data);
     }
 
+    // ------------ Unauthorized -------------
+    public static HTTPInterledgerException createILPUnauthorizedException(String data) {
+        // TODO:(RFC) Use new ErrorCode.??_FORBIDDEN / Unauthorized
+        return createILPException(401, ErrorCode.T00_INTERNAL_ERROR , data); 
+    }
     public static HTTPInterledgerException createILPUnauthorizedException() {
-        // TODO:(0) Use new ErrorCode.??_FORBIDDEN
-        return createILPException(401, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
+        return createILPUnauthorizedException("Unauthorized"); 
     }
 
+    // ----------- Forbidden --------------
+    public static HTTPInterledgerException createILPForbiddenException(String data) {
+        // TODO:(ILP) Use new ErrorCode.??_FORBIDDEN
+        return createILPException(403, ErrorCode.T00_INTERNAL_ERROR , "data"); 
+    }
     public static HTTPInterledgerException createILPForbiddenException() {
-        // TODO:(0) Use new ErrorCode.??_FORBIDDEN
-        return createILPException(403, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
+        return createILPForbiddenException("Forbidden"); 
     }
 
+    // ------------ NotFound -------------
+    public static HTTPInterledgerException createILPNotFoundException(String data) {
+        // TODO:(ILP) Use new ErrorCode.??_NOT_FOUND
+        return createILPException(404, ErrorCode.T00_INTERNAL_ERROR , data); 
+    }
     public static HTTPInterledgerException createILPNotFoundException() {
-        return createILPException(404, ErrorCode.T00_INTERNAL_ERROR /* TODO:(RFC) Create another code for this?*/, "Forbidden"); 
+        return createILPNotFoundException("Not Found"); 
     }
 
+    // ------------- BadRequest ------------
+    public static HTTPInterledgerException createILPBadRequestException(String data) {
+        return createILPException(404, ErrorCode.F00_BAD_REQUEST , data); 
+    }
+    public static HTTPInterledgerException createILPBadRequestException() {
+        return createILPBadRequestException("Forbidden"); 
+    }
 }

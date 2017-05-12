@@ -203,35 +203,6 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
         }
     }
 
-    protected static class RestEndpointException extends RuntimeException {
-
-        private static final long serialVersionUID = 1L;
-        private HttpResponseStatus responseStatus;
-        private JsonObject response;
-
-        public RestEndpointException(HttpResponseStatus responseStatus, Supplier<JsonObject> response) {
-            this(responseStatus, response.get());
-        }
-
-        public RestEndpointException(HttpResponseStatus responseStatus, String response) {
-            this(responseStatus, buildJSON("Error", response));
-        }
-
-        public RestEndpointException(HttpResponseStatus responseStatus, JsonObject response) {
-            this.responseStatus = responseStatus;
-            this.response = response;
-        }
-
-        public HttpResponseStatus getResponseStatus() {
-            return responseStatus;
-        }
-
-        public JsonObject getResponse() {
-            return response;
-        }
-
-    }
-
     @Override
     public String toString() {
         return this.getClass().getName();
