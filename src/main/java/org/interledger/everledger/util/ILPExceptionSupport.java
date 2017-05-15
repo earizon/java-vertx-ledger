@@ -58,7 +58,7 @@ public class ILPExceptionSupport {
 
     // ------------- BadRequest ------------
     public static HTTPInterledgerException createILPBadRequestException(String data) {
-        return createILPException(404, ErrorCode.F00_BAD_REQUEST , data); 
+        return createILPException(400, ErrorCode.F00_BAD_REQUEST , data); 
     }
     public static HTTPInterledgerException createILPBadRequestException() {
         return createILPBadRequestException("Forbidden"); 

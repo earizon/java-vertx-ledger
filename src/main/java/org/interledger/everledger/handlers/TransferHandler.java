@@ -122,11 +122,11 @@ public class TransferHandler extends RestEndpointHandler {
         JsonArray debits = requestBody.getJsonArray("debits");
 
         if (debits == null) {
-            ILPExceptionSupport.createILPException(
+            throw ILPExceptionSupport.createILPException(
                     403, ErrorCode.F00_BAD_REQUEST,"debits not found");
         }
         if (debits.size()!=1) {
-            ILPExceptionSupport.createILPException(
+            throw ILPExceptionSupport.createILPException(
                 500, ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
         }
         Debit[] debitList = new Debit[debits.size()];
@@ -142,11 +142,16 @@ public class TransferHandler extends RestEndpointHandler {
             if (ai.getId().equals(account_name)) { 
                 transferMatchUser = true; 
             }
+            MonetaryAmount debit_ammount; 
+                    try { 
+            debit_ammount = Money.of(
+                    Double.parseDouble(jsonDebit.getString("amount")), 
+                    currencyUnit);
+            }catch(Exception e){
+                throw ILPExceptionSupport.createILPBadRequestException();
+            }
             IfaceLocalAccount debitor = ledgerAccountManager
                     .getAccountByName(account_name);
-            MonetaryAmount debit_ammount = Money.of(
-                    Double.parseDouble(jsonDebit.getString("amount")),
-                    currencyUnit);
             log.debug("check123 debit_ammount (must match jsonDebit ammount: "
                     + debit_ammount.toString());
             debitList[idx] = new Debit(debitor, debit_ammount);

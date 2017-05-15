@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.interledger.everledger.handlers.AccountHandler;
 import org.interledger.everledger.handlers.AccountsHandler;
+import org.interledger.everledger.handlers.AccountsListHandler;
 import org.interledger.everledger.handlers.DebugRequestHandler;
 import org.interledger.everledger.handlers.FulfillmentHandler;
 import org.interledger.everledger.handlers.HealthHandler;
@@ -150,8 +150,8 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
         List<RestEndpointHandler> handlers = Arrays.asList(
                       IndexHandler.create(),
                      HealthHandler.create(),
-                   AccountsHandler.create(),
-                    AccountHandler.create(),
+                   AccountsListHandler.create(),
+                    AccountsHandler.create(),
                    TransferHandler.create(),
             TransferWSEventHandler.create(),
                   TransfersHandler.create(),

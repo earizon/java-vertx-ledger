@@ -2,6 +2,8 @@ package org.interledger.everledger.ledger.transfer;
 
 import java.util.regex.Pattern;
 
+import org.interledger.everledger.util.ILPExceptionSupport;
+
 public class ILPSpecTransferID {
     // TODO:(0) Recheck. It was created to indicate ILP transferIDs in old rfcs.
     // Now is just an internal Ledger class with free implementation. Recheck java-ilp-core and RFCs
@@ -22,8 +24,7 @@ public class ILPSpecTransferID {
         }
         java.util.regex.Matcher m = regex.matcher(transferID);
         if (!m.matches()) {
-            throw new IllegalArgumentException(
-                    "transferID '" + transferID + "' doesn't match " + SREGEX);
+            throw ILPExceptionSupport.createILPBadRequestException();
         }
         this.transferID = transferID;
     }
