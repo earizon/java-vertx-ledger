@@ -30,7 +30,8 @@ import org.javamoney.moneta.Money;
 public class SimpleLedgerTransfer implements ILedgerTransfer {
 
     public static final Fulfillment FF_NOT_PROVIDED = new PreimageSha256Fulfillment(new byte[]{});
-    public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(new byte[]{}, 1000);
+    public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(
+            new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}, 1000);
     
     static  final SimpleLedgerAccountManager  ledgerAccountManager = 
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
@@ -276,7 +277,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         jo.put("debits" , entryList2Json( debit_list));
         jo.put("credits", entryList2Json(credit_list));
         jo.put("execution_condition", this.getExecutionCondition().toString());
-        jo.put("state", this.getTransferStatus().toString());
+        jo.put("state", this.getTransferStatus().toString().toLowerCase());
 //        if (!this.getCancellationCondition().equals(Condition....NOT_PROVIDED)) {
 //            jo.put("cancellation_condition", this.getCancellationCondition());
 //        }
@@ -321,7 +322,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         for (LedgerPartialEntry entry : input_list) {
             // FIXME: This code to calculate amount is PLAIN WRONG. Just to pass five-bells-ledger tests
             JsonObject jo = new JsonObject();
-            jo.put("account", ledgerAccountManager.getPublicURIForAccount(entry.account) );
+            jo.put("account", ledgerAccountManager.getPublicURIForAccount(entry.account).toString() );
             String sAmount = "" + entry. amount.getNumber();
             jo.put( "amount", sAmount);
             if (entry instanceof Debit) {

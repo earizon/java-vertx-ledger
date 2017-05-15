@@ -1,7 +1,6 @@
 package org.interledger.everledger.handlers;
 
 import java.net.URI;
-import java.time.ZonedDateTime;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -83,6 +82,8 @@ public class TransferHandler extends RestEndpointHandler {
     protected void handlePut(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject requestBody = getBodyAsJson(context);
+System.out.println("deleteme context.getBodyAsString():"+context.getBodyAsString());
+
         boolean transferMatchUser = false;
         log.trace(this.getClass().getName() + "handlePut invoqued ");
         log.trace(context.getBodyAsString());
@@ -118,12 +119,10 @@ public class TransferHandler extends RestEndpointHandler {
         JsonArray debits = requestBody.getJsonArray("debits");
 
         if (debits == null) {
-            throw ILPExceptionSupport.createILPException(
-                    403, ErrorCode.F00_BAD_REQUEST,"debits not found");
+            throw ILPExceptionSupport.createILPBadRequestException("debits not found");
         }
         if (debits.size()!=1) {
-            throw ILPExceptionSupport.createILPException(
-                500, ErrorCode.F00_BAD_REQUEST,"Only one debitor supported by ledger");
+            throw ILPExceptionSupport.createILPBadRequestException("Only one debitor supported by ledger");
         }
         Debit[] debitList = new Debit[debits.size()];
         CurrencyUnit currencyUnit /* local ledger currency */= Monetary
@@ -147,6 +146,7 @@ public class TransferHandler extends RestEndpointHandler {
                     Double.parseDouble(jsonDebit.getString("amount")), 
                     currencyUnit);
             }catch(Exception e){
+                System.out.println(e.toString());
                 throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
             }
             if (debit_ammount.getNumber().floatValue() == 0.0) {
@@ -164,6 +164,7 @@ public class TransferHandler extends RestEndpointHandler {
         // REF: JsonArray ussage:
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
         JsonArray credits = requestBody.getJsonArray("credits");
+System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
 
         String sExpiresAt = requestBody.getString("expires_at"); // can be null
         DTTM DTTM_expires ; try {
@@ -203,6 +204,7 @@ public class TransferHandler extends RestEndpointHandler {
             }
             MonetaryAmount credit_ammount;
             try {
+System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
                 credit_ammount = Money.of(
                     Double.parseDouble(jsonCredit.getString("amount")),
                     currencyUnit);
@@ -210,7 +212,8 @@ public class TransferHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
             }
             if (credit_ammount.getNumber().floatValue() == 0.0) {
-                throw ILPExceptionSupport.createILPException(422, ErrorCode.F00_BAD_REQUEST , "credit is zero"); 
+                throw ILPExceptionSupport.createILPException(422,
+                        ErrorCode.F00_BAD_REQUEST , "credit is zero"); 
             }
 
             IfaceLocalAccount creditor = ledgerAccountManager
