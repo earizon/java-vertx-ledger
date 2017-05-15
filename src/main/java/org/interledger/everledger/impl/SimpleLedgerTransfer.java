@@ -334,15 +334,13 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
                 //          "amount":"1",
                 //          "data":{"expires_at":"2016-11-10T15:51:27.134Z"}}
                 //  }}
-                System.out.println(">>>deleteme (Credit)entry).ph.getExpiry().toString()"+((Credit)entry).ph.getExpiry().toString());
-                System.out.println(">>>deleteme DTTM_expires.toString()"+DTTM_expires.toString());
-                JsonObject memo = new JsonObject(), ilp_header = new JsonObject(), data = new JsonObject();
-                ilp_header.put("account", ((Credit)entry).ph.getDestinationAddress());
-                ilp_header.put("amount",  ""+((Credit)entry).ph.getAmount());// TODO: Recheck
-                data.put("expires_at", /*((Credit)entry).ph.getExpiry().toString()*/DTTM_expires.toString());  // TODO: Recheck.
-                ilp_header.put("data", data);
-                memo.put("ilp_header", ilp_header);
-                jo.put("memo", memo);
+                // COMMENTED OLD API JsonObject memo = new JsonObject()/*, ilp_header = new JsonObject()*/, data = new JsonObject();
+                // COMMENTED OLD API ilp_header.put("account", ((Credit)entry).ph.getDestinationAddress());
+                // COMMENTED OLD API ilp_header.put("amount",  ""+((Credit)entry).ph.getAmount());// TODO: Recheck
+                // COMMENTED OLD API data.put("expires_at", /*((Credit)entry).ph.getExpiry().toString()*/DTTM_expires.toString());  // TODO: Recheck.
+                // COMMENTED OLD API ilp_header.put("data", data);
+                // COMMENTED OLD API memo.put("ilp_header", ilp_header);
+                // COMMENTED OLD API jo.put("memo", memo);
             }
             ja.add(jo);
         }

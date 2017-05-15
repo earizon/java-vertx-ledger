@@ -1,6 +1,5 @@
 package org.interledger.everledger.handlers;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.time.ZonedDateTime;
 
@@ -37,9 +36,6 @@ import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
-import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.InterledgerAddressBuilder;
-import org.interledger.ilp.InterledgerPacketHeader;
 import org.interledger.ilp.InterledgerError.ErrorCode;
 import org.interledger.ilp.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
@@ -139,6 +135,9 @@ public class TransferHandler extends RestEndpointHandler {
             // debit0 will be similar to
             // {"account":"http://localhost/accounts/alice","amount":"50"}
             String account_name = jsonDebit.getString("account");
+            if (account_name.lastIndexOf('/')>0){
+                   account_name = account_name.substring(account_name.lastIndexOf('/')+1);
+            }
             if (ai.getId().equals(account_name)) { 
                 transferMatchUser = true; 
             }
@@ -148,7 +147,10 @@ public class TransferHandler extends RestEndpointHandler {
                     Double.parseDouble(jsonDebit.getString("amount")), 
                     currencyUnit);
             }catch(Exception e){
-                throw ILPExceptionSupport.createILPBadRequestException();
+                throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
+            }
+            if (debit_ammount.getNumber().floatValue() == 0.0) {
+                throw ILPExceptionSupport.createILPException(422, ErrorCode.F00_BAD_REQUEST , "debit is zero"); 
             }
             IfaceLocalAccount debitor = ledgerAccountManager
                     .getAccountByName(account_name);
@@ -163,7 +165,13 @@ public class TransferHandler extends RestEndpointHandler {
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
         JsonArray credits = requestBody.getJsonArray("credits");
 
-        DTTM DTTM_expires = new DTTM(requestBody.getString("expires_at"));
+        String sExpiresAt = requestBody.getString("expires_at"); // can be null
+        DTTM DTTM_expires ; try {
+            DTTM_expires = (sExpiresAt==null) ? DTTM.future : new DTTM(sExpiresAt);
+        }catch(Exception e){
+            throw ILPExceptionSupport.createILPBadRequestException("unparseable expires_at");
+
+        }
 
         String execution_condition = requestBody
                 .getString("execution_condition");
@@ -187,40 +195,50 @@ public class TransferHandler extends RestEndpointHandler {
              * , "amount":"1", "data":{"expires_at":"2016-11-10T15:51:27.134Z"}
              * } } }
              */
-            JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
-                    .getJsonObject("ilp_header");
-            String account_name = jsonCredit.getString("account"); // TODO:(0)
-                                                                   // FIXME. We
-                                                                   // receive an
-                                                                   // URL, not
-                                                                   // an "ID"
-            IfaceLocalAccount creditor = ledgerAccountManager
-                    .getAccountByName(account_name);
-            MonetaryAmount credit_ammount = Money.of(
+            // COMMENTED OLD API JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
+            // COMMENTED OLD API         .getJsonObject("ilp_header");
+            String account_name = jsonCredit.getString("account");
+            if (account_name.lastIndexOf('/')>0){
+                   account_name = account_name.substring(account_name.lastIndexOf('/')+1);
+            }
+            MonetaryAmount credit_ammount;
+            try {
+                credit_ammount = Money.of(
                     Double.parseDouble(jsonCredit.getString("amount")),
                     currencyUnit);
-
-            String ilp_ph_ilp_dst_address = jsonMemoILPHeader
-                    .getString("account");
-
-            InterledgerAddress dstAddress = InterledgerAddressBuilder.builder()
-                    .value(ilp_ph_ilp_dst_address).build();
-            String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
-            BigDecimal ammount = new BigDecimal(ilp_ph_amount); // TODO:(0)
-                                                                // FIXME?
-            Condition ilp_ph_condition = URIExecutionCond;
-            DTTM ilp_ph_expires = new DTTM(jsonMemoILPHeader.getJsonObject(
-                    "data").getString("expires_at"));
-            if (!DTTM_expires.equals(ilp_ph_expires)) {
-                DTTM_expires = ilp_ph_expires;// TODO: Recheck
+            }catch(Exception e){
+                throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
             }
-            ZonedDateTime zdt = ZonedDateTime.parse((DTTM_expires.toString()));
+            if (credit_ammount.getNumber().floatValue() == 0.0) {
+                throw ILPExceptionSupport.createILPException(422, ErrorCode.F00_BAD_REQUEST , "credit is zero"); 
+            }
+
+            IfaceLocalAccount creditor = ledgerAccountManager
+                    .getAccountByName(account_name);
+
+
+            // COMMENTED OLD API String ilp_ph_ilp_dst_address = jsonMemoILPHeader
+            // COMMENTED OLD API         .getString("account");
+
+            // COMMENTED OLD API InterledgerAddress dstAddress = InterledgerAddressBuilder.builder()
+            // COMMENTED OLD API         .value(ilp_ph_ilp_dst_address).build();
+            // COMMENTED OLD API String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
+            // COMMENTED OLD API BigDecimal ammount = new BigDecimal(ilp_ph_amount); // TODO:(0)
+                                                                // FIXME?
+            // COMMENTED OLD API Condition ilp_ph_condition = URIExecutionCond;
+            // COMMENTED OLD API DTTM ilp_ph_expires = new DTTM(jsonMemoILPHeader.getJsonObject(
+            // COMMENTED OLD API         "data").getString("expires_at"));
+            // COMMENTED OLD API if (!DTTM_expires.equals(ilp_ph_expires)) {
+            // COMMENTED OLD API     DTTM_expires = ilp_ph_expires;// TODO: Recheck
+            // COMMENTED OLD API }
+            // COMMENTED OLD API ZonedDateTime zdt = ZonedDateTime.parse((DTTM_expires.toString()));
             // InterledgerPacketHeader(InterledgerAddress destinationAddress,
             // BigDecimal amount,
             // Condition condition, ZonedDateTime expiry)
-            InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(
-                    dstAddress, ammount, ilp_ph_condition, zdt);
-            creditList[idx] = new Credit(creditor, credit_ammount, memo_ph);
+            // COMMENTED OLD API InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(
+            // COMMENTED OLD API         dstAddress, ammount, ilp_ph_condition, zdt);
+            // In five-bells-ledger, memo goes into transfer_adjustments table (@ src/sql/pg/...)
+            creditList[idx] = new Credit(creditor, credit_ammount/*, memo_ph*/);
         }
         IfaceTransferManager TM   = SimpleLedgerTransferManager.getTransferManager();
         String data = ""; // Not yet used
