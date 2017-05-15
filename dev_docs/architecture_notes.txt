@@ -1,9 +1,6 @@
 - Coding Style:
 ---------------
 
-
-
-   
    - Inmutable by default code makes code much more resiliant to errors.
      class instances are defined at contruction time, and internal members declared final.
      The compiler will neglect to compile if it detects that a class member can be 
@@ -48,32 +45,37 @@ SubPackages of org.interledger.everledger:
      For each entity (informally speaking an entity is anything that
      can be mentally mapped to a row in a database, that is, it contains
      an unique id) we will define varios interfaces:
-     - "Entity"Interface: Defines the getters with data that can be
-       stored in the entity. Notice that since we use inmutable code
-       there will ussually not be getters. All initialization must
-       be done in the constructor (or fail-fast and throw an exception
-       if the constructor fails).
+       - Entity Interfaces:
+         - IfaceLocal"Entity": Defines the getters with data that can be
+           stored in the entity. Notice that since we use inmutable code
+           there will ussually not be getters. All initialization must
+           be done in the constructor (or fail-fast and throw an exception
+           if the constructor fails).
+         - IfaceILPSpec"Entity":Defines the getters with data that can be
+           stored in the entity related to ILP protocol.
+         - Iface"Entity": IfaceLocal"Entity" + IfaceILPSpec"Entity"
 
-     - IfaceLocal"Entity"Manager  : Declares the handling methods for the 
-       bussiness logic of a local ledger that is not aware of the
-       Interledger ILP protocol. That is, a ledger handling local transfer.
-       This Local interface is free and independent of any other project appart
-       of java-vertx-ledger. It can be changed and modified at will by
-       developers. It will not be reused anywhere in any other project.
+       - Manager Interfaces (Business logic, Stateless session beans in JEE terminology(>
+         - IfaceLocal"Entity"Manager  : Declares the handling methods for the 
+           bussiness logic of a local ledger that is not aware of the
+           Interledger ILP protocol. That is, a ledger handling local transfer.
+           This Local interface is free and independent of any other project appart
+           of java-vertx-ledger. It can be changed and modified at will by
+           developers. It will not be reused anywhere in any other project.
+         
+         - IfaceILPSpec"Entity"Manager: Declares the handling methods for the bussiness
+           logic of a ledger connected and able to process the Intereldger 
+           ILP protocol.
+           >>IMPORTANT<<: Ideally all the IfaceILPSpec"Entity"Manager must be moved to
+           java-ilp-core so that they can be reused by any other 
+           non java-vertx-ledger related project.
+         
+         - Iface"Entity"Manager: IfaceLocal"Entity"Manager + IfaceILPSpec"Entity"Manager
 
-     - IfaceILPSpec"Entity"Manager: Declares the handling methods for the bussiness
-       logic of a ledger connected and able to process the Intereldger 
-       ILP protocol.
-       >>IMPORTANT<<: Ideally all the IfaceILPSpec"Entity"Manager must be moved to
-       java-ilp-core so that they can be reused by any other 
-       non java-vertx-ledger related project.
-
-     - Iface"Entity"Manager: IfaceLocal"Entity"Manager + IfaceILPSpec"Entity"Manager
-
-   - ...everledger.managers:
-      - Contains concrete managers clases implementing the 
-      Iface"Entity"Manager. That means it will support all specs defined by
-      local and ILP interfaces.
+       - ...everledger.managers:
+         - Contains concrete managers clases implementing the 
+         Iface"Entity"Manager. That means it will support all specs defined by
+         local and ILP interfaces.
 
 - Start-up sequence (REF: ILPLedgerAPIBootUpVerticle.main): 
 ----------------------------------------------------------
