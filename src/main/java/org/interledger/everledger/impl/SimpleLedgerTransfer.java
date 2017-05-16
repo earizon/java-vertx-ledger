@@ -90,6 +90,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         this.DTTM_expires       = Objects.requireNonNull(DTTM_expires   );
         this.DTTM_proposed      = Objects.requireNonNull(DTTM_proposed  );
         this.DTTM_prepared      = Objects.requireNonNull(DTTM.getNow()  );
+
         if (transferStatus.equals(TransferStatus.PROPOSED) /* && !ExecutionCond.equals(ConditionURI.EMPTY) TODO:(0)*/){
             transferStatus = TransferStatus.PREPARED;
         }
@@ -284,10 +285,17 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         jo.put("expires_at", this.DTTM_expires.toString());
         {
             JsonObject timeline = new JsonObject();
-            timeline.put("proposed_at", this.DTTM_proposed.toString());
-            if (this.DTTM_prepared != DTTM.future) { timeline.put("prepared_at", this.DTTM_prepared.toString()); }
-            if (this.DTTM_executed != DTTM.future) { timeline.put("executed_at", this.DTTM_executed.toString()); }
-            if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", this.DTTM_rejected.toString()); }
+            if (Config.unitTestsActive) {
+                timeline.put("proposed_at", DTTM.testingDate.toString());
+                if (this.DTTM_prepared != DTTM.future) { timeline.put("prepared_at", DTTM.testingDate.toString()); }
+                if (this.DTTM_executed != DTTM.future) { timeline.put("executed_at", DTTM.testingDate.toString()); }
+                if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", DTTM.testingDate.toString()); }
+            }else {
+                timeline.put("proposed_at", this.DTTM_proposed.toString());
+                if (this.DTTM_prepared != DTTM.future) { timeline.put("prepared_at", this.DTTM_prepared.toString()); }
+                if (this.DTTM_executed != DTTM.future) { timeline.put("executed_at", this.DTTM_executed.toString()); }
+                if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", this.DTTM_rejected.toString()); }
+            }
             jo.put("timeline", timeline);
         }
         return jo;

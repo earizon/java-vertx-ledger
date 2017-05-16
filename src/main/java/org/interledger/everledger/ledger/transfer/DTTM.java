@@ -30,6 +30,8 @@ public class DTTM { // TODO:(0) Recheck. CAn an interface to this class go into 
     }
 
     public static final DTTM future = new DTTM("2999-12-31T23:59:59.999Z");
+    public static final DTTM testingDate = new DTTM("2015-06-16T00:00:00.000Z");
+    
 
     private DTTM(Date date) {
         this.date = date;
