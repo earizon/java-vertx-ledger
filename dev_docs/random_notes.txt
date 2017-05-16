@@ -19,3 +19,14 @@ ________________________________________________________
   Ideally there must be no business logic into the Handlers (that's not exactly the case as
   of 2017-04-26, see TODOs in Handlers for related info).
  
+
+________________________________________________________
+To reset accounts/transfers during testing we can use an HTTP request similar to:
+    (shell script)
+    $ wget -O - http://localhost:3001/developerTesting/reset
+    
+    o using nodeJS (five-bells-ledger tests) something similar to:
+    await this.request()
+        .get("/developerTesting/reset")                                                                                                                                                                       
+        .expect(200)
+     
