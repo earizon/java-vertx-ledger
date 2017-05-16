@@ -271,7 +271,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         JsonObject jo = new JsonObject();
         String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
-        String id = /* ledger + */"/transfers/" /* TODO:(0) Get from Config */+ transferID.transferID;
+        String id = /* TODO:(doubt) add ledger as prefix ?? */"/transfers/" /* TODO:(0) Get from Config */+ transferID.transferID;
         jo.put("id", id);
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));

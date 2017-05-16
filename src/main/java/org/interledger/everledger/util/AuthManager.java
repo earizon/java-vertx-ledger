@@ -43,18 +43,23 @@ public class AuthManager {
         AuthInfo ilpconnector = new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector");
         AuthInfo alice        = new AuthInfo(        "alice",        "alice",        "alice", "user");
         AuthInfo bob          = new AuthInfo(          "bob",          "bob",          "bob", "user");
-        AuthInfo noBalance    = new AuthInfo(    "noBalance",    "noBalance",    "noBalance", "noBalance"); 
+        // AuthInfo noBalance    = new AuthInfo(    "nobalance",    "nobalance",    "nobalance", "user"); 
 
         users.put("admin"       , admin       ); result.put(admin       , 10000);
         users.put("ilpconnector", ilpconnector); result.put(ilpconnector,   100);
         users.put("alice"       , alice       ); result.put(alice       ,   100);
-        users.put("bob"         , bob         ); result.put(bob         ,   100);
-        users.put("noBalance"   , noBalance   ); result.put(noBalance   ,     0);
+        users.put("bob"         , bob         ); result.put(bob         ,     0);
+        // users.put("nobalance"   , noBalance   ); result.put(noBalance   ,     0);
         return result;
     }
     
     public static Map<String, AuthInfo> getUsers() {
         return users;
+    }
+    
+    public static void setUser(String id, String pass, String roll){
+        final AuthInfo ai = new AuthInfo(id, id, pass, roll);
+        users.put(id, ai);
     }
 
     public static AuthInfo authenticate(RoutingContext context, boolean allowAnonymous) {

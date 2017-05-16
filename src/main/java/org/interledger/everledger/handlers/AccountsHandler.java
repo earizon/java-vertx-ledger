@@ -61,9 +61,12 @@ public class AccountsHandler extends RestEndpointHandler {
         String accountName = getAccountName(context);
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
+        String password;
             try{
         String data_id = data.getString("id");
         if (data_id == null) throw new RuntimeException("id no provided");
+        password = data.getString("password");
+        if (password == null) throw new RuntimeException("password no provided");
         int li = data_id.lastIndexOf('/'); if (li < 0) li = 0;
         if (! accountName.equals(data_id.substring(li)) ) {
             throw ILPExceptionSupport.createILPBadRequestException();
@@ -79,7 +82,11 @@ public class AccountsHandler extends RestEndpointHandler {
         Number balance = null;
         Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
 
-        if (!exists) accountManager.store(new SimpleLedgerAccount(accountName)); 
+        if (!exists) {
+            accountManager.store(new SimpleLedgerAccount(accountName));
+            AuthManager.setUser(accountName, password, "user"/*roll*/ /* TODO:(1) allow user|admin|...*/);
+        }
+        
         IfaceAccount account = accountManager.getAccountByName(accountName);
         if(data.containsKey(PARAM_BALANCE)) {
             balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
