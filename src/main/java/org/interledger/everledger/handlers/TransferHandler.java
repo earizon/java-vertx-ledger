@@ -128,6 +128,7 @@ System.out.println("deleteme context.getBodyAsString():"+context.getBodyAsString
         CurrencyUnit currencyUnit /* local ledger currency */= Monetary
                 .getCurrency(Config.ledgerCurrencyCode);
 
+        double totalDebitAmmount = 0.0;
         for (int idx = 0; idx < debits.size(); idx++) {
             JsonObject jsonDebit = debits.getJsonObject(idx);
             log.debug("check123 jsonDebit: " + jsonDebit.encode());
@@ -141,10 +142,10 @@ System.out.println("deleteme context.getBodyAsString():"+context.getBodyAsString
                 transferMatchUser = true; 
             }
             MonetaryAmount debit_ammount; 
-                    try { 
-            debit_ammount = Money.of(
-                    Double.parseDouble(jsonDebit.getString("amount")), 
-                    currencyUnit);
+                    try {
+            double auxDebit = Double.parseDouble(jsonDebit.getString("amount"));
+            totalDebitAmmount += auxDebit;
+            debit_ammount = Money.of(auxDebit, currencyUnit);
             }catch(Exception e){
                 System.out.println(e.toString());
                 throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
@@ -187,6 +188,7 @@ System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
         }
         Credit[] creditList = new Credit[credits.size()];
 
+        double totalCreditAmmount = 0.0;
         for (int idx = 0; idx < credits.size(); idx++) {
             JsonObject jsonCredit = credits.getJsonObject(idx);
             /*
@@ -204,10 +206,9 @@ System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
             }
             MonetaryAmount credit_ammount;
             try {
-System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
-                credit_ammount = Money.of(
-                    Double.parseDouble(jsonCredit.getString("amount")),
-                    currencyUnit);
+                double auxCredit = Double.parseDouble(jsonCredit.getString("amount"));
+                totalCreditAmmount += auxCredit;
+                credit_ammount = Money.of(auxCredit, currencyUnit);
             }catch(Exception e){
                 throw ILPExceptionSupport.createILPBadRequestException("unparseable amount");
             }
@@ -215,7 +216,6 @@ System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
                 throw ILPExceptionSupport.createILPException(422,
                         ErrorCode.F00_BAD_REQUEST , "credit is zero"); 
             }
-
             IfaceLocalAccount creditor = ledgerAccountManager
                     .getAccountByName(account_name);
 
@@ -242,6 +242,10 @@ System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
             // COMMENTED OLD API         dstAddress, ammount, ilp_ph_condition, zdt);
             // In five-bells-ledger, memo goes into transfer_adjustments table (@ src/sql/pg/...)
             creditList[idx] = new Credit(creditor, credit_ammount/*, memo_ph*/);
+        }
+        if (totalCreditAmmount != totalDebitAmmount) {
+            throw ILPExceptionSupport.createILPException(422,
+                    ErrorCode.F00_BAD_REQUEST , "total credits do not match total debits"); 
         }
         IfaceTransferManager TM   = SimpleLedgerTransferManager.getTransferManager();
         String data = ""; // Not yet used
@@ -271,10 +275,11 @@ System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
             status = TransferStatus.parse(requestBody.getString("state"));
             log.debug("transfer status " + status);
         }
-
+        
         ILedgerTransfer receivedTransfer = new SimpleLedgerTransfer(transferID,
                 debitList, creditList, URIExecutionCond, URICancelationCond,
                 DTTM_expires, DTTM_proposed, data, noteToSelf, status);
+
 
         // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
         boolean isNewTransfer = !TM.doesTransferExists(ilpTransferID);
@@ -295,7 +300,7 @@ System.out.println("deleteme credit amount:"+jsonCredit.getString("amount"));
         } else {
             TM.createNewRemoteILPTransfer(receivedTransfer);
         }
-        try { // TODO: Refactor Next code for notification (next two loops) are
+        try { // TODO:(?) Refactor Next code for notification (next two loops) are
               // duplicated in FulfillmentHandler
             String notification = ((SimpleLedgerTransfer) effectiveTransfer)
                     .toMessageStringifiedFormat().encode();
