@@ -96,13 +96,7 @@ public interface ILedgerTransfer {
 
     public void           setCancelationFulfillment(Fulfillment ff);
     public Fulfillment    getCancellationFulfillment();
-    
-    /**
-     * @return true if the transaction is local between internal
-     * ledgers accounts
-     */
-    public boolean isLocal();
-    
+
     public void checkBalancedTransaction();
 
 

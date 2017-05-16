@@ -276,13 +276,15 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));
         jo.put("credits", entryList2Json(credit_list));
-        jo.put("execution_condition", this.getExecutionCondition().toString());
+        if (! this.getExecutionCondition().equals(SimpleLedgerTransfer.CC_NOT_PROVIDED)) {
+            jo.put("execution_condition", this.getExecutionCondition().toString());
+        }
         jo.put("state", this.getTransferStatus().toString().toLowerCase());
 //        if (!this.getCancellationCondition().equals(Condition....NOT_PROVIDED)) {
 //            jo.put("cancellation_condition", this.getCancellationCondition());
 //        }
         // FIXME: Cancelation_condition?
-        jo.put("expires_at", this.DTTM_expires.toString());
+        if (this.DTTM_expires != DTTM.future) { jo.put("expires_at", this.DTTM_expires.toString()); }
         {
             JsonObject timeline = new JsonObject();
             if (Config.unitTestsActive) {
@@ -354,17 +356,35 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         }
         return ja;
     }
-    
-    @Override
-    public boolean isLocal() {
-        String localLedgerURI = Config.publicURL.toString();
-        for (Credit credit : credit_list) {
-            if (! localLedgerURI.equals(ledgerAccountManager.getPublicURIForAccount(credit.account) ) ) {
-                return false;
-            }
-        }
-        return true;
-    }
 
+    @Override
+    public boolean equals(Object other){
+        if (other == null) throw new RuntimeException("other is null @ SimpleLedgerTransfer.equals(other)");
+        if (other == this) return true;
+        if (other.getClass()!=this.getClass()) return false;
+
+        boolean result = true;
+        SimpleLedgerTransfer other1 = (SimpleLedgerTransfer) other;
+        result = result && this.transferID.equals(other1);                       if (result == false) return result;
+        result = result && this.fromAccount.equals(other1.fromAccount);          if (result == false) return result;
+        result = result && this.executionCond.equals(other1.executionCond);      if (result == false) return result;
+        result = result && this.cancelationCond.equals(other1.cancelationCond);  if (result == false) return result;
+        result = result && this.DTTM_expires.equals(other1.DTTM_expires);        if (result == false) return result;
+        result = result && this.DTTM_proposed.equals(other1.DTTM_proposed);      if (result == false) return result;
+        result = result && this.credit_list.length == other1.credit_list.length; if (result == false) return result;
+        result = result && this.debit_list.length == other1.debit_list.length;   if (result == false) return result;
+        for (int idx=0; idx<credit_list.length; idx++){
+            final Credit credit0 = credit_list[idx], credit1 = other1.credit_list[idx];
+            result = result && credit0.equals(credit1);
+        }
+        if (result == false) return result;
+        for (int idx=0; idx<debit_list.length; idx++){
+            final Debit debit0 = debit_list[idx], debit1 = other1.debit_list[idx];
+            result = result && debit0.equals(debit1);
+        }
+        if (result == false) return result;
+        return result;
+    }
+    
 
 }

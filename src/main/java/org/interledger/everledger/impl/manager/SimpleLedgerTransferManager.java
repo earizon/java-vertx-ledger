@@ -13,6 +13,7 @@ import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
+import org.interledger.everledger.impl.SimpleLedgerTransfer;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
@@ -157,13 +158,10 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
         log.debug("createNewRemoteILPTransfer newTransfer "+
                 newTransfer.getTransferID().transferID+", status: "+newTransfer.getTransferStatus().toString());
 
-        log.debug("newTransfer.isLocal(): "+ newTransfer.isLocal());
-
         transferMap.put(newTransfer.getTransferID(), newTransfer);
-        if (newTransfer.isLocal() 
-            /* &&  newTransfer.getExecutionCondition().equals(Condition.EMPTY) TODO:(0) */) {
+        if (newTransfer.getExecutionCondition().equals(SimpleLedgerTransfer.CC_NOT_PROVIDED)) {
+            // local transfer with no execution condition => execute and "forget"
             log.debug("createNewRemoteILPTransfer execute locally and forget");
-            // local transfer with no execution condition => execute and "forget" 
             executeLocalTransfer(newTransfer);
             return;
         }

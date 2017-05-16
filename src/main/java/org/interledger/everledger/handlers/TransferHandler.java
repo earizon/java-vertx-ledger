@@ -14,7 +14,6 @@ import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 
 import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.everledger.AuthInfo;
@@ -55,15 +54,14 @@ public class TransferHandler extends RestEndpointHandler {
     private static final IfaceLocalAccountManager ledgerAccountManager = LedgerAccountManagerFactory
             .getLedgerAccountManagerSingleton();
 
+    private static final IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
 
     // TODO:(0) Generate random preimage. This object is just used to avoid null
     // comparations. The real preimage
     // doesn't really matter (but in cryptography always is better to be
     // paranoid)
-
-    public static final Condition Condition_NOT_PROVIDED = new PreimageSha256Condition(
-            new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }/* preimage */);
 
     public TransferHandler() {
         // REF:
@@ -82,7 +80,6 @@ public class TransferHandler extends RestEndpointHandler {
     protected void handlePut(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject requestBody = getBodyAsJson(context);
-System.out.println("deleteme context.getBodyAsString():"+context.getBodyAsString());
 
         boolean transferMatchUser = false;
         log.trace(this.getClass().getName() + "handlePut invoqued ");
@@ -165,7 +162,6 @@ System.out.println("deleteme context.getBodyAsString():"+context.getBodyAsString
         // REF: JsonArray ussage:
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
         JsonArray credits = requestBody.getJsonArray("credits");
-System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
 
         String sExpiresAt = requestBody.getString("expires_at"); // can be null
         DTTM DTTM_expires ; try {
@@ -181,7 +177,7 @@ System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
         try {
             URIExecutionCond = (execution_condition != null) ? CryptoConditionUri
                     .parse(URI.create(execution_condition))
-                    : TransferHandler.Condition_NOT_PROVIDED;
+                    : SimpleLedgerTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
             throw new RuntimeException("execution_condition '"
                     + execution_condition + "' could not be parsed as URI");
@@ -247,7 +243,7 @@ System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
             throw ILPExceptionSupport.createILPException(422,
                     ErrorCode.F00_BAD_REQUEST , "total credits do not match total debits"); 
         }
-        IfaceTransferManager TM   = SimpleLedgerTransferManager.getTransferManager();
+
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         DTTM DTTM_proposed = DTTM.getNow();
@@ -260,7 +256,7 @@ System.out.println("deleteme JsonArray credits:"+credits.encodePrettily());
         try {
             URICancelationCond = (cancelation_condition != null) ? CryptoConditionUri
                     .parse(URI.create(cancelation_condition))
-                    : Condition_NOT_PROVIDED;
+                    : SimpleLedgerTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
             throw new RuntimeException("cancelation_condition '"
                     + cancelation_condition + "' could not be parsed as URI");
