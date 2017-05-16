@@ -46,6 +46,8 @@ public class Config {
                 }
     }
 
+    public static final boolean unitTestsActive = getBoolean("developer.unitTestsActive");
+    
     public static final boolean debug = getBoolean("server.debug");
     public static final String ilpPrefix=getString("ledger.ilp.prefix");
     public static final String ledgerCurrencyCode=getString("ledger.currency.code");

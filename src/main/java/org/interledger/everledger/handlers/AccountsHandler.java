@@ -11,6 +11,7 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
+import org.interledger.everledger.impl.SimpleLedgerAccount;
 import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -78,9 +79,8 @@ public class AccountsHandler extends RestEndpointHandler {
         Number balance = null;
         Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
 
-        IfaceAccount account = exists
-                ? accountManager.getAccountByName(accountName)
-                : accountManager.create(accountName);
+        if (!exists) accountManager.store(new SimpleLedgerAccount(accountName)); 
+        IfaceAccount account = accountManager.getAccountByName(accountName);
         if(data.containsKey(PARAM_BALANCE)) {
             balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
             account.setBalance(balance);

@@ -269,9 +269,8 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         // https://github.com/interledger/five-bells-ledger/blob/master/src/models/converters/transfers.js
         JsonObject jo = new JsonObject();
         String ledger = Config.publicURL.toString();
-
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
-        String id = ledger + "/transfers/"+ transferID.transferID;
+        String id = /* ledger + */"/transfers/" /* TODO:(0) Get from Config */+ transferID.transferID;
         jo.put("id", id);
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));
@@ -322,8 +321,8 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         for (LedgerPartialEntry entry : input_list) {
             // FIXME: This code to calculate amount is PLAIN WRONG. Just to pass five-bells-ledger tests
             JsonObject jo = new JsonObject();
-            jo.put("account", ledgerAccountManager.getPublicURIForAccount(entry.account).toString() );
-            String sAmount = "" + entry. amount.getNumber();
+            jo.put("account", "/accounts/" /* TODO: Get from config.*/ + entry.account.getLocalName() );
+            String sAmount = "" + (long)entry. amount.getNumber().floatValue();
             jo.put( "amount", sAmount);
             if (entry instanceof Debit) {
                 jo.put("authorized", ((Debit) entry).getAuthorized());

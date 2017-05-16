@@ -8,11 +8,13 @@ import java.util.Map;
 
 
 
+
 //import io.vertx.ext.auth.AuthProvider;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 //import io.vertx.ext.web.handler.AuthHandler;
+
 
 
 
@@ -32,6 +34,10 @@ public class AuthManager {
     private static final Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
 
     public static Map<AuthInfo, Integer /*blance*/> configureDevelopmentEnvironment() {
+        if (! org.interledger.everledger.Config.unitTestsActive) {
+            throw new RuntimeException("developer.unitTestsActive must be true @ application.conf "
+                    + "to be able to reset tests");
+        }
         Map<AuthInfo, Integer /*blance*/> result = new HashMap<AuthInfo, Integer /*blance*/>();
         AuthInfo admin        = new AuthInfo(        "admin",        "admin",        "admin", "admin");
         AuthInfo ilpconnector = new AuthInfo( "ilpconnector", "ilpconnector", "ilpconnector", "connector");

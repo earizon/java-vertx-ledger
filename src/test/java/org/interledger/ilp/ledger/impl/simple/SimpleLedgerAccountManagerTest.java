@@ -45,7 +45,7 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testCreate() {
         System.out.println("create");
-        IfaceAccount result = instance.create(alice.getLocalName());
+        IfaceAccount result = new SimpleLedgerAccount(alice.getLocalName());
         System.out.println("result:" + result);
         assertNotNull(result);
         assertEquals(alice, result);
@@ -81,9 +81,9 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testGetAccountByName() {
         System.out.println("getAccountByName");
-        IfaceAccount bob = instance.create("bob");
+        IfaceAccount bob = new SimpleLedgerAccount("bob");
         instance.store(bob);
-        instance.store(instance.create("alice"));
+        instance.store(new SimpleLedgerAccount("alice"));
         assertEquals(2, instance.getTotalAccounts());
         IfaceLocalAccount result = instance.getAccountByName("bob");
         assertEquals(bob, result);
@@ -95,9 +95,9 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testGetAccounts() {
         System.out.println("testGetAccounts");
-        IfaceAccount bob = instance.create("bob");
+        IfaceAccount bob = new SimpleLedgerAccount("bob");
         instance.store(bob);
-        instance.store(instance.create("alice"));
+        instance.store(new SimpleLedgerAccount("alice"));
         assertEquals(2, instance.getTotalAccounts());
         Collection<IfaceLocalAccount> result = instance.getAccounts(1, 1);
         System.out.println("result:" + result);

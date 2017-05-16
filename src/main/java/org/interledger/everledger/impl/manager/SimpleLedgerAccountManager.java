@@ -6,13 +6,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
+import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
+import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.impl.SimpleLedgerAccount;
+import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ilp.exceptions.InterledgerException;
 import org.slf4j.Logger;
@@ -27,6 +31,31 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
     
     private static final Logger log = LoggerFactory.getLogger(SimpleLedgerAccountManager.class);
     
+    private void resetAccounts() {
+        accountMap  = new TreeMap<String, IfaceAccount>();
+        store(getHOLDAccountILP());
+    }
+
+    public static void developerTestingReset(){
+        if (! org.interledger.everledger.Config.unitTestsActive) {
+            throw new RuntimeException("developer.unitTestsActive must be true @ application.conf "
+                    + "to be able to reset tests");
+        }
+        // 
+        SimpleLedgerAccountManager ledgerAccountManager =(SimpleLedgerAccountManager)
+                LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        ledgerAccountManager.resetAccounts(); // STEP 1: Reset accounts to initial state
+
+        // STEP 2: Create an account for each pre-configured user in AuthManager:
+        final Map<AuthInfo, Integer /*blance*/> devUsers = AuthManager.configureDevelopmentEnvironment();
+        Set<AuthInfo> users = devUsers.keySet();
+        for (AuthInfo ai : users) {
+            SimpleLedgerAccount account = new SimpleLedgerAccount(ai.getId());
+            account.setBalance(devUsers.get(ai).intValue());
+            account.setMinimumAllowedBalance(0);
+            ledgerAccountManager.store(account);
+        }
+    }
     // start IfaceILPSpecAccountManager implementation {
     @Override
     public URI getPublicURIForAccount(IfaceLocalAccount account) {
@@ -43,22 +72,15 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
     @Override
     public IfaceAccount getHOLDAccountILP() {
         if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }
-        return create(ILP_HOLD_ACCOUNT);
+        SimpleLedgerAccount ilpHold = new SimpleLedgerAccount(ILP_HOLD_ACCOUNT);
+        store(ilpHold);
+        return ilpHold;
     }
     // } end IfaceILPSpecAccountManager implementation
 
     // start IfaceILPSpecAccountManager implementation {
     public SimpleLedgerAccountManager() {
-        accountMap = new TreeMap<String, IfaceAccount>();
-    }
-    
-    @Override
-    public IfaceAccount create(String name) throws InterledgerException {
-        if (accountMap.containsKey(name)) {
-            throw ILPExceptionSupport.createILPInternalException(
-                    this.getClass().getName() +  "account '"+name+"' already exists");
-        }
-        return new SimpleLedgerAccount(name);
+        resetAccounts();
     }
 
     @Override

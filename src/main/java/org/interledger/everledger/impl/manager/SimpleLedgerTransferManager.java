@@ -55,6 +55,14 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     // Make default constructor private to avoid instantiating new classes.
     private SimpleLedgerTransferManager() {}
 
+    public void developerTestingResetTransfers() { // TODO:(?) Make static?
+        if (! org.interledger.everledger.Config.unitTestsActive) {
+            throw new RuntimeException("developer.unitTestsActive must be true @ application.conf "
+                    + "to be able to reset tests");
+        }
+        transferMap = new HashMap<LocalTransferID, ILedgerTransfer>();
+    }
+
     public static IfaceTransferManager getTransferManager() {
         // TODO:(0) Move function to factory
         //      similar to LedgerAccountManagerFactory

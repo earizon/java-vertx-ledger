@@ -21,12 +21,11 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.interledger.everledger.handlers.AccountsHandler;
 import org.interledger.everledger.handlers.AccountsListHandler;
 import org.interledger.everledger.handlers.DebugRequestHandler;
+import org.interledger.everledger.handlers.DeveloperTestingRequestHandler;
 import org.interledger.everledger.handlers.FulfillmentHandler;
 import org.interledger.everledger.handlers.HealthHandler;
 import org.interledger.everledger.handlers.IndexHandler;
@@ -36,9 +35,7 @@ import org.interledger.everledger.handlers.TransferHandler;
 import org.interledger.everledger.handlers.TransferStateHandler;
 import org.interledger.everledger.handlers.TransferWSEventHandler;
 import org.interledger.everledger.handlers.TransfersHandler;
-import org.interledger.everledger.ifaces.account.IfaceAccountManager;
-import org.interledger.everledger.impl.SimpleLedgerAccount;
-import org.interledger.everledger.util.AuthManager;
+import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.util.VertxRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,16 +50,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
 
     private static void configureDevelopmentEnvironment() { // TODO:(0) Remove once everything is properly setup
         log.info("Preparing development environment");
-        
-        Map<AuthInfo, Integer /*blance*/> devUsers = AuthManager.configureDevelopmentEnvironment();
-        Set<AuthInfo> users = devUsers.keySet();
-        IfaceAccountManager ledgerAccountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
-        for (AuthInfo ai : users) {
-            SimpleLedgerAccount account = (SimpleLedgerAccount) ledgerAccountManager.create(ai.getId());
-            account.setBalance(devUsers.get(ai).intValue());
-            account.setMinimumAllowedBalance(0);
-            ledgerAccountManager.store(account);
-        }
+        SimpleLedgerAccountManager.developerTestingReset();
     }
 
     @Override
@@ -157,7 +145,8 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
                   TransfersHandler.create(),
               TransferStateHandler.create(),
                 FulfillmentHandler.create(),
-                    MessageHandler.create()
+                    MessageHandler.create(),
+    DeveloperTestingRequestHandler.create()
         );
         for (RestEndpointHandler handler : handlers) {
             for (String path : handler.getRoutePaths()) {

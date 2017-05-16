@@ -17,8 +17,6 @@ import java.util.Collection;
  */
 public interface IfaceLocalAccountManager {
 
-    IfaceAccount create(String name);
-
     int getTotalAccounts();
 
     boolean hasAccount(String name);

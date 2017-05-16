@@ -9,7 +9,7 @@ import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
  * @author mrmx
  */
 public class LedgerAccountManagerFactory {
-
+    // TODO:(?) Simplificar / eliminar esta clase??
     private static final SimpleLedgerAccountManager instance;
     static {
         instance = new SimpleLedgerAccountManager();
