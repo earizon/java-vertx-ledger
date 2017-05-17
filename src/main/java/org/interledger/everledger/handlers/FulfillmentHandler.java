@@ -240,6 +240,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
 
         String response  = Base64.getEncoder().
                 encodeToString(fulfillment.getEncoded()); 
+        response = response.substring(0, response.indexOf('='));
+
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
