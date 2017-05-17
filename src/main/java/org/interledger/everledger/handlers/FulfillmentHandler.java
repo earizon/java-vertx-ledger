@@ -12,9 +12,9 @@ import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.handlers.RestEndpointHandler;
-import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
-import org.interledger.everledger.impl.SimpleLedgerTransfer;
+import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.Debit;
@@ -104,8 +104,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     Note that the actual cryptographic signature might still be against a message - via prefix 
          *     conditions (which append a prefix to this empty message)
          **/
-        ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
-        if ( transfer.getExecutionCondition() == SimpleLedgerTransfer.CC_NOT_PROVIDED) {
+        IfaceTransfer transfer = TM.getTransferById(transferID);
+        if ( transfer.getExecutionCondition() == SimpleTransfer.CC_NOT_PROVIDED) {
             ILPExceptionSupport.createILPInternalException(
                     this.getClass().getName() + "Transfer is not conditional");
         }
@@ -165,7 +165,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             .setStatusCode(!ffExisted ? HttpResponseStatus.CREATED.code() : HttpResponseStatus.OK.code())
             .end(response);
         try {
-            String notification = ((SimpleLedgerTransfer) transfer).toMessageStringifiedFormat().encode();
+            String notification = ((SimpleTransfer) transfer).toMessageStringifiedFormat().encode();
             // Notify affected accounts:
             for (Debit  debit  : transfer.getDebits() ) {
                 TransferWSEventHandler.notifyListener(context, debit.account, notification);
@@ -207,7 +207,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
-        ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
+        IfaceTransfer transfer = TM.getTransferById(transferID);
         transferMatchUser = false 
                 || ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;
@@ -218,7 +218,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         Fulfillment fulfillment= (isFulfillment) 
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
-        if ( fulfillment == SimpleLedgerTransfer.FF_NOT_PROVIDED) {
+        if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
             ILPExceptionSupport.createILPException(
                     500,
                     InterledgerError.ErrorCode.F99_APPLICATION_ERROR,

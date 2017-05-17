@@ -6,13 +6,13 @@ import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 
 public  interface IfaceILPSpecTransferManager {
 
-    java.util.List<ILedgerTransfer> getTransfersByExecutionCondition(Condition condition);
+    java.util.List<IfaceTransfer> getTransfersByExecutionCondition(Condition condition);
 
-    void createNewRemoteILPTransfer(ILedgerTransfer newTransfer);
+    void createNewRemoteILPTransfer(IfaceTransfer newTransfer);
 
-    void executeRemoteILPTransfer(ILedgerTransfer transfer, Fulfillment executionFulfillment);
+    void executeRemoteILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
 
-    void abortRemoteILPTransfer(ILedgerTransfer transfer, Fulfillment cancellationFulfillment);
+    void abortRemoteILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
     
     boolean doesTransferExists(ILPSpecTransferID transferId);
 

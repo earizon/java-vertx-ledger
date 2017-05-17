@@ -9,7 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.handlers.RestEndpointHandler;
-import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.ILocalTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
@@ -86,7 +86,7 @@ public class TransferStateHandler extends RestEndpointHandler {
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
         if (TM.doesTransferExists(transferID)) { 
-            ILedgerTransfer transfer = TM.getLocalTransferById(transferID);
+            ILocalTransfer transfer = TM.getTransferById(transferID);
             status = transfer.getTransferStatus();
             transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                             ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());

@@ -22,10 +22,10 @@ import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccountManager;
-import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
-import org.interledger.everledger.impl.SimpleLedgerTransfer;
+import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
@@ -159,6 +159,8 @@ public class TransferHandler extends RestEndpointHandler {
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
+        JsonObject jsonMemo = requestBody.getJsonObject("memo");
+        String sMemo = (jsonMemo == null) ? "" : jsonMemo.encode(); 
         // REF: JsonArray ussage:
         // http://www.programcreek.com/java-api-examples/index.php?api=io.vertx.core.json.JsonArray
         JsonArray credits = requestBody.getJsonArray("credits");
@@ -177,7 +179,7 @@ public class TransferHandler extends RestEndpointHandler {
         try {
             URIExecutionCond = (execution_condition != null) ? CryptoConditionUri
                     .parse(URI.create(execution_condition))
-                    : SimpleLedgerTransfer.CC_NOT_PROVIDED;
+                    : SimpleTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
             throw new RuntimeException("execution_condition '"
                     + execution_condition + "' could not be parsed as URI");
@@ -194,7 +196,7 @@ public class TransferHandler extends RestEndpointHandler {
              * , "amount":"1", "data":{"expires_at":"2016-11-10T15:51:27.134Z"}
              * } } }
              */
-            // COMMENTED OLD API JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
+            // JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
             // COMMENTED OLD API         .getJsonObject("ilp_header");
             String account_name = jsonCredit.getString("account");
             if (account_name.lastIndexOf('/')>0){
@@ -256,7 +258,7 @@ public class TransferHandler extends RestEndpointHandler {
         try {
             URICancelationCond = (cancelation_condition != null) ? CryptoConditionUri
                     .parse(URI.create(cancelation_condition))
-                    : SimpleLedgerTransfer.CC_NOT_PROVIDED;
+                    : SimpleTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
             throw new RuntimeException("cancelation_condition '"
                     + cancelation_condition + "' could not be parsed as URI");
@@ -272,17 +274,17 @@ public class TransferHandler extends RestEndpointHandler {
             log.debug("transfer status " + status);
         }
         
-        ILedgerTransfer receivedTransfer = new SimpleLedgerTransfer(transferID,
+        IfaceTransfer receivedTransfer = new SimpleTransfer(transferID,
                 debitList, creditList, URIExecutionCond, URICancelationCond,
-                DTTM_expires, DTTM_proposed, data, noteToSelf, status);
+                DTTM_expires, DTTM_proposed, data, noteToSelf, status, sMemo);
 
 
         // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
         boolean isNewTransfer = !TM.doesTransferExists(ilpTransferID);
         log.debug("is new transfer?: " + isNewTransfer);
 
-        ILedgerTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
-                : TM.getLocalTransferById(transferID);
+        IfaceTransfer effectiveTransfer = (isNewTransfer) ? receivedTransfer
+                : TM.getTransferById(transferID);
         if (!isNewTransfer) {
             // Check that received json data match existing transaction.
             // TODO: Recheck (Multitransfer active now)
@@ -298,7 +300,7 @@ public class TransferHandler extends RestEndpointHandler {
         }
         try { // TODO:(?) Refactor Next code for notification (next two loops) are
               // duplicated in FulfillmentHandler
-            String notification = ((SimpleLedgerTransfer) effectiveTransfer)
+            String notification = ((SimpleTransfer) effectiveTransfer)
                     .toMessageStringifiedFormat().encode();
             log.info("send transfer update to ILP Connector through websocket: \n:"
                     + notification + "\n");
@@ -315,7 +317,7 @@ public class TransferHandler extends RestEndpointHandler {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to "
                     + e.toString());
         }
-        String response = ((SimpleLedgerTransfer) effectiveTransfer)
+        String response = ((SimpleTransfer) effectiveTransfer)
                 .toILPJSONStringifiedFormat().encode();// .encode();
 
         context.response()
@@ -334,7 +336,7 @@ public class TransferHandler extends RestEndpointHandler {
         IfaceLocalTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
                 transferUUID));
-        ILedgerTransfer transfer = TM.getLocalTransferById(
+        IfaceTransfer transfer = TM.getTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
         String debit0_account = transfer.getDebits()[0].account.getLocalName();
@@ -348,7 +350,6 @@ public class TransferHandler extends RestEndpointHandler {
         response(
                 context,
                 HttpResponseStatus.OK,
-                buildJSON("result", ((SimpleLedgerTransfer) transfer)
-                        .toILPJSONStringifiedFormat().encode()));
+                ((SimpleTransfer) transfer).toILPJSONStringifiedFormat());
     }
 }

@@ -14,9 +14,9 @@ import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.handlers.RestEndpointHandler;
-import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
-import org.interledger.everledger.impl.SimpleLedgerTransfer;
+import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -72,15 +72,15 @@ public class TransfersHandler extends RestEndpointHandler {
         } catch (URIEncodingException e) {
             throw new RuntimeException("'"+ sExecCond + "' can't be parsed as URI");
         }
-        List<ILedgerTransfer> transferList = TM.getTransfersByExecutionCondition(executionCondition);
+        List<IfaceTransfer> transferList = TM.getTransfersByExecutionCondition(executionCondition);
         
         JsonArray ja = new JsonArray();
-        for (ILedgerTransfer transfer : transferList) {
+        for (IfaceTransfer transfer : transferList) {
             if (ai.isAdmin() 
                  || transfer.getDebits ()[0].account.getLocalName().equals(ai.getId())
                  || transfer.getCredits()[0].account.getLocalName().equals(ai.getId())
                ) {
-                ja.add(((SimpleLedgerTransfer)transfer).toILPJSONStringifiedFormat());
+                ja.add(((SimpleTransfer)transfer).toILPJSONStringifiedFormat());
                 transferMatchUser = true;
             }
         }

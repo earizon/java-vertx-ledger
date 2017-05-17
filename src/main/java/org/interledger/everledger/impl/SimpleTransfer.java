@@ -1,10 +1,14 @@
 package org.interledger.everledger.impl;
 
+import java.time.ZonedDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import org.interledger.ilp.InterledgerAddress;
+import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
@@ -12,7 +16,7 @@ import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.ifaces.transfer.ILedgerTransfer;
+import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
@@ -27,7 +31,7 @@ import org.javamoney.moneta.Money;
 
 // FIXME: Allow multiple debit/credits (Remove all code related to index [0]
 
-public class SimpleLedgerTransfer implements ILedgerTransfer {
+public class SimpleTransfer implements IfaceTransfer {
 
     public static final Fulfillment FF_NOT_PROVIDED = new PreimageSha256Fulfillment(new byte[]{});
     public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(
@@ -41,10 +45,11 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
     final Credit[] credit_list;
     final Debit []  debit_list;
     // URI encoded execution & cancelation crypto-conditions
-    final Condition executionCond;
+    final Condition executionCond  ;
     final Condition cancelationCond;
     final DTTM DTTM_expires ;
     final DTTM DTTM_proposed;
+    final String sMemo;
 
     /*
      * Note: Defensive security protection:
@@ -62,11 +67,11 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
     DTTM DTTM_executed = DTTM.future;
     DTTM DTTM_rejected = DTTM.future;
 
-    public SimpleLedgerTransfer(LocalTransferID transferID,
+    public SimpleTransfer(LocalTransferID transferID,
         Debit[] debit_list, Credit[] credit_list, 
         Condition executionCond, 
         Condition cancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
-        String data, String noteToSelf, TransferStatus transferStatus ){
+        String data, String noteToSelf, TransferStatus transferStatus, String sMemo ){
         // TODO: Check that debit_list[idx].ammount.currency is always the same and match the ledger
         // TODO: Check that credit_list[idx].ammount.currency is always the same.
         //       For local transaction check also that it match the ledger
@@ -90,7 +95,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         this.DTTM_expires       = Objects.requireNonNull(DTTM_expires   );
         this.DTTM_proposed      = Objects.requireNonNull(DTTM_proposed  );
         this.DTTM_prepared      = Objects.requireNonNull(DTTM.getNow()  );
-
+        this.sMemo              = Objects.requireNonNull(sMemo)          ;
         if (transferStatus.equals(TransferStatus.PROPOSED) /* && !ExecutionCond.equals(ConditionURI.EMPTY) TODO:(0)*/){
             transferStatus = TransferStatus.PREPARED;
         }
@@ -105,6 +110,85 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         this.fromAccount = ledgerAccountManager.
                     getAccountByName(credit_list[0].account.getLocalName());
     }
+    
+    // Implement ILPSpec interface{
+    @Override
+    public UUID getId() {
+        UUID result = UUID.randomUUID(); // TODO:(0) FIX get from getTransferID
+        return result;
+    }
+
+    @Override
+    public InterledgerAddress getFromAccount() {
+        final InterledgerAddress result = new 
+                InterledgerAddressBuilder().value("TODO(0)").build();
+        return result;
+    }
+
+    @Override
+    public InterledgerAddress getToAccount() {
+        final InterledgerAddress result = new 
+                InterledgerAddressBuilder().value("TODO(0)").build();
+        return result;
+    }
+
+    @Override
+    public MonetaryAmount getAmount(){
+        MonetaryAmount result = Money.of(0, debit_list[0].amount.getCurrency());
+        return result;
+    }
+
+    @Override
+    public boolean isAuthorized(){
+        boolean result = true; // TODO:(1)
+        return result;
+    }
+
+    @Override
+    public String getInvoice(){
+        String result = ""; // TODO:(0)
+        return result;
+    }
+
+    @Override
+    public byte[] getData() {
+        return data.getBytes();
+    }
+
+    @Override
+    public byte[] getNoteToSelf() {
+        return noteToSelf.getBytes();
+    }
+
+    @Override
+
+    public boolean isRejected(){
+        boolean result = false; // TODO:(0)
+        return result;
+    }
+
+    @Override
+    public String getRejectionMessage(){
+        String result = ""; // TODO:(0)
+        return result;
+    }
+
+    @Override
+    public Condition getExecutionCondition() {
+        return executionCond;
+    }
+
+    @Override
+    public Condition getCancellationCondition() {
+        return cancelationCond;
+    }
+
+    public ZonedDateTime getExpiresAt() {
+        ZonedDateTime result = ZonedDateTime.parse(DTTM_expires.toString());
+        return result;
+    }
+    
+    // } End ILPSpec interface
     
     public void checkBalancedTransaction(){
         MonetaryAmount totalDebits = Money.of(0, debit_list[0].amount.getCurrency());
@@ -133,16 +217,6 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
     @Override
     public Credit[] getCredits() {
         return credit_list;
-    }
-
-    @Override
-    public String getData() {
-        return data;
-    }
-
-    @Override
-    public String getNoteToSelf() {
-        return noteToSelf;
     }
 
     // TODO: IMPROVEMENT. setTransferStatus Make private and change when providing
@@ -187,17 +261,6 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
     @Override
     public TransferStatus getTransferStatus() {
         return transferStatus;
-    }
-
-    
-    @Override
-    public Condition getExecutionCondition() {
-        return executionCond;
-    }
-
-    @Override
-    public Condition getCancellationCondition() {
-        return cancelationCond;
     }
 
     @Override
@@ -276,7 +339,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));
         jo.put("credits", entryList2Json(credit_list));
-        if (! this.getExecutionCondition().equals(SimpleLedgerTransfer.CC_NOT_PROVIDED)) {
+        if (! this.getExecutionCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
             jo.put("execution_condition", this.getExecutionCondition().toString());
         }
         jo.put("state", this.getTransferStatus().toString().toLowerCase());
@@ -364,7 +427,7 @@ public class SimpleLedgerTransfer implements ILedgerTransfer {
         if (other.getClass()!=this.getClass()) return false;
 
         boolean result = true;
-        SimpleLedgerTransfer other1 = (SimpleLedgerTransfer) other;
+        SimpleTransfer other1 = (SimpleTransfer) other;
         result = result && this.transferID.equals(other1);                       if (result == false) return result;
         result = result && this.fromAccount.equals(other1.fromAccount);          if (result == false) return result;
         result = result && this.executionCond.equals(other1.executionCond);      if (result == false) return result;

@@ -4,9 +4,9 @@ import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
 public interface IfaceLocalTransferManager {
 
-    ILedgerTransfer getLocalTransferById(LocalTransferID transferId);
+    IfaceTransfer getTransferById(LocalTransferID transferId);
 
-    void executeLocalTransfer(ILedgerTransfer transfer);
+    void executeLocalTransfer(IfaceTransfer transfer);
     
     boolean doesTransferExists(LocalTransferID transferId);
 

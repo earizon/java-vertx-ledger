@@ -44,11 +44,13 @@ public class AuthManager {
         AuthInfo alice        = new AuthInfo(        "alice",        "alice",        "alice", "user");
         AuthInfo bob          = new AuthInfo(          "bob",          "bob",          "bob", "user");
         // AuthInfo noBalance    = new AuthInfo(    "nobalance",    "nobalance",    "nobalance", "user"); 
+        AuthInfo eve          = new AuthInfo(          "eve",          "eve",          "eve", "user");
 
         users.put("admin"       , admin       ); result.put(admin       , 10000);
         users.put("ilpconnector", ilpconnector); result.put(ilpconnector,   100);
         users.put("alice"       , alice       ); result.put(alice       ,   100);
         users.put("bob"         , bob         ); result.put(bob         ,     0);
+        users.put("eve"         , eve         ); result.put(eve         ,     0);
         // users.put("nobalance"   , noBalance   ); result.put(noBalance   ,     0);
         return result;
     }
