@@ -90,8 +90,8 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
             throw ILPExceptionSupport.createILPNotFoundException("transfer '"+transferId.transferID+"' not found");
         }
         if (result.getTransferStatus() == TransferStatus.REJECTED) {
-            throw ILPExceptionSupport.createILPInternalException(
-                    this.getClass().getName() + "This transfer has already been rejected");
+            throw ILPExceptionSupport.createILPUnprocessableEntityException(
+                    "This transfer has already been rejected");
         }
     
         return result;
