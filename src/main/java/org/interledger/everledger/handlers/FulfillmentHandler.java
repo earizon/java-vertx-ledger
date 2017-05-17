@@ -227,6 +227,9 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
+            if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
+                throw ILPExceptionSupport.createILPNotFoundException("This transfer expired before it was fulfilled");
+            }
             throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity");
         }
 
