@@ -118,8 +118,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
 
-        String sFulfillment = context.getBodyAsString();
-        byte[] fulfillmentBytes = Base64.getDecoder().decode(sFulfillment);
+        String sFulfillmentInput = context.getBodyAsString();
+        byte[] fulfillmentBytes = Base64.getDecoder().decode(sFulfillmentInput);
 
 //        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
 //        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
@@ -129,13 +129,13 @@ public class FulfillmentHandler extends RestEndpointHandler {
             ff = CryptoConditionReader.readFulfillment(fulfillmentBytes);
         } catch (DEREncodingException e1) {
             throw ILPExceptionSupport.createILPBadRequestException(
-                "wrong fulfillment '"+ sFulfillment + "' in request");
+                "wrong fulfillment '"+ sFulfillmentInput + "' in request");
         }
         byte[] message = new byte[]{};
         boolean ffExisted = false;
         log.trace("transfer.getExecutionCondition():"+transfer.getExecutionCondition().toString());
         log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
-        log.trace("request hexFulfillment:"+sFulfillment);
+        log.trace("request hexFulfillment:"+sFulfillmentInput);
         log.trace("request ff.getCondition():"+ff.getCondition().toString());
 
         if (/*isFulfillment && */transfer.getExecutionCondition().equals(ff.getCondition()) ) {
@@ -165,7 +165,12 @@ public class FulfillmentHandler extends RestEndpointHandler {
         }
         log.trace("ffExisted:"+ffExisted);
 
-        String response = ff.toString();
+        String response  = Base64.getEncoder().
+                encodeToString(ff.getEncoded());
+        response = response.substring(0, response.indexOf('='));
+        if (!sFulfillmentInput.equals(response)) {
+            throw new RuntimeException("Assert exception. Input '"+sFulfillmentInput+"'doesn't match output '"+response+"' ");
+        }
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
@@ -233,7 +238,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
             throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity");
         }
 
-        String response  = fulfillment.toString();
+        String response  = Base64.getEncoder().
+                encodeToString(fulfillment.getEncoded()); 
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
