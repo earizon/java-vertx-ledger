@@ -63,4 +63,12 @@ public class ILPExceptionSupport {
     public static HTTPInterledgerException createILPBadRequestException() {
         return createILPBadRequestException("Forbidden"); 
     }
+
+    // ------------- Unprocessable Entity ------------
+    public static HTTPInterledgerException createILPUnprocessableEntityException(String data) {
+        return createILPException(422, ErrorCode.F00_BAD_REQUEST , data); 
+    }
+    public static HTTPInterledgerException createILPUnprocessableEntityException() {
+        return createILPUnprocessableEntityException("Unprocessable"); 
+    }
 }

@@ -11,6 +11,7 @@ import org.interledger.ilp.InterledgerAddress;
 import org.interledger.ilp.InterledgerAddressBuilder;
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
+//import org.interledger.cryptoconditions.der.CryptoConditionReader;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.Config;
@@ -21,6 +22,7 @@ import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
+//import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LedgerPartialEntry;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
@@ -29,7 +31,7 @@ import javax.money.MonetaryAmount;
 import org.interledger.ilp.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
 
-// FIXME: Allow multiple debit/credits (Remove all code related to index [0]
+// FIXME:(1) Allow multiple debit/credits (Remove all code related to index [0])
 
 public class SimpleTransfer implements IfaceTransfer {
 
@@ -57,8 +59,8 @@ public class SimpleTransfer implements IfaceTransfer {
      * will trigger a transaction just if the ConditionURI for Execution/Cancelation
      * are also empty.
      */
-    Fulfillment executionFF   = null; /* TODO:(0) Remove null */
-    Fulfillment cancelationFF = null; /* TODO:(0) Remove null */
+    Fulfillment executionFF   = FF_NOT_PROVIDED;
+    Fulfillment cancelationFF = FF_NOT_PROVIDED;
     String data = "";
     String noteToSelf = "";
 
@@ -110,10 +112,12 @@ public class SimpleTransfer implements IfaceTransfer {
         this.fromAccount = ledgerAccountManager.
                     getAccountByName(credit_list[0].account.getLocalName());
     }
-    
+
     // Implement ILPSpec interface{
     @Override
     public UUID getId() {
+        // TODO:(0) Check LocalTransferID  LocalTransferID.ILPSpec2LocalTransferID
+        //           Create inverse and use
         UUID result = UUID.randomUUID(); // TODO:(0) FIX get from getTransferID
         return result;
     }
@@ -362,6 +366,10 @@ public class SimpleTransfer implements IfaceTransfer {
                 if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", this.DTTM_rejected.toString()); }
             }
             jo.put("timeline", timeline);
+        }
+        if (sMemo != "") {
+            jo.put("memo", new JsonObject(sMemo));
+            
         }
         return jo;
     }

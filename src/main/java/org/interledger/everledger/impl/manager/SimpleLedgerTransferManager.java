@@ -87,8 +87,7 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     public IfaceTransfer getTransferById(LocalTransferID transferId) {
         IfaceTransfer result = transferMap.get(transferId);
         if (result == null) {
-            throw ILPExceptionSupport.createILPInternalException(
-                this.getClass().getName() + "This transfer does not exist");
+            throw ILPExceptionSupport.createILPNotFoundException("transfer '"+transferId.transferID+"' not found");
         }
         if (result.getTransferStatus() == TransferStatus.REJECTED) {
             throw ILPExceptionSupport.createILPInternalException(

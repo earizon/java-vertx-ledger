@@ -1,7 +1,10 @@
 package org.interledger.everledger.handlers;
 
-import javax.xml.bind.DatatypeConverter;
+import java.time.ZonedDateTime;
+import java.util.Base64;
 
+
+//import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -22,7 +25,6 @@ import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
-import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,45 +118,50 @@ public class FulfillmentHandler extends RestEndpointHandler {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
 
-        String hexFulfillment = context.getBodyAsString();
-        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
-        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(hexFulfillment);
+        String sFulfillment = context.getBodyAsString();
+        byte[] fulfillmentBytes = Base64.getDecoder().decode(sFulfillment);
+
+//        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+//        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
         
         Fulfillment ff;
         try {
             ff = CryptoConditionReader.readFulfillment(fulfillmentBytes);
         } catch (DEREncodingException e1) {
-            throw new RuntimeException("body request '"+hexFulfillment+"' can not be parsed as HEX -> DER");
+            throw ILPExceptionSupport.createILPBadRequestException(
+                "wrong fulfillment '"+ sFulfillment + "' in request");
         }
         byte[] message = new byte[]{};
         boolean ffExisted = false;
         log.trace("transfer.getExecutionCondition():"+transfer.getExecutionCondition().toString());
         log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
-        log.trace("request hexFulfillment:"+hexFulfillment);
+        log.trace("request hexFulfillment:"+sFulfillment);
         log.trace("request ff.getCondition():"+ff.getCondition().toString());
 
         if (/*isFulfillment && */transfer.getExecutionCondition().equals(ff.getCondition()) ) {
             ffExisted = transfer.getExecutionFulfillment().equals(ff);
             if (!ffExisted) {
                 if (!ff.verify(ff.getCondition(), message)){
-                    throw new RuntimeException("execution fulfillment doesn't validate");
+                    throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
+                }
+                // TODO:(0) Check expires_at not expired:
+                if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
+                    throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
                 }
                 TM.executeRemoteILPTransfer(transfer, ff);
-
             }
         } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
             ffExisted = transfer.getCancellationFulfillment().equals(ff);
             if (!ffExisted) {
                 if (!ff.verify(ff.getCondition(), message)){
-                    throw new RuntimeException("cancelation fulfillment doesn't validate");
+                    throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
                 }
                 TM.abortRemoteILPTransfer(transfer, ff);
             }
         } else {
-            ILPExceptionSupport.createILPException(
-                    403,
-                    InterledgerError.ErrorCode.F05_WRONG_CONDITION,
-                    this.getClass().getName() + "Fulfillment does not match any condition");
+            ILPExceptionSupport.
+                createILPUnprocessableEntityException(
+                    "Fulfillment does not match any condition");
         }
         log.trace("ffExisted:"+ffExisted);
 
@@ -200,7 +207,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
              *       at org.interledger.cryptoconditions.FulfillmentFactory.getFulfillmentFromURI(FulfillmentFactory.java:24)
              */
         } else {
-            throw new RuntimeException("path doesn't match /fulfillment | /rejection");
+            throw ILPExceptionSupport.createILPBadRequestException("path doesn't match /fulfillment | /rejection");
         }
         IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
 
@@ -219,10 +226,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
-            ILPExceptionSupport.createILPException(
-                    500,
-                    InterledgerError.ErrorCode.F99_APPLICATION_ERROR,
-                this.getClass().getName() + "This transfer has not yet been fulfilled");
+            ILPExceptionSupport.createILPNotFoundException("This transfer has not yet been fulfilled");
         }
 
         String response  = fulfillment.toString();
