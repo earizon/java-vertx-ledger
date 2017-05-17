@@ -215,6 +215,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
         IfaceTransfer transfer = TM.getTransferById(transferID);
+        
         transferMatchUser = false 
                 || ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
                 || ai.getId().equals(transfer.getCredits()[0].account.getLocalName()) ;
@@ -226,7 +227,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 ? transfer.getExecutionFulfillment()
                 : transfer.getCancellationFulfillment();
         if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
-            ILPExceptionSupport.createILPNotFoundException("This transfer has not yet been fulfilled");
+            throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity");
         }
 
         String response  = fulfillment.toString();
