@@ -112,7 +112,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          **/
         IfaceTransfer transfer = TM.getTransferById(transferID);
         if ( transfer.getExecutionCondition() == SimpleTransfer.CC_NOT_PROVIDED) {
-            ILPExceptionSupport.createILPInternalException(
+            throw ILPExceptionSupport.createILPUnprocessableEntityException(
                     this.getClass().getName() + "Transfer is not conditional");
         }
         boolean transferMatchUser = // TODO:(?) Recheck 
@@ -141,21 +141,17 @@ public class FulfillmentHandler extends RestEndpointHandler {
         log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
         log.trace("request hexFulfillment:"+sFulfillmentInput);
         log.trace("request ff.getCondition():"+inputFF.getCondition().toString());
-System.out.println(transfer.getExecutionCondition().getUri().toString());
-System.out.println( inputFF.         getCondition().getUri().toString());
 
         if (/*isFulfillment && */transfer.getExecutionCondition().equals(inputFF.getCondition()) ) {
-            ffExisted = transfer.getExecutionFulfillment().equals(inputFF);
-            // if (!ffExisted) {
             if (!inputFF.verify(inputFF.getCondition(), message)){
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
+
             // TODO:(0) Check expires_at not expired:
             if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
             }
-            TM.executeRemoteILPTransfer(transfer, inputFF);
-            // }
+            if ( transfer.getTransferStatus() != TransferStatus.EXECUTED) { TM.executeRemoteILPTransfer(transfer, inputFF); }
         } else if (/*isRejection && */transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
             if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
                 throw ILPExceptionSupport.createILPBadRequestException("Already executed");
