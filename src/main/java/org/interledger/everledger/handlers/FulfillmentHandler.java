@@ -128,9 +128,9 @@ public class FulfillmentHandler extends RestEndpointHandler {
 //        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
 //        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
         
-        Fulfillment ff;
+        Fulfillment inputFF;
         try {
-            ff = CryptoConditionReader.readFulfillment(fulfillmentBytes);
+            inputFF = CryptoConditionReader.readFulfillment(fulfillmentBytes);
         } catch (DEREncodingException e1) {
             throw ILPExceptionSupport.createILPBadRequestException(
                 "wrong fulfillment '"+ sFulfillmentInput + "' in request");
@@ -140,40 +140,42 @@ public class FulfillmentHandler extends RestEndpointHandler {
         log.trace("transfer.getExecutionCondition():"+transfer.getExecutionCondition().toString());
         log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
         log.trace("request hexFulfillment:"+sFulfillmentInput);
-        log.trace("request ff.getCondition():"+ff.getCondition().toString());
+        log.trace("request ff.getCondition():"+inputFF.getCondition().toString());
+System.out.println(transfer.getExecutionCondition().getUri().toString());
+System.out.println( inputFF.         getCondition().getUri().toString());
 
-        if (/*isFulfillment && */transfer.getExecutionCondition().equals(ff.getCondition()) ) {
-            ffExisted = transfer.getExecutionFulfillment().equals(ff);
-            if (!ffExisted) {
-                if (!ff.verify(ff.getCondition(), message)){
-                    throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
-                }
-                // TODO:(0) Check expires_at not expired:
-                if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
-                    throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
-                }
-                TM.executeRemoteILPTransfer(transfer, ff);
+        if (/*isFulfillment && */transfer.getExecutionCondition().equals(inputFF.getCondition()) ) {
+            ffExisted = transfer.getExecutionFulfillment().equals(inputFF);
+            // if (!ffExisted) {
+            if (!inputFF.verify(inputFF.getCondition(), message)){
+                throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
-        } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
+            // TODO:(0) Check expires_at not expired:
+            if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
+                throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
+            }
+            TM.executeRemoteILPTransfer(transfer, inputFF);
+            // }
+        } else if (/*isRejection && */transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
             if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
                 throw ILPExceptionSupport.createILPBadRequestException("Already executed");
             }
-            ffExisted = transfer.getCancellationFulfillment().equals(ff);
+            ffExisted = transfer.getCancellationFulfillment().equals(inputFF);
             if (!ffExisted) {
-                if (!ff.verify(ff.getCondition(), message)){
+                if (!inputFF.verify(inputFF.getCondition(), message)){
                     throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
                 }
-                TM.abortRemoteILPTransfer(transfer, ff);
+                TM.abortRemoteILPTransfer(transfer, inputFF);
             }
         } else {
-            ILPExceptionSupport.
+            throw ILPExceptionSupport.
                 createILPUnprocessableEntityException(
                     "Fulfillment does not match any condition");
         }
         log.trace("ffExisted:"+ffExisted);
 
         String response  = Base64.getEncoder().
-                encodeToString(ff.getEncoded());
+                encodeToString(inputFF.getEncoded());
         response = response.substring(0, response.indexOf('='));
         if (!sFulfillmentInput.equals(response)) {
             throw new RuntimeException("Assert exception. Input '"+sFulfillmentInput+"'doesn't match output '"+response+"' ");
