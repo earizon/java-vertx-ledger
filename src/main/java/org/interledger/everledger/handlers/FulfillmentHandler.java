@@ -4,6 +4,8 @@ import java.time.ZonedDateTime;
 import java.util.Base64;
 
 
+
+
 //import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -20,11 +22,13 @@ import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
+import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
+import org.interledger.ilp.ledger.model.TransferStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,6 +155,9 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 TM.executeRemoteILPTransfer(transfer, ff);
             }
         } else if (/*isRejection && */transfer.getCancellationCondition().equals(ff.getCondition()) ){
+            if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
+                throw ILPExceptionSupport.createILPBadRequestException("Already executed");
+            }
             ffExisted = transfer.getCancellationFulfillment().equals(ff);
             if (!ffExisted) {
                 if (!ff.verify(ff.getCondition(), message)){

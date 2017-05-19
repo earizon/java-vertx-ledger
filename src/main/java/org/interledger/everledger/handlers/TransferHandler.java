@@ -341,7 +341,7 @@ public class TransferHandler extends RestEndpointHandler {
 
         String debit0_account = transfer.getDebits()[0].account.getLocalName();
         boolean transferMatchUser = ai.getId().equals(debit0_account);
-        if (!transferMatchUser) {
+        if (!transferMatchUser && !ai.getRoll().equals("admin")) {
             log.error("transferMatchUser false: "
                     + "\n    ai.getId()    :" + ai.getId()
                     + "\n    debit0_account:" + debit0_account );
