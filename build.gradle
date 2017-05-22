@@ -29,6 +29,7 @@ repositories {
 
 dependencies {
 //  compile     project(':java-ilp-core')
+    compile     "org.web3j:core:2.1.0"
     compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
     compile     "javax.money:money-api:${money_api_version}"
     compile     "org.javamoney:moneta:${moneta_version}"
