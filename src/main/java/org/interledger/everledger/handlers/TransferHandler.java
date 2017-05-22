@@ -181,7 +181,7 @@ public class TransferHandler extends RestEndpointHandler {
                     .parse(URI.create(execution_condition))
                     : SimpleTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
-            throw new RuntimeException("execution_condition '"
+            throw ILPExceptionSupport.createILPBadRequestException("execution_condition '"
                     + execution_condition + "' could not be parsed as URI");
         }
         Credit[] creditList = new Credit[credits.size()];
@@ -260,7 +260,7 @@ public class TransferHandler extends RestEndpointHandler {
                     .parse(URI.create(cancelation_condition))
                     : SimpleTransfer.CC_NOT_PROVIDED;
         } catch (URIEncodingException e1) {
-            throw new RuntimeException("cancelation_condition '"
+            throw ILPExceptionSupport.createILPBadRequestException("cancelation_condition '"
                     + cancelation_condition + "' could not be parsed as URI");
         }
         TransferStatus status = TransferStatus.PROPOSED; // By default
@@ -292,7 +292,7 @@ public class TransferHandler extends RestEndpointHandler {
                     .getCredits()[0])
                     || !effectiveTransfer.getDebits()[0]
                             .equals(receivedTransfer.getDebits()[0])) {
-                throw new RuntimeException(
+                throw ILPExceptionSupport.createILPBadRequestException(
                         "data for credits and/or debits doesn't match existing registry");
             }
         } else {
