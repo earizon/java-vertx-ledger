@@ -70,7 +70,7 @@ public class TransfersHandler extends RestEndpointHandler {
         try {
             executionCondition = CryptoConditionUri.parse(URI.create(sExecCond));
         } catch (URIEncodingException e) {
-            throw new RuntimeException("'"+ sExecCond + "' can't be parsed as URI");
+            throw ILPExceptionSupport.createILPBadRequestException("'"+ sExecCond + "' can't be parsed as URI");
         }
         List<IfaceTransfer> transferList = TM.getTransfersByExecutionCondition(executionCondition);
         

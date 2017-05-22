@@ -41,7 +41,6 @@ public class SimpleTransfer implements IfaceTransfer {
     
     static  final SimpleLedgerAccountManager  ledgerAccountManager = 
             LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
-    // TODO: IMPROVEMENT. Mix of local/remote transactions not contemplated. Either all debit_list are remote or local
     final LocalTransferID transferID;
     final IfaceLocalAccount fromAccount;
     final Credit[] credit_list;
@@ -74,22 +73,14 @@ public class SimpleTransfer implements IfaceTransfer {
         Condition executionCond, 
         Condition cancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
         String data, String noteToSelf, TransferStatus transferStatus, String sMemo ){
-        // TODO: Check that debit_list[idx].ammount.currency is always the same and match the ledger
-        // TODO: Check that credit_list[idx].ammount.currency is always the same.
-        //       For local transaction check also that it match the ledger
-        
-//        if (debit_list.length!=1) {
-//            throw new RuntimeException("Only one debit is supported in this implementation");
-//        }
-//        if (credit_list.length!=1) {
-//            throw new RuntimeException("Only one credit is supported in this implementation");
-//        }
-        // TODO: FIXME: Check debit_list SUM of amounts equals credit_list SUM  of amounts.
+        // TODO:(1) Check that debit_list[idx].ammount.currency is always the same and match the ledger
+        // TODO:(1) Check that credit_list[idx].ammount.currency is always the same.
 
         // FIXME: TODO: If fromAccount.ledger != "our ledger" throw RuntimeException.
         this.transferID         = Objects.requireNonNull(transferID     );
         this.credit_list        = Objects.requireNonNull(credit_list    );
         this.debit_list         = Objects.requireNonNull(debit_list     );
+        checkBalancedTransaction();
         this.data               = Objects.requireNonNull(data           );
         this.noteToSelf         = Objects.requireNonNull(noteToSelf     );
         this.executionCond      = Objects.requireNonNull(executionCond  );

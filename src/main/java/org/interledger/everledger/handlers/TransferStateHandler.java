@@ -106,7 +106,9 @@ public class TransferStateHandler extends RestEndpointHandler {
         if ( ! receiptType.equals(RECEIPT_TYPE_ED25519) &&
              ! receiptType.equals(RECEIPT_TYPE_SHA256 ) &&
              true ) {
-            throw new RuntimeException("type not in := "+RECEIPT_TYPE_ED25519+"* | "+RECEIPT_TYPE_SHA256+" ");
+            throw ILPExceptionSupport.createILPBadRequestException(
+                "type not in := "+RECEIPT_TYPE_ED25519+"* | "+RECEIPT_TYPE_SHA256+" "
+            );
         }
         JsonObject jo = new JsonObject();
         String signer = "";      // FIXME: config.getIn(['server', 'base_uri']),

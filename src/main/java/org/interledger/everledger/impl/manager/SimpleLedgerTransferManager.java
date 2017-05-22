@@ -100,7 +100,6 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     @Override
     public void executeLocalTransfer(IfaceTransfer transfer) {
         // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
-        transfer.checkBalancedTransaction();
         Debit[] debit_list = transfer.getDebits();
         if (debit_list.length > 1) {
             // STEP 1: Pass all debits to first account.
