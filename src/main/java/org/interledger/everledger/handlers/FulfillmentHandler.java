@@ -178,7 +178,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 encodeToString(inputFF.getEncoded());
         response = response.substring(0, response.indexOf('='));
         if (!sFulfillmentInput.equals(response)) {
-            throw new RuntimeException("Assert exception. Input '"+sFulfillmentInput+"'doesn't match output '"+response+"' ");
+            throw ILPExceptionSupport.createILPBadRequestException(
+                "Assert exception. Input '"+sFulfillmentInput+"'doesn't match output '"+response+"' ");
         }
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")

@@ -63,16 +63,16 @@ public class AccountsHandler extends RestEndpointHandler {
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
         String password; String data_id;
-            try{
         data_id = data.getString("id");
-        if (data_id == null) throw new RuntimeException("id no provided");
+        if (data_id == null) {
+            throw ILPExceptionSupport.createILPBadRequestException("id no provided");
+        }
         password = data.getString("password");
-        if (password == null) throw new RuntimeException("password no provided for id:"+data_id);
+        if (password == null) {
+            throw ILPExceptionSupport.createILPBadRequestException("password no provided for id:"+data_id);
+        }
         int li = data_id.lastIndexOf('/'); if (li < 0) li = -1;
         data_id = data_id.substring(li+1); 
-            }catch(Exception e){
-        throw ILPExceptionSupport.createILPBadRequestException(e.toString());
-            }
         if (! accountName.equals(data_id) ) {
             throw ILPExceptionSupport.createILPBadRequestException(
                 "id in body '"+data_id+"'doesn't match account name '"+accountName+"' in URL");
