@@ -58,11 +58,6 @@ public class TransferHandler extends RestEndpointHandler {
 
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
 
-    // TODO:(0) Generate random preimage. This object is just used to avoid null
-    // comparations. The real preimage
-    // doesn't really matter (but in cryptography always is better to be
-    // paranoid)
-
     public TransferHandler() {
         // REF:
         // https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/app.js
@@ -224,13 +219,12 @@ public class TransferHandler extends RestEndpointHandler {
             // COMMENTED OLD API InterledgerAddress dstAddress = InterledgerAddressBuilder.builder()
             // COMMENTED OLD API         .value(ilp_ph_ilp_dst_address).build();
             // COMMENTED OLD API String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
-            // COMMENTED OLD API BigDecimal ammount = new BigDecimal(ilp_ph_amount); // TODO:(0)
-                                                                // FIXME?
+            // COMMENTED OLD API BigDecimal ammount = new BigDecimal(ilp_ph_amount);
             // COMMENTED OLD API Condition ilp_ph_condition = URIExecutionCond;
             // COMMENTED OLD API DTTM ilp_ph_expires = new DTTM(jsonMemoILPHeader.getJsonObject(
             // COMMENTED OLD API         "data").getString("expires_at"));
             // COMMENTED OLD API if (!DTTM_expires.equals(ilp_ph_expires)) {
-            // COMMENTED OLD API     DTTM_expires = ilp_ph_expires;// TODO: Recheck
+            // COMMENTED OLD API     DTTM_expires = ilp_ph_expires;
             // COMMENTED OLD API }
             // COMMENTED OLD API ZonedDateTime zdt = ZonedDateTime.parse((DTTM_expires.toString()));
             // InterledgerPacketHeader(InterledgerAddress destinationAddress,
@@ -277,7 +271,6 @@ public class TransferHandler extends RestEndpointHandler {
         IfaceTransfer receivedTransfer = new SimpleTransfer(transferID,
                 debitList, creditList, URIExecutionCond, URICancelationCond,
                 DTTM_expires, DTTM_proposed, data, noteToSelf, status, sMemo);
-
 
         // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
         boolean isNewTransfer = !TM.doesTransferExists(ilpTransferID);

@@ -5,7 +5,7 @@ public class AuthInfo {
     final public String id;
     final public String name;
     final public String pass;
-    final public String roll; // TODO:(0) Create ENUM 
+    final public String roll; // TODO:(1) Create ENUM 
 
     public static final AuthInfo ANONYMOUS = new AuthInfo("","","", "none");
     

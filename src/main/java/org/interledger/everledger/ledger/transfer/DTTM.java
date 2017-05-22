@@ -18,7 +18,7 @@ import java.util.Locale;
  *
  */
 // 
-public class DTTM { // TODO:(0) Recheck. CAn an interface to this class go into java-ilp-core? (it's defined by the ILP spec?) 
+public class DTTM { // TODO:(core) Recheck. (it's defined by the ILP spec?) 
 
     private final Date date;
     // https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html

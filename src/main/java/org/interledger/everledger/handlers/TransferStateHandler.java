@@ -30,7 +30,6 @@ import java.security.NoSuchAlgorithmException;
 public class TransferStateHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TransferStateHandler.class);
-    // TODO:(0) Clean code. Check that getConfig is not used "N" times in the same class.
     private static final String transferUUID  = "transferUUID";
     private static final String RECEIPT_TYPE_ED25519 = "ed25519-sha512",
                                 RECEIPT_TYPE_SHA256  = "sha256";
@@ -85,16 +84,14 @@ public class TransferStateHandler extends RestEndpointHandler {
         IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
-        if (TM.doesTransferExists(transferID)) { 
-            ILocalTransfer transfer = TM.getTransferById(transferID);
-            status = transfer.getTransferStatus();
-            transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
-                            ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());
-        } else {
-            //TODO:(0) ???? Continue with status equal proposed if transfer not found ???
-        }
+        if (!TM.doesTransferExists(transferID))
+            throw ILPExceptionSupport.createILPNotFoundException();
 
-        
+        ILocalTransfer transfer = TM.getTransferById(transferID);
+        status = transfer.getTransferStatus();
+        transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
+                        ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());
+
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }

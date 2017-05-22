@@ -2,7 +2,7 @@ package org.interledger.everledger.util;
 
 //REF: http://stackoverflow.com/questions/9755057/converting-strings-to-encryption-keys-and-vice-versa-java
 
-// TODO:(0) Move to java-ilp-core/... utils/... ?
+// TODO:(core) Move to java-ilp-core/... utils/... ?
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;

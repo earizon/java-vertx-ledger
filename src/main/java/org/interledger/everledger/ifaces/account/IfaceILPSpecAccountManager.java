@@ -7,10 +7,9 @@ import java.net.URI;
  *
  * @author earizon
  */
-//TODO:(0) Rename all ILP related interfaces as IfaceILP
 public interface IfaceILPSpecAccountManager { 
 
-    // TODO:(0) Could it be possible to have different HOLD accounts for different type of users/sub-ledgers?
+    // TODO:(RFC) Could it be possible to have different HOLD accounts for different type of users/sub-ledgers?
     IfaceLocalAccount getHOLDAccountILP();
     URI getPublicURIForAccount(IfaceLocalAccount name);
 

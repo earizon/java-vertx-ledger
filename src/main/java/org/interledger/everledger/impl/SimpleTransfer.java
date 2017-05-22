@@ -89,7 +89,7 @@ public class SimpleTransfer implements IfaceTransfer {
         this.DTTM_proposed      = Objects.requireNonNull(DTTM_proposed  );
         this.DTTM_prepared      = Objects.requireNonNull(DTTM.getNow()  );
         this.sMemo              = Objects.requireNonNull(sMemo)          ;
-        if (transferStatus.equals(TransferStatus.PROPOSED) /* && !ExecutionCond.equals(ConditionURI.EMPTY) TODO:(0)*/){
+        if (transferStatus.equals(TransferStatus.PROPOSED)){
             transferStatus = TransferStatus.PREPARED;
         }
         this.transferStatus     = transferStatus    ;
@@ -185,7 +185,7 @@ public class SimpleTransfer implements IfaceTransfer {
     
     // } End ILPSpec interface
     
-    public void checkBalancedTransaction(){
+    private void checkBalancedTransaction(){
         MonetaryAmount totalDebits = Money.of(0, debit_list[0].amount.getCurrency());
         for ( Debit debit : debit_list ) {
             totalDebits.add(debit.amount);
@@ -218,37 +218,7 @@ public class SimpleTransfer implements IfaceTransfer {
     //       exec/cancel fulfillment. Ummm, What happens for non-conditional transactions?
     @Override
     public void setTransferStatus(TransferStatus transferStatus) {
-//        final String errorState = "new state '"+transferStatus.toString()+"' "
-//                + "not compliant with Transfer State Machine. Current state: "
-//                + this.transferStatus.toString();
-        // TODO: COMMENT on ILP Ledger list. 
-        // next checks were commented to make five-bells-ledger tests pass
-        //    anyway it looks sensible to have them in place.
-        // switch(transferStatus){
-        //     // TODO: RECHECK allowed state machine 
-        //     case PROPOSED:
-        //         if (this.transferStatus != TransferStatus.PROPOSED) { 
-        //             throw new RuntimeException(errorState); 
-        //         }
-        //         break;
-        //     case PREPARED:
-        //         if (this.transferStatus != TransferStatus.PROPOSED) { 
-        //             throw new RuntimeException(errorState); 
-        //         }
-        //         break;
-        //     case EXECUTED:
-        //         if (this.transferStatus != TransferStatus.PREPARED ) { 
-        //             throw new RuntimeException(errorState); 
-        //         }
-        //         break;
-        //     case REJECTED:
-        //         if (this.transferStatus != TransferStatus.PREPARED ) { 
-        //             throw new RuntimeException(errorState); 
-        //         }
-        //         break;
-        //     default:
-        //         throw new RuntimeException("Unknown transferStatus");
-        // }
+        // TODO:(RFC) Could be useful to check transition state is correct 
         this.transferStatus = transferStatus;
         System.out.println("deleteme SimpleLedgerTransfer setTransferStatus transferStatus:"+transferStatus.toString());
     }
@@ -329,7 +299,7 @@ public class SimpleTransfer implements IfaceTransfer {
         JsonObject jo = new JsonObject();
         String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
-        String id = /* TODO:(doubt) add ledger as prefix ?? */"/transfers/" /* TODO:(0) Get from Config */+ transferID.transferID;
+        String id = /* TODO:(doubt) add ledger as prefix ?? */"/transfers/" /* TODO:(1) Get from Config */+ transferID.transferID;
         jo.put("id", id);
         jo.put("ledger", ledger);
         jo.put("debits" , entryList2Json( debit_list));

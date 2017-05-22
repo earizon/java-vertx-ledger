@@ -101,7 +101,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
     private void initRouter(Router router) {
         log.debug("Init router");
         router.route()
-                .handler(BodyHandler.create().setBodyLimit(2 * 1024 /* TODO:(0) hardcoded Use Config.*/));
+                .handler(BodyHandler.create().setBodyLimit(Config.vertxBodyLimit));
 
         if (Config.debug) {
             log.info("Enabled request debug");
@@ -150,7 +150,6 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
         );
         for (RestEndpointHandler handler : handlers) {
             for (String path : handler.getRoutePaths()) {
-                // checkProtectedEndpoint(router, handler, path); // TODO:(0) Recheck
                 for (HttpMethod httpMethod : handler.getHttpMethods()) {
                     log.info("publishing {} endpoint {} at {}", httpMethod, handler.getClass().getName(), getEndpointUrl(path));
                     router.route(httpMethod, path).handler(handler);

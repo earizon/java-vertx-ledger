@@ -6,7 +6,7 @@ import org.interledger.everledger.util.ILPExceptionSupport;
 
 public class ILPSpecTransferID {
     // TODO:(0) Recheck. It was created to indicate ILP transferIDs in old rfcs.
-    // Now is just an internal Ledger class with free implementation. Recheck java-ilp-core and RFCs
+    // Replace with java.util.UUID ?
 
     final private static String SREGEX
             = // Must be similar to 3a2a1d9e-8640-4d2d-b06c-84f2cd613204

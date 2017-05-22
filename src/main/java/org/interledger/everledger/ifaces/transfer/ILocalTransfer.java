@@ -59,7 +59,4 @@ public interface ILocalTransfer {
     public void           setCancelationFulfillment(Fulfillment ff);
     public Fulfillment    getCancellationFulfillment();
 
-    public void checkBalancedTransaction();
-
-
 }

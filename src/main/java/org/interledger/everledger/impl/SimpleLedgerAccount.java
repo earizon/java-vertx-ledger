@@ -22,8 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Represents a simple ledger account.
  *
  */
-// TODO:(0) Fixme must implement org.interledger.ilp.ledger.model.AccountInfo,
-//    (not custom org.interledger.everledger.ledger.account.LedgerAccount)
 public class SimpleLedgerAccount implements IfaceAccount {
 
     public static final String currencyCode = Config.ledgerCurrencyCode;

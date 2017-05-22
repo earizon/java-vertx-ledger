@@ -21,6 +21,7 @@
    - Use TODO:(0) to mark tasks in code that must be fixed.
    - Use TODO:(1) to mark tasks in code that can be left as improvements.
    - Use TODO:(RFC)|TODO:(ILP) to mark things that must be discusses with the Interledger community
+   - Use TODO:(core) to mark things that could(/must) be placed in java-ilp-core
 
 Data flow Summary:
 ------------------

@@ -65,22 +65,9 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     }
 
     public static IfaceTransferManager getTransferManager() {
-        // TODO:(0) Move function to factory
-        //      similar to LedgerAccountManagerFactory
+        // TODO:(1) Move function to factory similar to LedgerAccountManagerFactory
         return (IfaceTransferManager) singleton;
     }
-
-//    public static IfaceLocalTransferManager _getLocalTransferManager() {
-//        // TODO:(0) Move function to factory
-//        //      similar to LedgerAccountManagerFactory
-//        return (IfaceLocalTransferManager) singleton;
-//    }
-//
-//    public static IfaceILPSpecTransferManager _getILPSpecTransferManager() {
-//        // TODO:(0) Move function to factory
-//        //      similar to LedgerAccountManagerFactory
-//        return (IfaceILPSpecTransferManager) singleton;
-//    }
 
     // START IfaceLocalTransferManager implementation {
     @Override

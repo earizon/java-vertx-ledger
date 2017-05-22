@@ -151,7 +151,6 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
 
-            // TODO:(0) Check expires_at not expired:
             if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
             }

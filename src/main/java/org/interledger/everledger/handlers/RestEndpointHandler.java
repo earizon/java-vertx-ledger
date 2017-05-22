@@ -75,13 +75,6 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
         this.routePaths = handlerPath(uriList);
     }
 
-
-// TODO:(0)
-//    @JsonValue
-//    public URL getUrl() {
-//        return url;
-//    }
-
     public final List<HttpMethod> getHttpMethods() {
         return httpMethods;
     }
@@ -135,7 +128,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
             response(
                 context, 
                 HttpResponseStatus.valueOf(ex.getHTTPErrorCode()),
-                buildJSONWith/* TODO:(0) FIXME Launch Binary Packet. Not JSON. Pending fixes in JS five-bells-ledger implementation */(
+                buildJSONWith (
                     "errCode"    , err.getErrCode().getCode(), 
                     "triggeredBy", err.getTriggeredBy().getValue().toString(),
                     "data"       , err.getData() )
@@ -165,12 +158,12 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
     }
 
     protected static Supplier<JsonObject> buildJSON(CharSequence id, CharSequence message) {
-        // TODO:(0) move to JSONSupport (Do not inherit)
+        // TODO:(1) move to JSONSupport (Do not inherit)
         return buildJSONWith("id", id, "message", message);
     }
 
     protected static Supplier<JsonObject> buildJSONWith(Object... pairs) {
-     // TODO:(0) move to JSONSupport (Do not inherit)
+     // TODO:(1) move to JSONSupport (Do not inherit)
         return JsonObjectBuilder.create().with(pairs);
     }
 

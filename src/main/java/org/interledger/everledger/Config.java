@@ -45,6 +45,7 @@ public class Config {
                 "due to " + e.toString() +"\n");
                 }
     }
+    public static final int vertxBodyLimit = getInteger("vertx.request.bodyLimit");
 
     public static final boolean unitTestsActive = getBoolean("developer.unitTestsActive");
     
