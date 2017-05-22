@@ -111,6 +111,8 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                 }
             } catch (Exception t) {
                 // TODO:(?) Improve logging
+                if (t instanceof HTTPInterledgerException) throw t;
+
                 StringWriter writer = new StringWriter();
                 PrintWriter printWriter = new PrintWriter( writer );
                 t.printStackTrace( printWriter );
@@ -127,7 +129,9 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
             
         } catch (HTTPInterledgerException ex ) {
             InterledgerError err = ex.getInterledgerError();
-            log.error("{} -> {} \n{}", err.getErrCode()  , err.getErrorType(), err.getData());
+            log.error(err.getErrCode() +" -> "+err.getErrorType()+" \n"+err.getData());
+            System.out.println(err.getErrCode() +" -> "+err.getErrorType()+" \n"+err.getData());
+            
             response(
                 context, 
                 HttpResponseStatus.valueOf(ex.getHTTPErrorCode()),

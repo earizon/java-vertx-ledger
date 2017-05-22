@@ -173,7 +173,7 @@ public class SimpleTransfer implements IfaceTransfer {
 
     @Override
     public String getRejectionMessage(){
-        String result = ""; // TODO:(0)
+        String result = "";
         return result;
     }
 

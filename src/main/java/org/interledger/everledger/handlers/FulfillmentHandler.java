@@ -22,7 +22,6 @@ import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
@@ -33,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Fulfillment (and rejection) handler
+ * Fulfillment handler
  * 
  * REF: five-bells-ledger/src/controllers/transfers.js
  */
@@ -42,16 +41,22 @@ public class FulfillmentHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(FulfillmentHandler.class);
     private final static String transferUUID= "transferUUID";
 
-	// GET|PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
-	// PUT /transfers/4e36fe38-8171-4aab-b60e-08d4b56fbbf1/rejection
+	/*
+	 *  GET|PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
+	 *  fulfillment can be execution or cancellation
+	 *  Note: Rejection != cancellation. Rejection in five-bells-ledger refers
+	 *      to the rejection in the proposed (not-yet prepared) transfer (or part of the
+	 *      transfer).
+	 *      In the java-vertx-ledger there is not yet (2017-05) concept of proposed
+	 *      state.
+	 */
 
     public FulfillmentHandler() {
        // REF: _makeRouter @ five-bells-ledger/src/lib/app.js
         super(
                 new HttpMethod[] {HttpMethod.GET, HttpMethod.PUT},
                 new String[] {
-                        "transfers/:" + transferUUID + "/fulfillment",
-                        "transfers/:" + transferUUID + "/rejection"
+                        "transfers/:" + transferUUID + "/fulfillment"
                 }
             );
     }
@@ -63,7 +68,6 @@ public class FulfillmentHandler extends RestEndpointHandler {
     @Override
     protected void handlePut(RoutingContext context) {
         // PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
-        // PUT /transfers/4e36fe38-8171-4aab-b60e-08d4b56fbbf1/rejection
         AuthInfo ai = AuthManager.authenticate(context);
 
         log.trace(this.getClass().getName() + "handlePut invoqued ");
@@ -142,7 +146,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         log.trace("request hexFulfillment:"+sFulfillmentInput);
         log.trace("request ff.getCondition():"+inputFF.getCondition().toString());
 
-        if (/*isFulfillment && */transfer.getExecutionCondition().equals(inputFF.getCondition()) ) {
+        if (transfer.getExecutionCondition().equals(inputFF.getCondition()) ) {
             if (!inputFF.verify(inputFF.getCondition(), message)){
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
@@ -152,7 +156,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
             }
             if ( transfer.getTransferStatus() != TransferStatus.EXECUTED) { TM.executeRemoteILPTransfer(transfer, inputFF); }
-        } else if (/*isRejection && */transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
+        } else if (transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
             if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
                 throw ILPExceptionSupport.createILPBadRequestException("Already executed");
             }
@@ -198,27 +202,11 @@ public class FulfillmentHandler extends RestEndpointHandler {
     @Override
     protected void handleGet(RoutingContext context) {
         // GET /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment 
-        //                                                    /rejection
         log.trace(this.getClass().getName() + " handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
         
         boolean transferMatchUser = false;
-        boolean isFulfillment = false; // false => isRejection
-        if (context.request().path().endsWith("/fulfillment")){
-            isFulfillment = true;
-        } else if (context.request().path().endsWith("/rejection")){
-            isFulfillment = false;
-            /*
-             * FIXME: rejection request doesn't look to be symmetrical with fulfillments.
-             *    INFO: 127.0.0.1 - - [Wed, 16 Nov 2016 09:05:21 GMT] 
-             *    "PUT /transfers/eec954ec-005e-460a-8dd6-829161da05ac/rejection HTTP/1.1" 200 19 "-" "-"
-             *       Handle exception java.lang.IllegalArgumentException: serializedFulfillment 'transfer timed out.' must start with 'cf:'
-             *       java.lang.IllegalArgumentException: serializedFulfillment 'transfer timed out.' must start with 'cf:'
-             *       at org.interledger.cryptoconditions.FulfillmentFactory.getFulfillmentFromURI(FulfillmentFactory.java:24)
-             */
-        } else {
-            throw ILPExceptionSupport.createILPBadRequestException("path doesn't match /fulfillment | /rejection");
-        }
+
         IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
 
         ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
@@ -233,9 +221,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
 
-        Fulfillment fulfillment= (isFulfillment) 
-                ? transfer.getExecutionFulfillment()
-                : transfer.getCancellationFulfillment();
+        Fulfillment fulfillment=  transfer.getExecutionFulfillment();
         if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
             if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
                 throw ILPExceptionSupport.createILPNotFoundException("This transfer expired before it was fulfilled");

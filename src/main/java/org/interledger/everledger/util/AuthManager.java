@@ -31,7 +31,7 @@ public class AuthManager {
 //    String realm = authConfig.getString(DEFAULT_BASIC_REALM, Auth.realm);
 //    public final AuthHandler authHandler = BasicAuthHandler.create(authProvider, realm);
 
-    private static final Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
+    private static Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
 
     public static Map<AuthInfo, Integer /*blance*/> configureDevelopmentEnvironment() {
         if (! org.interledger.everledger.Config.unitTestsActive) {
@@ -45,7 +45,7 @@ public class AuthManager {
         AuthInfo bob          = new AuthInfo(          "bob",          "bob",          "bob", "user");
         // AuthInfo noBalance    = new AuthInfo(    "nobalance",    "nobalance",    "nobalance", "user"); 
         AuthInfo eve          = new AuthInfo(          "eve",          "eve",          "eve", "user");
-
+        users = new HashMap<String, AuthInfo>();
         users.put("admin"       , admin       ); result.put(admin       , 10000);
         users.put("ilpconnector", ilpconnector); result.put(ilpconnector,   100);
         users.put("alice"       , alice       ); result.put(alice       ,   100);

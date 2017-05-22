@@ -49,8 +49,9 @@ public class AccountsHandler extends RestEndpointHandler {
     protected void handleGet(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context, true);
         String accountName = getAccountName(context);
+        boolean isAuthenticated = ai.getRoll().equals("admin") || ai.getId().equals(accountName); 
         IfaceAccount account = accountManager.getAccountByName(accountName);
-        JsonObject result = accountToJsonObject(account, ai.isAdmin());
+        JsonObject result = accountToJsonObject(account, isAuthenticated);
         response(context, HttpResponseStatus.OK, result);
     }
 
@@ -61,19 +62,21 @@ public class AccountsHandler extends RestEndpointHandler {
         String accountName = getAccountName(context);
         boolean exists = accountManager.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
-        String password;
+        String password; String data_id;
             try{
-        String data_id = data.getString("id");
+        data_id = data.getString("id");
         if (data_id == null) throw new RuntimeException("id no provided");
         password = data.getString("password");
-        if (password == null) throw new RuntimeException("password no provided");
-        int li = data_id.lastIndexOf('/'); if (li < 0) li = 0;
-        if (! accountName.equals(data_id.substring(li)) ) {
-            throw ILPExceptionSupport.createILPBadRequestException();
-        }
+        if (password == null) throw new RuntimeException("password no provided for id:"+data_id);
+        int li = data_id.lastIndexOf('/'); if (li < 0) li = -1;
+        data_id = data_id.substring(li+1); 
             }catch(Exception e){
         throw ILPExceptionSupport.createILPBadRequestException(e.toString());
             }
+        if (! accountName.equals(data_id) ) {
+            throw ILPExceptionSupport.createILPBadRequestException(
+                "id in body '"+data_id+"'doesn't match account name '"+accountName+"' in URL");
+        }
         if(exists && !accountName.equalsIgnoreCase(accountName)) {
             throw ILPExceptionSupport.createILPBadRequestException();
         }
@@ -110,7 +113,7 @@ public class AccountsHandler extends RestEndpointHandler {
         return accountName;
     }
 
-    private JsonObject accountToJsonObject(IfaceAccount account, boolean isAdmin) {
+    private JsonObject accountToJsonObject(IfaceAccount account, boolean isAuthenticated) {
         String ledger = Config.publicURL.toString();
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
@@ -119,7 +122,7 @@ public class AccountsHandler extends RestEndpointHandler {
                 .put("id", accountManager.getPublicURIForAccount(account))
                 .put("name", account.getLocalName())
                 .put("ledger", ledger);
-        if (isAdmin){ 
+        if (isAuthenticated){ 
             build
                 .put("balance", account.getBalanceAsString())
                 // .put("connector", "??????" /* TODO:(?) Recheck */)

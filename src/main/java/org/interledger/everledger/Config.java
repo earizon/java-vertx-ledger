@@ -144,7 +144,6 @@ public class Config {
         // Required by wallet & ilp (ilp-plugin-bells) connector
         services.put("transfer"            , base + "transfers/:id"            );
         services.put("transfer_fulfillment", base + "transfers/:id/fulfillment");
-        services.put("transfer_rejection"  , base + "transfers/:id/rejection"  );
         services.put("message"             , base + "messages"                 );
         services.put("auth_token"          , base + "auth_token"               );
         indexHandlerMap.put("urls", services);
