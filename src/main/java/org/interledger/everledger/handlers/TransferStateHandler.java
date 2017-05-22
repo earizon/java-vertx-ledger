@@ -89,8 +89,8 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         ILocalTransfer transfer = TM.getTransferById(transferID);
         status = transfer.getTransferStatus();
-        transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalName())
-                        ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalName());
+        transferMatchUser = ai.getId().equals(transfer.getDebits ()[0].account.getLocalID())
+                        ||  ai.getId().equals(transfer.getCredits()[0].account.getLocalID());
 
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();

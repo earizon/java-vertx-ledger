@@ -15,7 +15,12 @@ import javax.money.MonetaryAmount;
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public interface IfaceLocalAccount {
 
-    public String getLocalName();
+    /**
+     * localID can be a public blockchain address (hash of the public key),
+     * and internal or mapped database id, ...
+     * @return
+     */
+    public String getLocalID();
 
     IfaceLocalAccount setMinimumAllowedBalance(Number balance);
 

@@ -101,7 +101,7 @@ public class SimpleTransfer implements IfaceTransfer {
          */
 
         this.fromAccount = ledgerAccountManager.
-                    getAccountByName(credit_list[0].account.getLocalName());
+                    getAccountByName(credit_list[0].account.getLocalID());
     }
 
     // Implement ILPSpec interface{
@@ -363,7 +363,7 @@ public class SimpleTransfer implements IfaceTransfer {
         for (LedgerPartialEntry entry : input_list) {
             // FIXME: This code to calculate amount is PLAIN WRONG. Just to pass five-bells-ledger tests
             JsonObject jo = new JsonObject();
-            jo.put("account", "/accounts/" /* TODO: Get from config.*/ + entry.account.getLocalName() );
+            jo.put("account", "/accounts/" /* TODO: Get from config.*/ + entry.account.getLocalID() );
             String sAmount = "" + (long)entry. amount.getNumber().floatValue();
             jo.put( "amount", sAmount);
             if (entry instanceof Debit) {

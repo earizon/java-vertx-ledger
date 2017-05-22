@@ -30,7 +30,7 @@ public class LocalTransferID {
     
     @Override
     public boolean equals(Object other) {
-        if (other == null) return false;
+        if (other == null) throw new RuntimeException("comparing to null @ LocalTransferID");
         if (other == this) return true;
         if (!(other instanceof LocalTransferID))return false;
         return transferID.equals(((LocalTransferID)other).transferID);

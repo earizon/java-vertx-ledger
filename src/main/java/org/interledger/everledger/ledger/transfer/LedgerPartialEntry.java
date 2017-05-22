@@ -20,7 +20,7 @@ public abstract class LedgerPartialEntry {
     
     @Override
     public boolean equals(Object other) {
-        if (other == null) return false;
+        if (other == null) throw new RuntimeException("comparing to null @ LedgerPartialEntry");
         if (other == this) return true;
         if (!(other instanceof LedgerPartialEntry))return false;
         return account.equals(((LedgerPartialEntry)other).account) &&

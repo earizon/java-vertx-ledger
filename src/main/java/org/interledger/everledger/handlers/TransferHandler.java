@@ -243,8 +243,6 @@ public class TransferHandler extends RestEndpointHandler {
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         DTTM DTTM_proposed = DTTM.getNow();
-        log.debug(transferID.transferID + " expires_at == null"
-                + (requestBody.getString("expires_at") == null));
 
         String cancelation_condition = requestBody
                 .getString("cancellation_condition");
@@ -332,7 +330,7 @@ public class TransferHandler extends RestEndpointHandler {
         IfaceTransfer transfer = TM.getTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));
 
-        String debit0_account = transfer.getDebits()[0].account.getLocalName();
+        String debit0_account = transfer.getDebits()[0].account.getLocalID();
         boolean transferMatchUser = ai.getId().equals(debit0_account);
         if (!transferMatchUser && !ai.getRoll().equals("admin")) {
             log.error("transferMatchUser false: "

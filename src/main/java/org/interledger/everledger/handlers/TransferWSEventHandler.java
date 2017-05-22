@@ -90,7 +90,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         EventBus eventBus = context.vertx().eventBus();
 
         io.vertx.core.eventbus.MessageConsumer<String> mc = 
-                eventBus.consumer("message-" + account.getLocalName(), message -> { 
+                eventBus.consumer("message-" + account.getLocalID(), message -> { 
             log.debug("received '"+message.body()+"' from internal *Manager:");
             sws.writeFinalTextFrame(message.body());
             log.debug("message forwarded to websocket peer through websocket");
@@ -99,7 +99,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         sws.closeHandler(new Handler<Void>() {
             @Override
             public void handle(final Void event) {
-                log.debug("un-registering WS connection: "+account.getLocalName());
+                log.debug("un-registering WS connection: "+account.getLocalID());
                 mc.unregister();
             }
         });
@@ -110,7 +110,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             throwable.printStackTrace( printWriter );
             printWriter.flush();
             String stackTrace = writer.toString();
-            log.warn("There was an exception in the ws "+account.getLocalName()+ ":"+throwable.toString()+ "\n" +stackTrace );
+            log.warn("There was an exception in the ws "+account.getLocalID()+ ":"+throwable.toString()+ "\n" +stackTrace );
         });
     }
 
@@ -123,7 +123,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     public static void notifyListener(RoutingContext context, IfaceLocalAccount account, String message) {
         // Send notification to all existing webSockets
         log.debug("notifyListener to account:"+account + ", message:'''" + message + "'''\n");
-        context.vertx().eventBus().send("message-"+account.getLocalName(), message); // will be sent to handler "@bookmark1"
+        context.vertx().eventBus().send("message-"+account.getLocalID(), message); // will be sent to handler "@bookmark1"
         
     }
 

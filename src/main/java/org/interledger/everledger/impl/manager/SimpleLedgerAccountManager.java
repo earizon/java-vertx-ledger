@@ -1,7 +1,5 @@
 package org.interledger.everledger.impl.manager;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +8,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.interledger.everledger.AuthInfo;
-import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
@@ -54,18 +51,6 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
             account.setBalance(devUsers.get(ai).intValue());
             account.setMinimumAllowedBalance(0);
             ledgerAccountManager.store(account);
-        }
-    }
-    // start IfaceILPSpecAccountManager implementation {
-    @Override
-    public URI getPublicURIForAccount(IfaceLocalAccount account) {
-        String baseURI = Config.publicURL.toString();
-        String sURI = baseURI+"accounts/"+account.getLocalName();
-        try {
-            URI result = new URI(sURI);
-            return result;
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Can't create URI from string '"+sURI+"'");
         }
     }
 

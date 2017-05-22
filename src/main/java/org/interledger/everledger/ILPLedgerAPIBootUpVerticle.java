@@ -78,7 +78,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
     @Override
     public void stop() throws Exception {
         if (server == null) {
-            log.info("server already stopped");
+            log.warn("server already stopped");
             return; 
         }
         log.info("shutting down server");

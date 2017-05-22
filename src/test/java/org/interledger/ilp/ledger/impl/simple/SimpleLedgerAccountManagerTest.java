@@ -45,7 +45,7 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testCreate() {
         System.out.println("create");
-        IfaceAccount result = new SimpleLedgerAccount(alice.getLocalName());
+        IfaceAccount result = new SimpleLedgerAccount(alice.getLocalID());
         System.out.println("result:" + result);
         assertNotNull(result);
         assertEquals(alice, result);

@@ -2,6 +2,8 @@ package org.interledger.everledger.impl;
 
 
 import java.util.Objects;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.PublicKey;
 
 import javax.money.MonetaryAmount;
@@ -26,9 +28,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
 
     public static final String currencyCode = Config.ledgerCurrencyCode;
     // TODO:(0) Convert to "inmutable" object. 
-    // TODO:(0) Rename as ID and add {first name, second name, ...} if needed.
-    //    (Check commented @JsonProperty("id") in parent class)
-    private final String name; 
+    private final String localID; 
     private MonetaryAmount balance;
     private MonetaryAmount minimumAllowedBalance;
     private boolean disabled;
@@ -36,7 +36,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
 
     public SimpleLedgerAccount(String name) {
         Objects.nonNull(name);
-        this.name = name;
+        this.localID = name;
         this.balance = Money.of(0, currencyCode);
         this.minimumAllowedBalance = Money.of(0, currencyCode);
         this.disabled = false;
@@ -46,8 +46,8 @@ public class SimpleLedgerAccount implements IfaceAccount {
 
     @Override
     @JsonIgnore
-    public String getLocalName() {
-        return name;
+    public String getLocalID() {
+        return localID;
     }
 
     @Override
@@ -132,7 +132,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
         return this;
     }
 
-    // END   IMPLEMENTATION IfaceLocalAccount {
+    // } END   IMPLEMENTATION IfaceLocalAccount
 
     
     // START IMPLEMENTATION IfaceLocalAccount {
@@ -144,18 +144,25 @@ public class SimpleLedgerAccount implements IfaceAccount {
 
     @Override
     public String getId() {
-        return Config.publicURL+"accounts/"+name;
+        String baseURI = Config.publicURL.toString();
+        String sURI = baseURI+"accounts/"+getLocalID();
+        try {
+            URI result = new URI(sURI);
+            return result.toString();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Can't create URI from string '"+sURI+"'");
+        }
     }
     
     @Override
     public String getName() {
-        return getLocalName();
+        return getLocalID();
     }
     
     @Override
     @JsonIgnore
     public InterledgerAddress getAddress() {
-        return new InterledgerAddressBuilder().value(Config.ilpPrefix).build();
+        return new InterledgerAddressBuilder().value(Config.ilpPrefix+"."+getLocalID()).build();
     }
     
     @Override
@@ -180,7 +187,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
         return null; // TODO:(0) FIXME
     }
 
-    // END   IMPLEMENTATION IfaceLocalAccount {
+    // } END   IMPLEMENTATION IfaceLocalAccount 
 
     // START OVERRIDING Object {
 
@@ -193,7 +200,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
             return true;
         }
         SimpleLedgerAccount other =  (SimpleLedgerAccount) obj;
-        boolean result = name.equals(other.getName());
+        boolean result = localID.equals(other.getName());
         // Extra checks while refactoring name -> account_id;
         assert(balance.equals(other.getBalance()));
         return result;

@@ -10,7 +10,7 @@ import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
-import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
+import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -49,7 +49,7 @@ public class MessageHandler extends RestEndpointHandler {
         
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject jsonMessageReceived = getBodyAsJson(context); // TODO:(?) Mark as Tainted object
-        IfaceLocalAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
+        IfaceAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
 
         log.debug("handlePost context.getBodyAsString():\n   "+context.getBodyAsString());
 
@@ -107,19 +107,18 @@ public class MessageHandler extends RestEndpointHandler {
             jsonMessageReceived.put("to",jsonMessageReceived.getString("account"));
             jsonMessageReceived.put("from", Config.publicURL + "accounts/" + ai.getId());
         }
-        IfaceLocalAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
-        boolean transferMatchUser = ai.getId().equals(fromAccount.getLocalName()) || ai.getId().equals(recipient.getLocalName());
+        IfaceAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
+        boolean transferMatchUser = ai.getId().equals(fromAccount.getLocalID()) || ai.getId().equals(recipient.getLocalID());
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
 
-        String URIAccount = accountManager.getPublicURIForAccount(fromAccount).toString();
         /*
          * REF: sendMessage @ src/model/messajes.js : Add account to message:
          * yield notificationBroadcaster.sendMessage(recipientName,
          *    Object.assign({}, message, {account: senderAccount}))
          */
-        jsonMessageReceived.put("account", URIAccount);
+        jsonMessageReceived.put("account", fromAccount.getId());
         
         // REF: sendMessage @ models/messages.js:
         JsonObject notificationJSON = new JsonObject();

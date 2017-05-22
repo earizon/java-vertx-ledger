@@ -41,7 +41,7 @@ public class ILPSpecTransferID {
     
     @Override
     public boolean equals(Object other) {
-        if (other == null) return false;
+        if (other == null) throw new RuntimeException("comparing to null @ ILPSpecTransferID");
         if (other == this) return true;
         if (!(other instanceof ILPSpecTransferID))return false;
         return transferID.equals(((ILPSpecTransferID)other).transferID);

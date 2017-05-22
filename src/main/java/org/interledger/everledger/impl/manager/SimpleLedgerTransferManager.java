@@ -190,8 +190,8 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     private void __executeLocalTransfer(IfaceLocalAccount sender, IfaceLocalAccount recipient, MonetaryAmount amount) {
         // TODO: LOG local transfer execution.
         log.info("executeLocalTransfer {");
-        accountManager.getAccountByName(sender   .getLocalName()).debit (amount);
-        accountManager.getAccountByName(recipient.getLocalName()).credit(amount);
+        accountManager.getAccountByName(sender   .getLocalID()).debit (amount);
+        accountManager.getAccountByName(recipient.getLocalID()).credit(amount);
         log.info("} executeLocalTransfer");
     }
 

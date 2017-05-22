@@ -82,7 +82,6 @@ public class AccountsHandler extends RestEndpointHandler {
         }
         
         log.debug("Put data: {} to account {}", data,accountName);
-        Number balance = null;
         Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
 
         if (!exists) {
@@ -92,14 +91,14 @@ public class AccountsHandler extends RestEndpointHandler {
         
         IfaceAccount account = accountManager.getAccountByName(accountName);
         if(data.containsKey(PARAM_BALANCE)) {
-            balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
+            Number balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
             account.setBalance(balance);
+            log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         }
         account.setMinimumAllowedBalance(minAllowedBalance);
         // if(data.containsKey(PARAM_DISABLED)) {
         //     ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         // }
-        log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
@@ -118,9 +117,8 @@ public class AccountsHandler extends RestEndpointHandler {
         if (ledger.endsWith("/")) { ledger = ledger.substring(0, ledger.length()-1); }
         
         JsonObjectBuilder build = JsonObjectBuilder.create()
-                // .put("id", accountManager.getPublicURIForAccount(account))
-                .put("id", accountManager.getPublicURIForAccount(account))
-                .put("name", account.getLocalName())
+                .put("id", account.getId())
+                .put("name", account.getLocalID())
                 .put("ledger", ledger);
         if (isAuthenticated){ 
             build
