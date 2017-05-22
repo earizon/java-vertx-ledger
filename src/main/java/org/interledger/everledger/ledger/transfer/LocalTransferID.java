@@ -1,5 +1,7 @@
 package org.interledger.everledger.ledger.transfer;
 
+import java.util.UUID;
+
 /*
  *  TODO:(0) This must be defined by an Interface. Differente ledgers/
  * blockchains will map public "ILP transferIDs" to local transferIDs
@@ -10,8 +12,8 @@ public class LocalTransferID {
     public final String transferID;
 
     public static LocalTransferID ILPSpec2LocalTransferID
-        (ILPSpecTransferID ilpTransferID) {
-        return new LocalTransferID(ilpTransferID.transferID);
+        (UUID ilpTransferID) {
+        return new LocalTransferID(ilpTransferID.toString());
     }
 
     public LocalTransferID(String transferID) {

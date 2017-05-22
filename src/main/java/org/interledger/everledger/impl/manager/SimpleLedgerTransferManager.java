@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.money.MonetaryAmount;
 
@@ -17,7 +18,6 @@ import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ledger.model.TransferStatus;
@@ -180,7 +180,7 @@ public class SimpleLedgerTransferManager implements IfaceTransferManager {
     }
 
     @Override
-    public boolean doesTransferExists(ILPSpecTransferID transferId) {
+    public boolean doesTransferExists(UUID transferId) {
         return doesTransferExists(LocalTransferID.ILPSpec2LocalTransferID(transferId));
     }
 

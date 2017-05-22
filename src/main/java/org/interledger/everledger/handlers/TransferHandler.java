@@ -1,6 +1,7 @@
 package org.interledger.everledger.handlers;
 
 import java.net.URI;
+import java.util.UUID;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -30,7 +31,6 @@ import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -99,8 +99,12 @@ public class TransferHandler extends RestEndpointHandler {
          * "timeline":{"proposed_at":"2015-06-16T00:00:00.000Z"} }
          */
         
-        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
-                transferUUID));
+        UUID ilpTransferID; try {
+            ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
+            }catch(Exception e){
+        throw ILPExceptionSupport.createILPBadRequestException(
+            "'"+context.request().getParam(transferUUID)+"' is not a valid UUID");
+            }
         LocalTransferID transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
         // TODO: Check requestBody.getString("ledger") match ledger host/port
@@ -325,7 +329,7 @@ public class TransferHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
 
         IfaceLocalTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
-        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(
+        UUID ilpTransferID = UUID.fromString(context.request().getParam(
                 transferUUID));
         IfaceTransfer transfer = TM.getTransferById(
                 LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID));

@@ -1,8 +1,9 @@
 package org.interledger.everledger.ifaces.transfer;
 
+import java.util.UUID;
+
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 
 public  interface IfaceILPSpecTransferManager {
 
@@ -14,7 +15,7 @@ public  interface IfaceILPSpecTransferManager {
 
     void abortRemoteILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
     
-    boolean doesTransferExists(ILPSpecTransferID transferId);
+    boolean doesTransferExists(UUID transferId);
 
 
 }

@@ -1,6 +1,9 @@
 package org.interledger.everledger.handlers;
 
 import java.time.ZonedDateTime;
+
+
+import java.util.UUID;
 import java.util.Base64;
 
 
@@ -23,7 +26,6 @@ import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
@@ -84,7 +86,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     HTTP 1.1 200 OK
          *     cf:0:ZXhlY3V0ZQ
          */
-        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
+        UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
         
         IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
@@ -209,7 +211,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
 
         IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
 
-        ILPSpecTransferID ilpTransferID = new ILPSpecTransferID(context.request().getParam(transferUUID));
+        UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
 
         IfaceTransfer transfer = TM.getTransferById(transferID);
