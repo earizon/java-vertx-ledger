@@ -2,6 +2,7 @@ package org.interledger.everledger.handlers;
 
 import java.net.URI;
 import java.util.UUID;
+import java.time.ZonedDateTime;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -29,11 +30,11 @@ import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
 import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
+import org.interledger.everledger.util.TimeUtils;
 import org.interledger.ilp.InterledgerError.ErrorCode;
 import org.interledger.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
@@ -165,8 +166,8 @@ public class TransferHandler extends RestEndpointHandler {
         JsonArray credits = requestBody.getJsonArray("credits");
 
         String sExpiresAt = requestBody.getString("expires_at"); // can be null
-        DTTM DTTM_expires ; try {
-            DTTM_expires = (sExpiresAt==null) ? DTTM.future : new DTTM(sExpiresAt);
+        ZonedDateTime DTTM_expires ; try {
+            DTTM_expires = (sExpiresAt==null) ? TimeUtils.future : ZonedDateTime.parse(sExpiresAt);
         }catch(Exception e){
             throw ILPExceptionSupport.createILPBadRequestException("unparseable expires_at");
 
@@ -246,7 +247,7 @@ public class TransferHandler extends RestEndpointHandler {
 
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
-        DTTM DTTM_proposed = DTTM.getNow();
+        ZonedDateTime DTTM_proposed = ZonedDateTime.now();
 
         String cancelation_condition = requestBody
                 .getString("cancellation_condition");
@@ -346,5 +347,9 @@ public class TransferHandler extends RestEndpointHandler {
                 context,
                 HttpResponseStatus.OK,
                 ((SimpleTransfer) transfer).toILPJSONStringifiedFormat());
+    }
+
+    public static void main(String[] args){
+        System.out.println(">"+TimeUtils.testingDate.format(TimeUtils.ilpFormatter));
     }
 }

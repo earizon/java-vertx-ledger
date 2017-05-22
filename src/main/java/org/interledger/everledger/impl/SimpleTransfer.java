@@ -20,11 +20,11 @@ import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
 import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 //import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LedgerPartialEntry;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.util.TimeUtils;
 
 import javax.money.MonetaryAmount;
 
@@ -48,8 +48,8 @@ public class SimpleTransfer implements IfaceTransfer {
     // URI encoded execution & cancelation crypto-conditions
     final Condition executionCond  ;
     final Condition cancelationCond;
-    final DTTM DTTM_expires ;
-    final DTTM DTTM_proposed;
+    final ZonedDateTime DTTM_expires ;
+    final ZonedDateTime DTTM_proposed;
     final String sMemo;
 
     /*
@@ -64,14 +64,14 @@ public class SimpleTransfer implements IfaceTransfer {
     String noteToSelf = "";
 
     TransferStatus transferStatus;
-    DTTM DTTM_prepared = DTTM.future;
-    DTTM DTTM_executed = DTTM.future;
-    DTTM DTTM_rejected = DTTM.future;
+    ZonedDateTime DTTM_prepared = TimeUtils.future;
+    ZonedDateTime DTTM_executed = TimeUtils.future;
+    ZonedDateTime DTTM_rejected = TimeUtils.future;
 
     public SimpleTransfer(LocalTransferID transferID,
         Debit[] debit_list, Credit[] credit_list, 
         Condition executionCond, 
-        Condition cancelationCond, DTTM DTTM_expires, DTTM DTTM_proposed,
+        Condition cancelationCond, ZonedDateTime DTTM_expires, ZonedDateTime DTTM_proposed,
         String data, String noteToSelf, TransferStatus transferStatus, String sMemo ){
         // TODO:(1) Check that debit_list[idx].ammount.currency is always the same and match the ledger
         // TODO:(1) Check that credit_list[idx].ammount.currency is always the same.
@@ -87,7 +87,7 @@ public class SimpleTransfer implements IfaceTransfer {
         this.cancelationCond    = Objects.requireNonNull(cancelationCond);
         this.DTTM_expires       = Objects.requireNonNull(DTTM_expires   );
         this.DTTM_proposed      = Objects.requireNonNull(DTTM_proposed  );
-        this.DTTM_prepared      = Objects.requireNonNull(DTTM.getNow()  );
+        this.DTTM_prepared      = Objects.requireNonNull(ZonedDateTime.now());
         this.sMemo              = Objects.requireNonNull(sMemo)          ;
         if (transferStatus.equals(TransferStatus.PROPOSED)){
             transferStatus = TransferStatus.PREPARED;
@@ -173,8 +173,7 @@ public class SimpleTransfer implements IfaceTransfer {
     }
 
     public ZonedDateTime getExpiresAt() {
-        ZonedDateTime result = ZonedDateTime.parse(DTTM_expires.toString());
-        return result;
+        return DTTM_expires;
     }
     
     // } End ILPSpec interface
@@ -223,42 +222,42 @@ public class SimpleTransfer implements IfaceTransfer {
     }
 
     @Override
-    public DTTM getDTTM_prepared() {
+    public ZonedDateTime getDTTM_prepared() {
         return DTTM_prepared;
     }
 
     @Override
-    public void setDTTM_prepared(DTTM DTTM) {
+    public void setDTTM_prepared(ZonedDateTime DTTM) {
         DTTM_prepared = DTTM;
     }
 
     @Override
-    public DTTM getDTTM_executed() {
+    public ZonedDateTime getDTTM_executed() {
         return DTTM_executed;
     }
 
     @Override
-    public void setDTTM_executed(DTTM DTTM) {
+    public void setDTTM_executed(ZonedDateTime DTTM) {
         DTTM_executed = DTTM;
     }
 
     @Override
-    public DTTM getDTTM_rejected() {
+    public ZonedDateTime getDTTM_rejected() {
         return DTTM_rejected;
     }
 
     @Override
-    public void setDTTM_rejected(DTTM DTTM) {
+    public void setDTTM_rejected(ZonedDateTime DTTM) {
         DTTM_rejected = DTTM;
     }
 
     @Override
-    public DTTM getDTTM_expires() {
+    public ZonedDateTime getDTTM_expires() {
         return DTTM_expires;
     }
 
     @Override
-    public DTTM getDTTM_proposed() {
+    public ZonedDateTime getDTTM_proposed() {
         return DTTM_proposed;
     }
 
@@ -306,19 +305,19 @@ public class SimpleTransfer implements IfaceTransfer {
 //            jo.put("cancellation_condition", this.getCancellationCondition());
 //        }
         // FIXME: Cancelation_condition?
-        if (this.DTTM_expires != DTTM.future) { jo.put("expires_at", this.DTTM_expires.toString()); }
+        if (this.DTTM_expires != TimeUtils.future) { jo.put("expires_at", this.DTTM_expires.format(TimeUtils.ilpFormatter)); }
         {
             JsonObject timeline = new JsonObject();
             if (Config.unitTestsActive) {
-                timeline.put("proposed_at", DTTM.testingDate.toString());
-                if (this.DTTM_prepared != DTTM.future) { timeline.put("prepared_at", DTTM.testingDate.toString()); }
-                if (this.DTTM_executed != DTTM.future) { timeline.put("executed_at", DTTM.testingDate.toString()); }
-                if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", DTTM.testingDate.toString()); }
+                timeline.put("proposed_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter));
+                if (this.DTTM_prepared != TimeUtils.future) { timeline.put("prepared_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
+                if (this.DTTM_executed != TimeUtils.future) { timeline.put("executed_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
+                if (this.DTTM_rejected != TimeUtils.future) { timeline.put("rejected_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
             }else {
-                timeline.put("proposed_at", this.DTTM_proposed.toString());
-                if (this.DTTM_prepared != DTTM.future) { timeline.put("prepared_at", this.DTTM_prepared.toString()); }
-                if (this.DTTM_executed != DTTM.future) { timeline.put("executed_at", this.DTTM_executed.toString()); }
-                if (this.DTTM_rejected != DTTM.future) { timeline.put("rejected_at", this.DTTM_rejected.toString()); }
+                timeline.put("proposed_at", this.DTTM_proposed.format(TimeUtils.ilpFormatter));
+                if (this.DTTM_prepared != TimeUtils.future) { timeline.put("prepared_at", this.DTTM_prepared.format(TimeUtils.ilpFormatter)); }
+                if (this.DTTM_executed != TimeUtils.future) { timeline.put("executed_at", this.DTTM_executed.format(TimeUtils.ilpFormatter)); }
+                if (this.DTTM_rejected != TimeUtils.future) { timeline.put("rejected_at", this.DTTM_rejected.format(TimeUtils.ilpFormatter)); }
             }
             jo.put("timeline", timeline);
         }

@@ -1,8 +1,9 @@
 package org.interledger.everledger.ifaces.transfer;
 
+import java.time.ZonedDateTime;
+
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.ledger.model.TransferStatus;
@@ -40,18 +41,18 @@ public interface ILocalTransfer {
     void setTransferStatus(TransferStatus transferStatus);
     TransferStatus getTransferStatus();
 
-    public DTTM getDTTM_prepared();
-    public void setDTTM_prepared(DTTM dTTM_prepared);
+    public ZonedDateTime getDTTM_prepared();
+    public void setDTTM_prepared(ZonedDateTime dTTM_prepared);
 
-    public DTTM getDTTM_executed();
-    public void setDTTM_executed(DTTM dTTM_executed);
+    public ZonedDateTime getDTTM_executed();
+    public void setDTTM_executed(ZonedDateTime dTTM_executed);
 
-    public DTTM getDTTM_rejected();
-    public void setDTTM_rejected(DTTM dTTM_rejected);
+    public ZonedDateTime getDTTM_rejected();
+    public void setDTTM_rejected(ZonedDateTime dTTM_rejected);
 
-    public DTTM getDTTM_expires();
+    public ZonedDateTime getDTTM_expires();
 
-    public DTTM getDTTM_proposed();
+    public ZonedDateTime getDTTM_proposed();
 
     public void           setExecutionFulfillment(Fulfillment ff);
     public Fulfillment    getExecutionFulfillment();
