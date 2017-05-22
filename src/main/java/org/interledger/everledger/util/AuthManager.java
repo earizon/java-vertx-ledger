@@ -34,6 +34,8 @@ public class AuthManager {
     private static Map<String, AuthInfo> users = new HashMap<String, AuthInfo>();
 
     public static Map<AuthInfo, Integer /*blance*/> configureDevelopmentEnvironment() {
+        // TODO:(0) This is a temporal "patch". Ideally functional-test will recreate the accounts
+        //   through HTTP-requests.
         if (! org.interledger.everledger.Config.unitTestsActive) {
             throw new RuntimeException("developer.unitTestsActive must be true @ application.conf "
                     + "to be able to reset tests");
