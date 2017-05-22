@@ -20,7 +20,7 @@ import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
-import org.interledger.ilp.ledger.model.TransferStatus;
+import org.interledger.ledger.model.TransferStatus;
 //import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

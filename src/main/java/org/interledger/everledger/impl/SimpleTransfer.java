@@ -7,8 +7,8 @@ import java.util.UUID;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.InterledgerAddressBuilder;
+import org.interledger.InterledgerAddress;
+import org.interledger.InterledgerAddressBuilder;
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 //import org.interledger.cryptoconditions.der.CryptoConditionReader;
@@ -28,7 +28,7 @@ import org.interledger.everledger.ledger.transfer.LocalTransferID;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.ilp.ledger.model.TransferStatus;
+import org.interledger.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
 
 // FIXME:(1) Allow multiple debit/credits (Remove all code related to index [0])
@@ -130,12 +130,6 @@ public class SimpleTransfer implements IfaceTransfer {
     @Override
     public MonetaryAmount getAmount(){
         MonetaryAmount result = Money.of(0, debit_list[0].amount.getCurrency());
-        return result;
-    }
-
-    @Override
-    public boolean isAuthorized(){
-        boolean result = true; // TODO:(1)
         return result;
     }
 

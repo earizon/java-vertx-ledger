@@ -5,7 +5,7 @@ import org.interledger.everledger.ledger.transfer.Credit;
 import org.interledger.everledger.ledger.transfer.DTTM;
 import org.interledger.everledger.ledger.transfer.Debit;
 import org.interledger.everledger.ledger.transfer.LocalTransferID;
-import org.interledger.ilp.ledger.model.TransferStatus;
+import org.interledger.ledger.model.TransferStatus;
 
 /*
  * Note: This interfaces implement local (non-ILP-related)

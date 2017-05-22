@@ -1,6 +1,5 @@
 package org.interledger.everledger.impl;
 
-
 import java.util.Objects;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -9,8 +8,8 @@ import java.security.PublicKey;
 import javax.money.MonetaryAmount;
 import javax.money.NumberValue;
 
-import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.InterledgerAddressBuilder;
+import org.interledger.InterledgerAddress;
+import org.interledger.InterledgerAddressBuilder;
 import org.interledger.everledger.Config;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;

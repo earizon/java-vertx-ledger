@@ -1,7 +1,7 @@
 package org.interledger.everledger;
 
 import org.interledger.ilp.InterledgerError;
-import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.InterledgerException;
 
 /*
  * Wrapper around InterledgerException to allow adding HTTP expected Error Codes

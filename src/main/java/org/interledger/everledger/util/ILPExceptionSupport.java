@@ -1,11 +1,9 @@
 package org.interledger.everledger.util;
 
-
-
 import org.interledger.everledger.Config;
 import org.interledger.everledger.HTTPInterledgerException;
-import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.InterledgerAddressBuilder;
+import org.interledger.InterledgerAddress;
+import org.interledger.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.InterledgerError.ErrorCode;
 
@@ -20,9 +18,12 @@ public class ILPExceptionSupport {
      * @param data
      */
     public static HTTPInterledgerException createILPException(int httpErrCode, ErrorCode errCode , String data){
-        return new HTTPInterledgerException(httpErrCode, new InterledgerError(errCode, triggeredBy, data));
+        return new HTTPInterledgerException(httpErrCode, 
+                new InterledgerError(errCode, triggeredBy, data));
+        
     }
 
+    
     // Next follow some wrappers arount createILPException, more human-readable.
     // ----------- Internal --------------
     public static HTTPInterledgerException createILPInternalException(String data) {

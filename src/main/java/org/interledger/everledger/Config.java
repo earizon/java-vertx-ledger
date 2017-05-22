@@ -15,10 +15,10 @@ import javax.money.Monetary;
 import javax.money.format.MonetaryAmountFormat;
 
 import org.interledger.everledger.util.DSAPrivPubKeySupport;
-import org.interledger.ilp.InterledgerAddress;
-import org.interledger.ilp.InterledgerAddressBuilder;
-import org.interledger.ilp.ledger.model.LedgerInfo;
-import org.interledger.ilp.ledger.money.format.LedgerSpecificDecimalMonetaryAmountFormat;
+import org.interledger.InterledgerAddress;
+import org.interledger.InterledgerAddressBuilder;
+import org.interledger.ledger.model.LedgerInfo;
+import org.interledger.ledger.money.format.LedgerSpecificDecimalMonetaryAmountFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

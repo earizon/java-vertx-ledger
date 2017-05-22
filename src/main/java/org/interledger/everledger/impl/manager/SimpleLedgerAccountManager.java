@@ -15,7 +15,7 @@ import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.impl.SimpleLedgerAccount;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
-import org.interledger.ilp.exceptions.InterledgerException;
+import org.interledger.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,14 +70,11 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
 
     @Override
     public void store(IfaceAccount account) {
-        log.info(">>>>>>>>>>>>>>>>>>>>>deleteme: store account.getName():"+account.getName());
         accountMap.put(account.getName(), account);
     }
 
     @Override
     public boolean hasAccount(String name) {
-        log.info(">>>>>>>>>>>>>>>>>>>>>deleteme: hasAccount account. name:"+name);
-
         return accountMap.containsKey(name);
     }
 
