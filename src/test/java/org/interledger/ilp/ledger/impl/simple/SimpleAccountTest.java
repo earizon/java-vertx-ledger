@@ -2,8 +2,6 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleAccount;
 import org.javamoney.moneta.Money;
 
 import static org.junit.Assert.*;
@@ -11,6 +9,9 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.everis.everledger.ifaces.account.IfaceLocalAccount;
+import com.everis.everledger.impl.SimpleAccount;
 
 /**
  * SimpleLedgerAccount tests

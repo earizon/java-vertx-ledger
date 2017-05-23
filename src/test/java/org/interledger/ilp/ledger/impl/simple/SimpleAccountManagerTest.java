@@ -2,18 +2,18 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import java.util.Collection;
 
-import org.interledger.everledger.AccountManagerFactory;
-import org.interledger.everledger.ifaces.account.IfaceAccount;
-import org.interledger.everledger.ifaces.account.IfaceAccountManager;
-import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleAccount;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.everis.everledger.AccountManagerFactory;
+import com.everis.everledger.ifaces.account.IfaceAccount;
+import com.everis.everledger.ifaces.account.IfaceAccountManager;
+import com.everis.everledger.ifaces.account.IfaceLocalAccount;
+import com.everis.everledger.impl.SimpleAccount;
 
 /**
  *
