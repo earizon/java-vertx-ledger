@@ -93,7 +93,6 @@ public class SimpleTransfer implements IfaceTransfer {
             transferStatus = TransferStatus.PREPARED;
         }
         this.transferStatus     = transferStatus    ;
-        System.out.println("deleteme SimpleLedgerTransfer constructor transferStatus:"+transferStatus.toString());
         /*
          *  Parse String to fetch local accounturi
          *  String will be similar to http://localLedger/account/"accountId" ->
@@ -213,7 +212,6 @@ public class SimpleTransfer implements IfaceTransfer {
     public void setTransferStatus(TransferStatus transferStatus) {
         // TODO:(RFC) Could be useful to check transition state is correct 
         this.transferStatus = transferStatus;
-        System.out.println("deleteme SimpleLedgerTransfer setTransferStatus transferStatus:"+transferStatus.toString());
     }
 
     @Override
