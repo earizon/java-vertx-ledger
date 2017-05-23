@@ -7,7 +7,9 @@
 [CI-url]: https://travis-ci.org/everis-innolab/java-ilp-master
 
 ## About
-Java in-memory ledger implementing the Rest/Websocket expected by ilp-plugin-bells and VertX for java reactive programming
+Java ledger implementing the Rest/Websocket expected by ilp-plugin-bells and the java interfaces defined @ https://github.com/interledger/java-ilp-core/ 
+
+Read developers docs @ dev_docs for more info
 
 ### Build:
 ```  $ gradle build ```
