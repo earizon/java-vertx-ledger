@@ -4,8 +4,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
-import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
+import org.interledger.everledger.impl.manager.SimpleTransferManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class DeveloperTestingRequestHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(DeveloperTestingRequestHandler.class);
     
-    private SimpleLedgerTransferManager TM = (SimpleLedgerTransferManager)SimpleLedgerTransferManager.getTransferManager();
+    private SimpleTransferManager TM = (SimpleTransferManager)SimpleTransferManager.getTransferManager();
 
     public static DeveloperTestingRequestHandler create() {
         return new DeveloperTestingRequestHandler(); // TODO: return singleton?
@@ -36,7 +36,7 @@ public class DeveloperTestingRequestHandler extends RestEndpointHandler {
     public void handle(RoutingContext context) {
         log.info("reseting ...");
         TM.developerTestingResetTransfers();
-        SimpleLedgerAccountManager.developerTestingReset();
+        SimpleAccountManager.developerTestingReset();
         response(
                 context,
                 HttpResponseStatus.OK,

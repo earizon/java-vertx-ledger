@@ -15,10 +15,10 @@ import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 //import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 import org.interledger.everledger.transfer.Credit;
 import org.interledger.everledger.transfer.Debit;
@@ -39,8 +39,8 @@ public class SimpleTransfer implements IfaceTransfer {
     public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(
             new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}, 1000);
     
-    static  final SimpleLedgerAccountManager  ledgerAccountManager = 
-            LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+    static  final SimpleAccountManager  ledgerAccountManager = 
+            AccountManagerFactory.getLedgerAccountManagerSingleton();
     final LocalTransferID transferID;
     final IfaceLocalAccount fromAccount;
     final Credit[] credit_list;

@@ -20,7 +20,7 @@ import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.cryptoconditions.uri.URIEncodingException;
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccountManager;
@@ -28,7 +28,7 @@ import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
-import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleTransferManager;
 import org.interledger.everledger.transfer.Credit;
 import org.interledger.everledger.transfer.Debit;
 import org.interledger.everledger.transfer.LocalTransferID;
@@ -52,10 +52,10 @@ public class TransferHandler extends RestEndpointHandler {
             .getLogger(TransferHandler.class);
     private final static String transferUUID = "transferUUID";
 
-    private static final IfaceLocalAccountManager ledgerAccountManager = LedgerAccountManagerFactory
+    private static final IfaceLocalAccountManager ledgerAccountManager = AccountManagerFactory
             .getLedgerAccountManagerSingleton();
 
-    private static final IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+    private static final IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
 
@@ -329,7 +329,7 @@ public class TransferHandler extends RestEndpointHandler {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
 
-        IfaceLocalTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+        IfaceLocalTransferManager TM = SimpleTransferManager.getTransferManager();
         UUID ilpTransferID = UUID.fromString(context.request().getParam(
                 transferUUID));
         IfaceTransfer transfer = TM.getTransferById(

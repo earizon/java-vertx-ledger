@@ -1,27 +1,27 @@
 package org.interledger.everledger;
 
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * Ledger factory.
  *
  * @author mrmx
  */
-public class LedgerAccountManagerFactory {
+public class AccountManagerFactory {
     // TODO:(?) Simplificar / eliminar esta clase??
-    private static final SimpleLedgerAccountManager instance;
+    private static final SimpleAccountManager instance;
     static {
-        instance = new SimpleLedgerAccountManager();
+        instance = new SimpleAccountManager();
         // Create HOLD account required by ILP Protocol.
         instance.store(instance.getHOLDAccountILP());
     }
 
-    public static SimpleLedgerAccountManager getLedgerAccountManagerSingleton() {
+    public static SimpleAccountManager getLedgerAccountManagerSingleton() {
         return instance;
     }
     
     public static IfaceAccountManager createLedgerAccountManager() {
-        return new SimpleLedgerAccountManager();
+        return new SimpleAccountManager();
     }
 }

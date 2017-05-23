@@ -2,11 +2,11 @@ package org.interledger.ilp.ledger.impl.simple;
 
 import java.util.Collection;
 
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleLedgerAccount;
+import org.interledger.everledger.impl.SimpleAccount;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -19,15 +19,15 @@ import org.junit.Test;
  *
  * @author mrmx
  */
-public class SimpleLedgerAccountManagerTest {
+public class SimpleAccountManagerTest {
 
     IfaceAccountManager instance;
     
     final static String URI_LEDGER_A = "ledger1.example";
     final static String URI_LEDGER_B = "ledger2.example";
 
-    IfaceLocalAccount alice = new SimpleLedgerAccount("alice");
-    IfaceLocalAccount bob = new SimpleLedgerAccount("bob");
+    IfaceLocalAccount alice = new SimpleAccount("alice");
+    IfaceLocalAccount bob = new SimpleAccount("bob");
     
 
     @BeforeClass
@@ -36,7 +36,7 @@ public class SimpleLedgerAccountManagerTest {
     
     @Before
     public void setUp() {        
-        instance = LedgerAccountManagerFactory.createLedgerAccountManager();
+        instance = AccountManagerFactory.createLedgerAccountManager();
     }
 
     /**
@@ -45,7 +45,7 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testCreate() {
         System.out.println("create");
-        IfaceAccount result = new SimpleLedgerAccount(alice.getLocalID());
+        IfaceAccount result = new SimpleAccount(alice.getLocalID());
         System.out.println("result:" + result);
         assertNotNull(result);
         assertEquals(alice, result);
@@ -59,8 +59,8 @@ public class SimpleLedgerAccountManagerTest {
     public void testAddAccounts() {
         System.out.println("addAccounts");
         assertEquals(0, instance.getTotalAccounts());
-        instance.store(new SimpleLedgerAccount("alice"));
-        instance.store(new SimpleLedgerAccount("bob"));
+        instance.store(new SimpleAccount("alice"));
+        instance.store(new SimpleAccount("bob"));
         assertEquals(2, instance.getTotalAccounts());        
     }
 
@@ -71,7 +71,7 @@ public class SimpleLedgerAccountManagerTest {
     public void testAddAccount() {
         System.out.println("addAccount");
         assertEquals(0, instance.getTotalAccounts());
-        instance.store(new SimpleLedgerAccount("alice"));
+        instance.store(new SimpleAccount("alice"));
         assertEquals(1, instance.getTotalAccounts());
     }
 
@@ -81,9 +81,9 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testGetAccountByName() {
         System.out.println("getAccountByName");
-        IfaceAccount bob = new SimpleLedgerAccount("bob");
+        IfaceAccount bob = new SimpleAccount("bob");
         instance.store(bob);
-        instance.store(new SimpleLedgerAccount("alice"));
+        instance.store(new SimpleAccount("alice"));
         assertEquals(2, instance.getTotalAccounts());
         IfaceLocalAccount result = instance.getAccountByName("bob");
         assertEquals(bob, result);
@@ -95,9 +95,9 @@ public class SimpleLedgerAccountManagerTest {
     @Test
     public void testGetAccounts() {
         System.out.println("testGetAccounts");
-        IfaceAccount bob = new SimpleLedgerAccount("bob");
+        IfaceAccount bob = new SimpleAccount("bob");
         instance.store(bob);
-        instance.store(new SimpleLedgerAccount("alice"));
+        instance.store(new SimpleAccount("alice"));
         assertEquals(2, instance.getTotalAccounts());
         Collection<IfaceLocalAccount> result = instance.getAccounts(1, 1);
         System.out.println("result:" + result);

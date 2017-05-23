@@ -11,7 +11,7 @@ import javax.money.MonetaryAmount;
 
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
@@ -40,21 +40,21 @@ import org.slf4j.LoggerFactory;
  *    - http://docs.oracle.com/javaee/6/tutorial/doc/bncij.html
  *    - ...
  */
-public class SimpleLedgerTransferManager implements IfaceTransferManager {
+public class SimpleTransferManager implements IfaceTransferManager {
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleLedgerTransferManager.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleTransferManager.class);
 
     private Map<LocalTransferID, IfaceTransfer> transferMap = 
         new HashMap<LocalTransferID, IfaceTransfer>();// In-memory database of pending/executed/cancelled transfers
 
-    private static SimpleLedgerTransferManager singleton = new SimpleLedgerTransferManager();
+    private static SimpleTransferManager singleton = new SimpleTransferManager();
 
-    private static final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+    private static final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     private static final IfaceLocalAccount HOLDS_URI = accountManager.getHOLDAccountILP();
 
     // Make default constructor private to avoid instantiating new classes.
-    private SimpleLedgerTransferManager() {}
+    private SimpleTransferManager() {}
 
     public void developerTestingResetTransfers() { // TODO:(?) Make static?
         if (! org.interledger.everledger.Config.unitTestsActive) {

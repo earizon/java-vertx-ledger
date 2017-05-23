@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Represents a simple ledger account.
  *
  */
-public class SimpleLedgerAccount implements IfaceAccount {
+public class SimpleAccount implements IfaceAccount {
 
     public static final String currencyCode = Config.ledgerCurrencyCode;
     // TODO:(0) Convert to "inmutable" object. 
@@ -33,7 +33,7 @@ public class SimpleLedgerAccount implements IfaceAccount {
     private boolean disabled;
     private String connector;
 
-    public SimpleLedgerAccount(String name) {
+    public SimpleAccount(String name) {
         Objects.nonNull(name);
         this.localID = name;
         this.balance = Money.of(0, currencyCode);
@@ -72,13 +72,13 @@ public class SimpleLedgerAccount implements IfaceAccount {
     }
 
     @Override
-    public SimpleLedgerAccount setBalance(Number balance) {
+    public SimpleAccount setBalance(Number balance) {
         Objects.nonNull(balance);
         return setBalance(Money.of(balance, currencyCode));
     }
 
     @Override
-    public SimpleLedgerAccount setBalance(MonetaryAmount balance) {
+    public SimpleAccount setBalance(MonetaryAmount balance) {
         Objects.nonNull(balance);
         this.balance = balance;
         return this;
@@ -108,24 +108,24 @@ public class SimpleLedgerAccount implements IfaceAccount {
     }
 
     @Override
-    public SimpleLedgerAccount credit(Number amount) {
+    public SimpleAccount credit(Number amount) {
         return credit(Money.of(amount, currencyCode));
     }
 
     @Override
-    public SimpleLedgerAccount credit(MonetaryAmount amount) {
+    public SimpleAccount credit(MonetaryAmount amount) {
         // TODO: FIXME: Check amount > 0
         setBalance(getBalance().add(amount));
         return this;
     }
 
     @Override
-    public SimpleLedgerAccount debit(Number amount) {
+    public SimpleAccount debit(Number amount) {
         return debit(Money.of(amount, currencyCode));
     }
 
     @Override
-    public SimpleLedgerAccount debit(MonetaryAmount amount) {
+    public SimpleAccount debit(MonetaryAmount amount) {
         Objects.nonNull(amount);
         setBalance(getBalance().subtract(amount));
         return this;
@@ -192,13 +192,13 @@ public class SimpleLedgerAccount implements IfaceAccount {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof SimpleLedgerAccount)) {
+        if (obj == null || !(obj instanceof SimpleAccount)) {
             return false;
         }
         if (obj == this) {
             return true;
         }
-        SimpleLedgerAccount other =  (SimpleLedgerAccount) obj;
+        SimpleAccount other =  (SimpleAccount) obj;
         boolean result = localID.equals(other.getName());
         // Extra checks while refactoring name -> account_id;
         assert(balance.equals(other.getBalance()));

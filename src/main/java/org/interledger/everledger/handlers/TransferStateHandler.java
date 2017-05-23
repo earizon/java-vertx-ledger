@@ -11,7 +11,7 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.ILocalTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
-import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleTransferManager;
 import org.interledger.everledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.DSAPrivPubKeySupport;
@@ -81,7 +81,7 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         String transferId = context.request().getParam(transferUUID);
         LocalTransferID transferID = new LocalTransferID(transferId);
-        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
         if (!TM.doesTransferExists(transferID))

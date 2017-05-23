@@ -3,7 +3,7 @@ package org.interledger.ilp.ledger.impl.simple;
 import javax.money.MonetaryAmount;
 
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleLedgerAccount;
+import org.interledger.everledger.impl.SimpleAccount;
 import org.javamoney.moneta.Money;
 
 import static org.junit.Assert.*;
@@ -16,14 +16,14 @@ import org.junit.Test;
  * SimpleLedgerAccount tests
  *
  */
-public class SimpleLedgerAccountTest {
+public class SimpleAccountTest {
 
     static final String CURRENCY_CODE = "EUR";
-    SimpleLedgerAccount instance;
+    SimpleAccount instance;
     final String sTestURI = "http://ledgerTest";
     final String sOtherURI = "http://ledgerOther";
-    IfaceLocalAccount testURI = new SimpleLedgerAccount(sTestURI);
-    IfaceLocalAccount otherURI = new SimpleLedgerAccount(sOtherURI);
+    IfaceLocalAccount testURI = new SimpleAccount(sTestURI);
+    IfaceLocalAccount otherURI = new SimpleAccount(sOtherURI);
 
     @BeforeClass
     public static void init() throws Exception {
@@ -31,7 +31,7 @@ public class SimpleLedgerAccountTest {
 
     @Before
     public void setUp() {
-        instance = new SimpleLedgerAccount("test");
+        instance = new SimpleAccount("test");
     }
 
     /**
@@ -122,7 +122,7 @@ public class SimpleLedgerAccountTest {
     @Test
     public void testEquals() {
         System.out.println("equals");
-        SimpleLedgerAccount other = new SimpleLedgerAccount(sOtherURI);
+        SimpleAccount other = new SimpleAccount(sOtherURI);
         assertNotEquals(instance, other);
         assertNotEquals(instance, null);
         assertEquals(instance, instance);

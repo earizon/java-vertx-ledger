@@ -8,10 +8,10 @@ import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ public class MessageHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
 
-    private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     public MessageHandler() {
         super(new HttpMethod[] {HttpMethod.POST},

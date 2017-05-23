@@ -35,7 +35,7 @@ import org.interledger.everledger.handlers.TransferHandler;
 import org.interledger.everledger.handlers.TransferStateHandler;
 import org.interledger.everledger.handlers.TransferWSEventHandler;
 import org.interledger.everledger.handlers.TransfersHandler;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 import org.interledger.everledger.util.VertxRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
 
     private static void configureDevelopmentEnvironment() { // TODO:(0) Remove once everything is properly setup
         log.info("Preparing development environment");
-        SimpleLedgerAccountManager.developerTestingReset();
+        SimpleAccountManager.developerTestingReset();
     }
 
     @Override

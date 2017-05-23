@@ -8,11 +8,11 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.interledger.everledger.AuthInfo;
 import org.interledger.everledger.Config;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
-import org.interledger.everledger.impl.SimpleLedgerAccount;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.SimpleAccount;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.everledger.util.JsonObjectBuilder;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class AccountsHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(AccountsHandler.class);
-    private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     private final static String PARAM_NAME = "name";
     private final static String PARAM_BALANCE = "balance";
@@ -85,7 +85,7 @@ public class AccountsHandler extends RestEndpointHandler {
         Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
 
         if (!exists) {
-            accountManager.store(new SimpleLedgerAccount(accountName));
+            accountManager.store(new SimpleAccount(accountName));
             AuthManager.setUser(accountName, password, "user"/*roll*/ /* TODO:(1) allow user|admin|...*/);
         }
         

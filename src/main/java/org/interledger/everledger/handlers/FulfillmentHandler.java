@@ -22,7 +22,7 @@ import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
-import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleTransferManager;
 import org.interledger.everledger.transfer.Credit;
 import org.interledger.everledger.transfer.Debit;
 import org.interledger.everledger.transfer.LocalTransferID;
@@ -88,7 +88,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
         
-        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 //        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
 //        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
@@ -208,7 +208,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         
         boolean transferMatchUser = false;
 
-        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 
         UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);

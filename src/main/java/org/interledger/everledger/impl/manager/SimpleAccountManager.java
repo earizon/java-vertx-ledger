@@ -8,11 +8,11 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.interledger.everledger.AuthInfo;
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceAccount;
 import org.interledger.everledger.ifaces.account.IfaceAccountManager;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.SimpleLedgerAccount;
+import org.interledger.everledger.impl.SimpleAccount;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.InterledgerException;
@@ -22,11 +22,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Simple in-memory {@code LedgerAccountManager}.
  */
-public class SimpleLedgerAccountManager implements IfaceAccountManager {
+public class SimpleAccountManager implements IfaceAccountManager {
     private Map<String, IfaceAccount> accountMap;
     private static final String ILP_HOLD_ACCOUNT = "@@HOLD@@";
     
-    private static final Logger log = LoggerFactory.getLogger(SimpleLedgerAccountManager.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleAccountManager.class);
     
     private void resetAccounts() {
         accountMap  = new TreeMap<String, IfaceAccount>();
@@ -39,15 +39,15 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
                     + "to be able to reset tests");
         }
         // 
-        SimpleLedgerAccountManager ledgerAccountManager =(SimpleLedgerAccountManager)
-                LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+        SimpleAccountManager ledgerAccountManager =(SimpleAccountManager)
+                AccountManagerFactory.getLedgerAccountManagerSingleton();
         ledgerAccountManager.resetAccounts(); // STEP 1: Reset accounts to initial state
 
         // STEP 2: Create an account for each pre-configured user in AuthManager:
         final Map<AuthInfo, Integer /*blance*/> devUsers = AuthManager.configureDevelopmentEnvironment();
         Set<AuthInfo> users = devUsers.keySet();
         for (AuthInfo ai : users) {
-            SimpleLedgerAccount account = new SimpleLedgerAccount(ai.getId());
+            SimpleAccount account = new SimpleAccount(ai.getId());
             account.setBalance(devUsers.get(ai).intValue());
             account.setMinimumAllowedBalance(0);
             ledgerAccountManager.store(account);
@@ -57,14 +57,14 @@ public class SimpleLedgerAccountManager implements IfaceAccountManager {
     @Override
     public IfaceAccount getHOLDAccountILP() {
         if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }
-        SimpleLedgerAccount ilpHold = new SimpleLedgerAccount(ILP_HOLD_ACCOUNT);
+        SimpleAccount ilpHold = new SimpleAccount(ILP_HOLD_ACCOUNT);
         store(ilpHold);
         return ilpHold;
     }
     // } end IfaceILPSpecAccountManager implementation
 
     // start IfaceILPSpecAccountManager implementation {
-    public SimpleLedgerAccountManager() {
+    public SimpleAccountManager() {
         resetAccounts();
     }
 

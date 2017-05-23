@@ -10,10 +10,10 @@ import io.vertx.ext.web.RoutingContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.interledger.everledger.LedgerAccountManagerFactory;
+import org.interledger.everledger.AccountManagerFactory;
 import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
+import org.interledger.everledger.impl.manager.SimpleAccountManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
-    private final SimpleLedgerAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();
+    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
 
     private final static String PARAM_NAME = "name";

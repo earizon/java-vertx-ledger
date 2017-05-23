@@ -17,7 +17,7 @@ import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
-import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
+import org.interledger.everledger.impl.manager.SimpleTransferManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class TransfersHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
         boolean transferMatchUser = false;
         
-        IfaceTransferManager TM = SimpleLedgerTransferManager.getTransferManager();
+        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
         Condition executionCondition;
