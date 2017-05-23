@@ -18,8 +18,10 @@ Read developers docs @ dev_docs for more info
 ```  $ gradle test ```
 
 ### Functional-Testing:
-   This projects tries to keep compatibility with the REST/WS API of five-bells-ledger, that also warrants
-   compatibility with the plugin-bells plugin for the https://github.com/interledgerjs/ilp-connector:
+   This project tries to keep compatibility with the REST/WS API of 
+   [five-bells-ledger](https://github.com/interledgerjs/five-bells-ledger), that automatically
+   warrants compatibility with the [plugin](https://github.com/interledgerjs/ilp-plugin-bells) for the
+   [ilp connector reference implementation](https://github.com/interledgerjs/ilp-connector)
 
    A subset of five-bells-ledger tests adapted to this project are available at:
    https://github.com/interledgerjs/five-bells-ledger, branch: earizon-adaptedTest4JavaVertXLedger
