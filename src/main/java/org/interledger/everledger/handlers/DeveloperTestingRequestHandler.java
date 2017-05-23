@@ -10,13 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Dumps reqeust headers for debugging purposes.
- * 
- * @author mrmx
+ * Helper handler for testing. 
+ *
+ * <p>Reset state for accounts and transfers,...</p>
  */
 public class DeveloperTestingRequestHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(DeveloperTestingRequestHandler.class);
-
     
     private SimpleLedgerTransferManager TM = (SimpleLedgerTransferManager)SimpleLedgerTransferManager.getTransferManager();
 

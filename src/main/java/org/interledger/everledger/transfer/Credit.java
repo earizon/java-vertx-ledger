@@ -1,4 +1,4 @@
-package org.interledger.everledger.ledger.transfer;
+package org.interledger.everledger.transfer;
 
 
 import javax.money.MonetaryAmount;

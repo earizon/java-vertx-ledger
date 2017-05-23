@@ -1,6 +1,6 @@
 package org.interledger.everledger.ifaces.transfer;
 
-import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.transfer.LocalTransferID;
 
 public interface IfaceLocalTransferManager {
 

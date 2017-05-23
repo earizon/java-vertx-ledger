@@ -3,9 +3,9 @@ package org.interledger.everledger.ifaces.transfer;
 import java.time.ZonedDateTime;
 
 import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.transfer.Credit;
+import org.interledger.everledger.transfer.Debit;
+import org.interledger.everledger.transfer.LocalTransferID;
 import org.interledger.ledger.model.TransferStatus;
 
 /*

@@ -1,7 +1,6 @@
 package org.interledger.everledger.impl.manager;
 
 import java.time.ZonedDateTime;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import javax.money.MonetaryAmount;
+
 import org.interledger.cryptoconditions.Condition;
 import org.interledger.cryptoconditions.Fulfillment;
 import org.interledger.everledger.LedgerAccountManagerFactory;
@@ -16,10 +16,9 @@ import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.SimpleTransfer;
-import org.interledger.everledger.ledger.transfer.Credit;
-
-import org.interledger.everledger.ledger.transfer.Debit;
-import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.transfer.Credit;
+import org.interledger.everledger.transfer.Debit;
+import org.interledger.everledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.ledger.model.TransferStatus;
 //import org.javamoney.moneta.Money;

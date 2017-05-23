@@ -19,11 +19,11 @@ import org.interledger.everledger.LedgerAccountManagerFactory;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.everledger.ifaces.transfer.IfaceTransfer;
 import org.interledger.everledger.impl.manager.SimpleLedgerAccountManager;
-import org.interledger.everledger.ledger.transfer.Credit;
-import org.interledger.everledger.ledger.transfer.Debit;
 //import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
-import org.interledger.everledger.ledger.transfer.LedgerPartialEntry;
-import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.transfer.Credit;
+import org.interledger.everledger.transfer.Debit;
+import org.interledger.everledger.transfer.LedgerPartialEntry;
+import org.interledger.everledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.TimeUtils;
 
 import javax.money.MonetaryAmount;

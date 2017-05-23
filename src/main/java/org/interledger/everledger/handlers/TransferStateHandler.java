@@ -12,7 +12,7 @@ import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.transfer.ILocalTransfer;
 import org.interledger.everledger.ifaces.transfer.IfaceTransferManager;
 import org.interledger.everledger.impl.manager.SimpleLedgerTransferManager;
-import org.interledger.everledger.ledger.transfer.LocalTransferID;
+import org.interledger.everledger.transfer.LocalTransferID;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.DSAPrivPubKeySupport;
 import org.interledger.everledger.util.ILPExceptionSupport;
