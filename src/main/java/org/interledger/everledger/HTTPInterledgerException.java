@@ -9,7 +9,7 @@ import org.interledger.InterledgerException;
  * Note that in general the InterledgerException could be transported through
  * any transport channel (HTTP, WebSockets, gRPC, ...,...).
  */
-// TODO:(?) Port to java-ilp-core?
+// TODO:(core) Port to java-ilp-core?
 public class HTTPInterledgerException extends InterledgerException {
 
     private static final long serialVersionUID = 1L;
