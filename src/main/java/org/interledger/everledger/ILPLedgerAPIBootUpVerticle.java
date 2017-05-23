@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.interledger.everledger.handlers.AccountsHandler;
 import org.interledger.everledger.handlers.AccountsListHandler;
-import org.interledger.everledger.handlers.DebugRequestHandler;
 import org.interledger.everledger.handlers.DeveloperTestingRequestHandler;
 import org.interledger.everledger.handlers.FulfillmentHandler;
 import org.interledger.everledger.handlers.HealthHandler;
@@ -106,7 +105,6 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
         if (Config.debug) {
             log.info("Enabled request debug");
             router.route("/*").handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-            router.route("/*").handler(new DebugRequestHandler());
             router.route("/*").handler(LoggerHandler.create(false, LoggerFormat.TINY)); //Log used time of request execution
         }
         __publishRestHandlers(router);
