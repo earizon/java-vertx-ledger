@@ -1,7 +1,6 @@
 package org.interledger.everledger.util;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -10,7 +9,6 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,34 +22,10 @@ public class VertxRunner {
     private static final Logger log = LoggerFactory.getLogger(VertxRunner.class);
 
     public static void run(Class<?> clazz) {
-        run(clazz, false);
-    }
-
-    public static void run(Class<?> clazz, boolean clustered) {
-        run(null, clazz, clustered);
-    }
-
-    public static void run(String baseDir, Class<?> clazz) {
-        run(baseDir, clazz, true);
-    }
-
-    public static void run(String baseDir, Class<?> clazz, boolean clustered) {
-        run(baseDir, clazz, new VertxOptions().setClustered(clustered), null);
-    }
-
-    public static void run(String baseDir, Class<?> clazz, VertxOptions options, DeploymentOptions deploymentOptions) {
-        run(
-                StringUtils.defaultIfBlank(baseDir, "") + clazz.getPackage().getName().replace(".", "/"),
-                clazz.getName(), options, deploymentOptions
-        );
-    }
-
-    public static void run(String baseDir, String verticleID, VertxOptions options, DeploymentOptions deploymentOptions) {
-        if (options == null) {
-            // Default parameter
-            options = new VertxOptions();
-        }
-        // Smart cwd detection
+        String verticleID = clazz.getName();
+        String baseDir = "";
+        VertxOptions options = new VertxOptions().setClustered(false);
+                // Smart cwd detection
 
         // Based on the current directory (.) and the desired directory (baseDir), we try to compute the vertx.cwd
         // directory:
@@ -76,15 +50,13 @@ public class VertxRunner {
             }
         };
         Consumer<Vertx> runner = vertx -> {
-            try {
-                if (deploymentOptions != null) {
-                    vertx.deployVerticle(verticleID, deploymentOptions, deployHandler);
-                } else {
-                    vertx.deployVerticle(verticleID, deployHandler);
+                try {
+            vertx.deployVerticle(verticleID, deployHandler);
+            // Alt: vertx.deployVerticle(verticleID, deploymentOptions, deployHandler);
+                } catch (Throwable e) {
+            log.error("Deploying verticle " + verticleID, e);
+            throw e;
                 }
-            } catch (Throwable e) {
-                log.error("Deploying verticle " + verticleID, e);
-            }
         };
         //DefaultChannelId.newInstance();//Warm up java ipv6 localhost dns
         if (options.isClustered()) {
