@@ -11,7 +11,6 @@ import org.interledger.everledger.handlers.RestEndpointHandler;
 import org.interledger.everledger.ifaces.account.IfaceLocalAccountManager;
 import org.interledger.everledger.util.AuthManager;
 import org.interledger.everledger.util.ILPExceptionSupport;
-import org.interledger.everledger.util.VertxUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ public class AccountsListHandler extends RestEndpointHandler {
             log.info("fail due to '"+ai.getId()+"' not having admin roll");
             throw ILPExceptionSupport.createILPForbiddenException();
         }
-        JsonObject request = VertxUtils.getBodyAsJson(context);
+        JsonObject request = getBodyAsJson(context);
         int page = request.getInteger("page", 1);
         int pageSize = request.getInteger("pageSize", 10);
         IfaceLocalAccountManager accountManager = LedgerAccountManagerFactory.getLedgerAccountManagerSingleton();

@@ -21,12 +21,9 @@ import org.interledger.everledger.Config;
 import org.interledger.everledger.HTTPInterledgerException;
 import org.interledger.everledger.util.ILPExceptionSupport;
 import org.interledger.everledger.util.JsonObjectBuilder;
-import org.interledger.everledger.util.VertxUtils;
 import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-//import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Rest endpoint handler
@@ -51,6 +48,14 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
             path.append(child);
         }
         return path.toString();
+    }
+    
+    public static JsonObject getBodyAsJson(RoutingContext context) {
+        String bodyAsString = context.getBodyAsString();
+        if (StringUtils.isBlank(bodyAsString)) {
+            return new JsonObject();
+        }
+        return new JsonObject(bodyAsString);
     }
 
     private static List<String> handlerPath(String... uriList) {
@@ -135,10 +140,6 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                 );
 
         }
-    }
-
-    protected JsonObject getBodyAsJson(RoutingContext context) {
-        return VertxUtils.getBodyAsJson(context);
     }
 
     protected void handleGet(RoutingContext context) {
