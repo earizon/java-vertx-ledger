@@ -100,4 +100,12 @@ SubPackages of org.interledger.everledger:
       
       - Will create the "http" routes mapping paths to handlers.
 
+----------------------------------------------------------
+This code is designed to be run "single-thread" with many static methods, 
+since the purpose was to make code as easy and simple as possible. 
+Notice also that scaling through multiple-threads is a patchy solution 
+that introduces too much complexity with minor benefits over multiprocess,
+the second one having the added advantage of scaling horizontally to many
+servers.
+
 

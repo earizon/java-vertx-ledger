@@ -1,26 +1,3 @@
-This code is designed to be run "single-thread" with many static methods, since the 
-purpose was to make code as easy and simple as possible. Also it is the author's personal
-opinion that scaling through multiple-threads is a patchy soution that introduces 
-too much complexity with minor benefits over multiprocess, the second one having the added 
-advantage of scaling horizontally to many servers. The natural tendency of web-browsers
-to change from threads to isolated process-by-tab is just one example as it is the success
-of many modern single-thread script languages like Python, NodeJS, R or Rubby. 
-
-You can consider threads as "deprecated" while reading the code in this project.
-
-________________________________________________________
-- Business logic is implemented in Simple*Manager.java:
-  In general the class *Manager will implement a local interface for local related operations
-  and an IFaceILPSpec interface for ILP compatibility operations.
-  Note that in general ILP is supposed to be built "on top" of the already existing local
-  interfaces wrapping for example local accounts IDs into ILP account IDs (addresses?)
-
-- Handlers will be used to "map" HTTP/WebSocket request into internal *Manager methods.
-  Ideally there must be no business logic into the Handlers (that's not exactly the case as
-  of 2017-04-26, see TODOs in Handlers for related info).
- 
-
-________________________________________________________
 To reset accounts/transfers during testing we can use an HTTP request similar to:
     (shell script)
     $ wget -O - http://localhost:3001/developerTesting/reset
