@@ -39,7 +39,7 @@ dependencies {
 //  compile     "com.typesafe:config:${typesafe_config_version}"
     compile     "ch.qos.logback:logback-classic:${logback_classic_version}"
     compile     "io.vertx:vertx-web:${vertx_web_version}"
-
+    compile     "io.jsonwebtoken:jjwt:${jsonwebtoken_version}"
     testCompile "junit:junit:${junit_version}"
     testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
 }
