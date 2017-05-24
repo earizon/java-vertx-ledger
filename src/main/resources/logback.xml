@@ -24,11 +24,13 @@
     </appender>
     
     <logger name="io.netty" level="WARN"/>
-    <logger name="org.interledger" level="INFO"/>
-    <logger name="org.interledger.ilp.common.api.handlers.DebugRequestHandler"    level="INFO"/>
-    <logger name="org.interledger.ilp.common.api.handlers.RestEndpointHandler"    level="INFO"/>
-    <logger name="org.interledger.ilp.ledger.api.handlers.TransferWSEventHandler" level="TRACE"/>
-    <logger name="org.interledger.ilp.ledger.api.handlers.TransferHandler"        level="TRACE"/>
+    <logger name="com.everis" level="DEBUG"/>
+<!--
+    <logger name="com.everis.ilp.common.api.handlers.DebugRequestHandler"    level="INFO"/>
+    <logger name="com.everis.ilp.common.api.handlers.RestEndpointHandler"    level="INFO"/>
+    <logger name="com.everis.ilp.ledger.api.handlers.TransferWSEventHandler" level="TRACE"/>
+    <logger name="com.everis.ilp.ledger.api.handlers.TransferHandler"        level="TRACE"/>
+ -->
 
     <root level="WARN">          
         <appender-ref ref="STDOUT" />
