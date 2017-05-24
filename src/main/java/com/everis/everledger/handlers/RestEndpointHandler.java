@@ -127,6 +127,7 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
             }
             
         } catch (HTTPInterledgerException ex ) {
+            log.error("request body for captured exception:"+context.getBody().toString());
             InterledgerError err = ex.getInterledgerError();
             log.error(err.getErrCode() +" -> "+err.getErrorType()+" \n"+err.getData());
             System.out.println(err.getErrCode() +" -> "+err.getErrorType()+" \n"+err.getData());
