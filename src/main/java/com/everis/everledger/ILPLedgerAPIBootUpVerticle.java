@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.handlers.AccountsHandler;
 import com.everis.everledger.handlers.AccountsListHandler;
+import com.everis.everledger.handlers.AuthTokenHandler;
 import com.everis.everledger.handlers.DeveloperTestingRequestHandler;
 import com.everis.everledger.handlers.FulfillmentHandler;
 import com.everis.everledger.handlers.HealthHandler;
@@ -145,7 +146,8 @@ public class ILPLedgerAPIBootUpVerticle extends AbstractVerticle {
               TransferStateHandler.create(),
                 FulfillmentHandler.create(),
                     MessageHandler.create(),
-    DeveloperTestingRequestHandler.create()
+    DeveloperTestingRequestHandler.create(),
+                  AuthTokenHandler.create()
         );
         for (RestEndpointHandler handler : handlers) {
             for (String path : handler.getRoutePaths()) {
