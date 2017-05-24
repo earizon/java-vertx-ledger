@@ -37,7 +37,7 @@ public class AccountsHandler extends RestEndpointHandler {
 
     private AccountsHandler() {
         super(
-            new HttpMethod[] {HttpMethod.GET, HttpMethod.PUT},
+            new HttpMethod[] {HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST},
             new String[] {"accounts/:" + PARAM_NAME}
         );
     }
@@ -65,10 +65,14 @@ public class AccountsHandler extends RestEndpointHandler {
         JsonObject data = getBodyAsJson(context);
         String password; String data_id;
         data_id = data.getString("id");
+        if (data_id == null) data_id = data.getString("name"); // Second chance
         if (data_id == null) {
             throw ILPExceptionSupport.createILPBadRequestException("id no provided");
         }
         password = data.getString("password");
+        if (password == null && exists == true) {
+            password = AuthManager.getUsers().get(accountName).pass;
+        }
         if (password == null) {
             throw ILPExceptionSupport.createILPBadRequestException("password no provided for id:"+data_id);
         }
@@ -83,7 +87,10 @@ public class AccountsHandler extends RestEndpointHandler {
         }
         
         log.debug("Put data: {} to account {}", data,accountName);
-        Number minAllowedBalance = NumberConversionUtil.toNumber(data.getValue(PARAM_MIN_ALLOWED_BALANCE, 0d));
+        String sMinAllowVal = data.getString(PARAM_MIN_ALLOWED_BALANCE);
+        if (sMinAllowVal==null) sMinAllowVal = "0"; // TODO:(1) Arbitrary value. Use Config....
+        sMinAllowVal = sMinAllowVal.toLowerCase().replace("infinity", "1000000000000000"); // TODO:(0) Arbitrary value. Use Config...
+        Number minAllowedBalance = NumberConversionUtil.toNumber(sMinAllowVal);
 
         if (!exists) {
             accountManager.store(new SimpleAccount(accountName));
@@ -103,6 +110,11 @@ public class AccountsHandler extends RestEndpointHandler {
         accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
+    }
+
+    @Override
+    protected void handlePost(RoutingContext context) {
+        handlePut(context);
     }
 
     private String getAccountName(RoutingContext context) {
