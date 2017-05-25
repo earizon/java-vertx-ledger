@@ -1,20 +1,10 @@
 package com.everis.everledger.handlers;
 
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Base64;
-
-
-
-
-
-
-
-
-
-
-
-
 
 //import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -198,12 +188,17 @@ public class FulfillmentHandler extends RestEndpointHandler {
         try {
             String notification = ((SimpleTransfer) transfer).toMessageStringifiedFormat().encode();
             // Notify affected accounts:
-            for (Debit  debit  : transfer.getDebits() ) {
-                TransferWSEventHandler.notifyListener(context, debit.account, notification);
-            }
-            for (Credit credit : transfer.getCredits() ) {
-                TransferWSEventHandler.notifyListener(context, credit.account, notification);
-            }
+            TransferWSEventHandler.EventType eventType = 
+                    (transfer.getTransferStatus() == TransferStatus.PROPOSED)
+                          ? TransferWSEventHandler.EventType.TRANSFER_CREATE
+                          : TransferWSEventHandler.EventType.TRANSFER_UPDATE ;
+            Set<String> setAffectedAccounts = new HashSet<String>();
+            for (Debit  debit  : transfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
+            for (Credit credit : transfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
+            
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification);
+
+
         } catch (Exception e) {
             log.warn("Fulfillment registrered correctly but ilp-connector couldn't be notified due to " + e.toString());
         }

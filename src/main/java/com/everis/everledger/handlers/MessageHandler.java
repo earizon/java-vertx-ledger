@@ -1,5 +1,8 @@
 package com.everis.everledger.handlers;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import io.vertx.core.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -125,8 +128,12 @@ public class MessageHandler extends RestEndpointHandler {
         JsonObject notificationJSON = new JsonObject();
         notificationJSON.put("type", "message");
         notificationJSON.put("resource", jsonMessageReceived);
-        String notification = notificationJSON.encode();
-        TransferWSEventHandler.notifyListener(context, recipient, notification);
+        String notification = notificationJSON.encode(); // TODO:(0) Recheck
+        // final IfaceAccount[] affectedAccounts, EventType type, String resource
+        Set<String> affectedAccounts = new HashSet<String>();
+        affectedAccounts.add(recipient.getLocalID());
+        TransferWSEventHandler.notifyListener(
+                affectedAccounts, TransferWSEventHandler.EventType.MESSAGE_SEND, notification);
         String response = context.getBodyAsString();
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")

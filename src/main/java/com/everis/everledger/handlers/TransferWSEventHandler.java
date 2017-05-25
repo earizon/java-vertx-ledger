@@ -2,13 +2,17 @@ package com.everis.everledger.handlers;
 
 // TESTING FROM COMMAND LINE: https://blogs.oracle.com/PavelBucek/entry/websocket_command_line_client
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +21,6 @@ import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceAccount;
-import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
 
@@ -38,6 +41,39 @@ import com.everis.everledger.util.AuthManager;
  */
 // FIXME: implements ProtectedResource required?
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
+    // TODO:(0) Protect listeners access. Can be accesed from different threads
+    //      simultaneously.
+    public static HashMap<
+            String /*account*/, HashMap<EventType ,ServerWebSocket /*channel*/>
+        > listeners = new HashMap<String , HashMap<EventType, ServerWebSocket>> ();
+
+    public static enum EventType {
+        ANY            ("*"),
+        TRANSFER_CREATE("transfer.create"),
+        TRANSFER_UPDATE("transfer.update"),
+        TRANSFER_ANY   ("transfer.*"),
+        MESSAGE_SEND   ("message.send"),
+        MESSAGE_ANY    ("message.*");
+        String s;
+        
+        private EventType(String s){
+            this.s = s;
+        }
+        
+        public static EventType parse(final String s){
+            Objects.nonNull(s);
+            if (s.equals("*"              )) return ANY            ;
+            if (s.equals("transfer.create")) return TRANSFER_CREATE;
+            if (s.equals("transfer.update")) return TRANSFER_UPDATE;
+            if (s.equals("transfer.*"     )) return TRANSFER_ANY   ;
+            if (s.equals("message.send"   )) return MESSAGE_SEND   ;
+            if (s.equals("message.*"      )) return MESSAGE_ANY    ;
+            throw new RuntimeException(s + "can NOT be parsed as EventType ");
+        }
+        @Override public String toString(){
+            return s;
+        }
+    }
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
     private final SimpleAccountManager AM = AccountManagerFactory.getLedgerAccountManagerSingleton();
@@ -88,33 +124,58 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
 
         IfaceAccount account = AM.getAccountByName(ai.getName());
 
-        registerServerWebSocket(context, account, sws);
+        registerServerWebSocket(account, sws);
     }
 
-    private static void registerServerWebSocket(RoutingContext context, IfaceAccount account, ServerWebSocket sws) {
-
-        log.debug("registering WS connection: "+account.getLocalID());
-        
+    private static void registerServerWebSocket(IfaceAccount channelAccountOwner, ServerWebSocket sws) {
 
         sws.frameHandler/* WebSocket input */(/*WebSocketFrame*/frame -> {
-               log.debug("WebSocket '"+account.getLocalID()+"' account input frame -> frame.  textData(): " + frame.textData());
-               log.debug("WebSocket '"+account.getLocalID()+"' account input frame -> frame.binaryData(): " + frame.binaryData());
-           });
+            String message = frame.  textData(); // TODO:(0) message can be bigger than ws frame?
 
-        EventBus eventBus = context.vertx().eventBus();
+            JsonObject jsonMessage = new JsonObject(message);
+            
+            String method = jsonMessage.getString("method");
+            JsonObject params = jsonMessage.getJsonObject("params");
+            String result;
+            if (method.equals("subscribe_account") ) {
+                //  {"jsonrpc":"2.0","id":1, "method":"subscribe_account",
+                //     "params":{ "eventType":"*", "accounts":["..."]}
+                //  }
+                EventType eventType = EventType.parse(params.getString("eventType"));
+                JsonArray jsonAccounts = params.getJsonArray("accounts");
+                for (int idx=0; idx < jsonAccounts.size(); idx ++) {
+                    String account = jsonAccounts.getString(idx);
+                    // TODO:(0) Check  channelAccountOwner..getLocalID() match account
+                    HashMap<EventType, ServerWebSocket> listener4Account = 
+                        TransferWSEventHandler.listeners.get(account);
+                    if (listener4Account != null) {
+                        // TODO:(0) Clear all previous subcriptions
+                    }
+                    listener4Account = new HashMap< EventType, ServerWebSocket>();
+                    listeners.put(account, listener4Account);
+                    listener4Account.put(eventType, sws);
+                }
+                result = ""+jsonAccounts.size();
+            } else if ( method.equals("subscribe_all_accounts") ) {
+                //  {"jsonrpc":"2.0","id":1, "method":"subscribe_all_accounts",
+                //     "params":{ "eventType":"*"}
+                //  }
+                result = "TODO:(0) not implemented";
+            } else {
+                // TODO:(0) throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
+                result = "TODO:(0) not implemented";
+            }
+            HashMap<String, Object> response = new HashMap<String, Object>();
+            response.put("jsonrpc", "2.0");
+            response.put("id", jsonMessage.getInteger("id"));
+            response.put("result", result);
+            String jsonString = (new JsonObject(response)).encode();
+            sws.writeFinalTextFrame(jsonString);
+        });
 
-        io.vertx.core.eventbus.MessageConsumer<String> mc = 
-                eventBus.consumer("message-" + account.getLocalID(), message -> { 
-            log.debug("received '"+message.body()+"' from internal *Manager:");
-            sws.writeFinalTextFrame(message.body());
-            log.debug("message forwarded to websocket peer through websocket");
-            });
-        
         sws.closeHandler(new Handler<Void>() {
-            @Override
-            public void handle(final Void event) {
-                log.debug("un-registering WS connection: "+account.getLocalID());
-                mc.unregister();
+            @Override public void handle(final Void event) {
+                log.debug("un-registering WS connection: "+channelAccountOwner.getLocalID());
             }
         });
 
@@ -123,21 +184,71 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             PrintWriter printWriter = new PrintWriter( writer );
             throwable.printStackTrace( printWriter );
             printWriter.flush();
-            log.warn("There was an exception in the WebSocket '"+account.getLocalID()+ "':"+throwable.toString()+ "\n" +writer.toString() );
+            log.warn("There was an exception in the WebSocket '"+channelAccountOwner.getLocalID()+ "':"+throwable.toString()+ "\n" +writer.toString() );
         });
     }
 
-    /**
-     * Send transacction status update to the ILP connector
-     *
-     * @param context
-     * @param message
-     */
-    public static void notifyListener(RoutingContext context, IfaceLocalAccount account, String message) {
-        // Send notification to all existing webSockets
-        log.debug("notifyListener to account:"+account + ", message:'''" + message + "'''\n");
-        context.vertx().eventBus().send("message-"+account.getLocalID(), message); // will be sent to handler "@bookmark1"
-        
+    public static void notifyListener(
+            final Set<String> affectedAccounts, EventType type, String resource ) {
+        for (String account : affectedAccounts){
+            HashMap<String, Object> response = new HashMap<String, Object>();
+            response.put("jsonrpc", "2.0");
+            response.put("id", null);
+            response.put("result", "TODO");
+            String message = (new JsonObject(response)).encode();
+            HashMap<EventType, ServerWebSocket> listeners4account = listeners.get(account);
+            if (listeners4account==null) continue;
+            for (EventType typeI : listeners4account.keySet()) {
+                if (! typeI.equals(type)) continue;
+                listeners4account.get(typeI).writeFinalTextFrame(message);
+            }
+        }
     }
 
 }
+/**
+ * class NotificationBroadcaster {
+ *   this.listeners = new Map()
+ * 
+ *   async sendNotifications (transfer, transaction) {
+ *     const affectedAccounts = _([transfer.debits, transfer.credits]).flatten().map('account').uniq().value()
+ *     if (isTransferFinalized(transfer)) { // If the transfer is finalized, see if it was finalized by a fulfillment
+ *       const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
+ *       if (fulfillment) {
+ *         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
+ *           var relatedResources = { execution_condition_fulfillment: convertToExternalFulfillment(fulfillment) }
+ *         } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
+ *           var relatedResources = { cancellation_condition_fulfillment: convertToExternalFulfillment(fulfillment) }
+ *         }
+ *       }
+ *     }
+ *     const eventName = transfer.state === transferStates.TRANSFER_STATE_PREPARED ? 'transfer.create' : 'transfer.update'
+ *     await this.emitNotification(affectedAccounts, eventName, convertToExternalTransfer(transfer), relatedResources)
+ *   }
+ * 
+ *   sendMessage (destinationAccount, message) {
+ *     return this.emitNotification([destinationAccount], 'message.send', message)
+ *   }
+ * 
+ *   async emitNotification (affectedAccounts, eventType, resource, relatedResources) {
+ *     // Always notify global listeners - as identified by the special "*" account name
+ *     affectedAccounts = affectedAccounts.concat('*')
+ * 
+ *     const eventTypes = ['*', eventType]
+ *     const eventParts = eventType.split('.')
+ *     for (let i = 1; i < eventParts.length; i++) { eventTypes.push(eventParts.slice(0, i).join('.') + '.*') }
+ *     const notification = { event: eventType, resource }
+ *     if (relatedResources) notification.related_resources = relatedResources
+ * 
+ *     this.log.debug('emitting notification:{' + affectedAccounts.join(',') + '}:' + eventType)
+ * 
+ *     const selectedListeners = new Set()
+ *     for (const account of affectedAccounts)
+ *       for (const eventType of eventTypes)
+ *           for (const listener of this.listeners.get(account).get(eventType)) selectedListeners.add(listener)
+ * 
+ *     for (const listener of selectedListeners) listener(notification)
+ *     return !!selectedListeners.size
+ *   }
+ * }
+ */

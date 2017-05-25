@@ -1,6 +1,8 @@
 package com.everis.everledger.handlers;
 
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.time.ZonedDateTime;
 
@@ -302,14 +304,14 @@ public class TransferHandler extends RestEndpointHandler {
             log.info("send transfer update to ILP Connector through websocket: \n:"
                     + notification + "\n");
             // Notify affected accounts:
-            for (Debit debit : effectiveTransfer.getDebits()) {
-                TransferWSEventHandler.notifyListener(context, debit.account,
-                        notification);
-            }
-            for (Credit credit : effectiveTransfer.getCredits()) {
-                TransferWSEventHandler.notifyListener(context, credit.account,
-                        notification);
-            }
+            TransferWSEventHandler.EventType eventType = 
+                    (receivedTransfer.getTransferStatus() == TransferStatus.PROPOSED)
+                          ? TransferWSEventHandler.EventType.TRANSFER_CREATE
+                          : TransferWSEventHandler.EventType.TRANSFER_UPDATE ;
+            Set<String> setAffectedAccounts = new HashSet<String>();
+            for (Debit  debit  : receivedTransfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
+            for (Credit credit : receivedTransfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification);
         } catch (Exception e) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to "
                     + e.toString());
