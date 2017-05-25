@@ -14,9 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.AccountManagerFactory;
+import com.everis.everledger.AuthInfo;
 import com.everis.everledger.handlers.RestEndpointHandler;
+import com.everis.everledger.ifaces.account.IfaceAccount;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.impl.manager.SimpleAccountManager;
+import com.everis.everledger.util.AuthManager;
 
 /**
  * @author earizon TransferWSEventHandler handler Wrapper to HTTP GET request to
@@ -37,15 +40,14 @@ import com.everis.everledger.impl.manager.SimpleAccountManager;
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
-    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
-
-
-    private final static String PARAM_NAME = "name";
+    private final SimpleAccountManager AM = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     public TransferWSEventHandler() {
         super(
                 new HttpMethod[] {HttpMethod.GET},
-                new String[] {"accounts/:" + PARAM_NAME + "/transfers"}
+                
+                new String[] {"websocket"} // /websocket?token=9AtVZPN3t49Kx07stO813UHXv6pcES
+             // new String[] {"accounts/:" + PARAM_NAME + "/transfers"}
             );
     }
 
@@ -55,10 +57,12 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
 
     @Override
     protected void handleGet(RoutingContext context) {
-        String accountName = context.request().getParam(PARAM_NAME);
-        IfaceLocalAccount account = accountManager.getAccountByName(accountName);
-        // GET /accounts/alice/transfers -> Upgrade to websocket
-        log.debug("TransferWSEventHandler Connected. Upgrading HTTP GET to WebSocket!");
+        AuthInfo ai = AuthManager.authenticate(context, false);
+        String token = context.request().getParam("token"); // TODO:(0) check ussage in tests
+//      String accountName = context.request().getParam(PARAM_NAME);
+//      IfaceLocalAccount account = accountManager.getAccountByName(accountName);
+//      // GET /accounts/alice/transfers -> Upgrade to websocket
+//      log.debug("TransferWSEventHandler Connected. Upgrading HTTP GET to WebSocket!");
         ServerWebSocket sws = context.request().upgrade();
         /* 
          * From vertx Docs:
@@ -75,17 +79,26 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
          *   // Send a message upon connection
          *   this.websocket.send(JSON.stringify({ type: 'connect' })) 
          */
-        sws.writeFinalTextFrame("{\"type\" : \"connect\" }"); // TODO: recheck this line
+        sws.writeFinalTextFrame(
+                "{"
+              +   "\"jsonrpc\" : \"2.0\", "
+              +   "\"method\": \"connect\", "
+              +   "\"id\" : null "
+              + "}");
+
+        IfaceAccount account = AM.getAccountByName(ai.getName());
+
         registerServerWebSocket(context, account, sws);
     }
 
-    private static void registerServerWebSocket(RoutingContext context, IfaceLocalAccount account, ServerWebSocket sws) {
+    private static void registerServerWebSocket(RoutingContext context, IfaceAccount account, ServerWebSocket sws) {
 
-        log.debug("registering WS connection: "+account);
+        log.debug("registering WS connection: "+account.getLocalID());
+        
 
-        sws.frameHandler/* bytes read from the connector */(/*WebSocketFrame*/frame -> {
-               log.debug("ilpConnector input frame -> frame.textData()   " + frame.textData());
-               log.debug("ilpConnector input frame -> frame.binaryData() " + frame.binaryData());
+        sws.frameHandler/* WebSocket input */(/*WebSocketFrame*/frame -> {
+               log.debug("WebSocket '"+account.getLocalID()+"' account input frame -> frame.  textData(): " + frame.textData());
+               log.debug("WebSocket '"+account.getLocalID()+"' account input frame -> frame.binaryData(): " + frame.binaryData());
            });
 
         EventBus eventBus = context.vertx().eventBus();
@@ -110,8 +123,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             PrintWriter printWriter = new PrintWriter( writer );
             throwable.printStackTrace( printWriter );
             printWriter.flush();
-            String stackTrace = writer.toString();
-            log.warn("There was an exception in the ws "+account.getLocalID()+ ":"+throwable.toString()+ "\n" +stackTrace );
+            log.warn("There was an exception in the WebSocket '"+account.getLocalID()+ "':"+throwable.toString()+ "\n" +writer.toString() );
         });
     }
 
