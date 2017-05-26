@@ -122,7 +122,6 @@ public abstract class RestEndpointHandler implements Handler<RoutingContext> {
                 }
             } catch (Exception t) {
                 // TODO:(?) Improve logging
-                if (t instanceof HTTPInterledgerException) throw t;
 
                 StringWriter writer = new StringWriter();
                 PrintWriter printWriter = new PrintWriter( writer );

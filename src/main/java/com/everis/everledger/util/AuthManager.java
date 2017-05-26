@@ -5,28 +5,15 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
-
-
-
-
-//import io.vertx.ext.auth.AuthProvider;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
-//import io.vertx.ext.web.handler.AuthHandler;
-
-
-
-
-
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.AuthInfo;
+import com.everis.everledger.handlers.AuthTokenHandler;
 
 public class AuthManager {
 
@@ -72,38 +59,56 @@ public class AuthManager {
     }
 
     public static AuthInfo authenticate(RoutingContext context, boolean allowAnonymous) {
+                                try {
         HttpServerRequest request = context.request();
-        String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
-        if (authorization == null) {
-            if (allowAnonymous) { return AuthInfo.ANONYMOUS; }
-            throw ILPExceptionSupport.createILPUnauthorizedException();
-        }
-        try {
-            String[] parts = authorization.split(" ");
-            String sscheme = parts[0];
-            if (!"Basic".equals(sscheme)) {
-                log.error("Only Basic Authorization support supported.");
+        
+        //  "GET /websocket?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJodHRwOi8vMTcyLjE3LjAuMTozMDAxLy9hY2NvdW50cy9hZG1pbiIsImlzcyI6IjE3Mi4xNy4wLjEifQ.yt95JiNCOzwn80MVP25KfXNhyHfxZmiclwCFATSN7wVNm3ODazPmaEqf8TLkvkiDJoHM49LqvDzgvzbKe_rSxw
+        String token = request.getParam("token");
+        if (token != null) {// REF: ./services/auth.js
+            if ( ! AuthTokenHandler.parser.isSigned(token)) {
                 throw ILPExceptionSupport.createILPUnauthorizedException();
             }
-            String decoded = new String(Base64.getDecoder().decode(parts[1]));
-            int colonIdx = decoded.indexOf(":");
-            String suser = (colonIdx != -1) ? decoded.substring(0, colonIdx) : decoded;
-            String spass = (colonIdx != -1) ? decoded.substring(colonIdx + 1): null ;
+            String URLAccount = AuthTokenHandler.parser.parseClaimsJws(token).getBody().getSubject();
+            int offset = URLAccount.lastIndexOf("/accounts/");
+            String suser = URLAccount.substring(offset+"/accounts/".length());
             AuthInfo authInfo = users.get(suser);
             if (authInfo == null){
                 log.error("authInfo null. (User not int AuthManager.users lists)");
                 throw ILPExceptionSupport.createILPUnauthorizedException();
             }
-            boolean isAdmin = authInfo.getRoll().equals("admin");
-            if (!isAdmin && !authInfo.pass.equals(spass)  ) {
-                log.error("user "+authInfo.id+" is not admin and pass doesn't match");
-                throw ILPExceptionSupport.createILPUnauthorizedException();
-            }
             return authInfo;
-        } catch (Exception e) {
-            log.error("Unhandled Auth Exception: " + e.toString());
+        }
+        String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
+        if (authorization == null) {
+            if (allowAnonymous) { return AuthInfo.ANONYMOUS; }
             throw ILPExceptionSupport.createILPUnauthorizedException();
         }
+        String[] parts = authorization.split(" ");
+        String sscheme = parts[0];
+        if (!"Basic".equals(sscheme)) {
+            log.error("Only Basic Authorization support supported.");
+            throw ILPExceptionSupport.createILPUnauthorizedException();
+        }
+        String decoded = new String(Base64.getDecoder().decode(parts[1]));
+        int colonIdx = decoded.indexOf(":");
+        String suser = (colonIdx != -1) ? decoded.substring(0, colonIdx) : decoded;
+        String spass = (colonIdx != -1) ? decoded.substring(colonIdx + 1): null ;
+        
+        AuthInfo authInfo = users.get(suser);
+        if (authInfo == null){
+            log.error("authInfo null. (User not int AuthManager.users lists)");
+            throw ILPExceptionSupport.createILPUnauthorizedException();
+        }
+        boolean isAdmin = authInfo.getRoll().equals("admin");
+        if (!isAdmin && !authInfo.pass.equals(spass)  ) {
+            log.error("user "+authInfo.id+" is not admin and pass doesn't match");
+            throw ILPExceptionSupport.createILPUnauthorizedException();
+        }
+        return authInfo;
+                            } catch (Exception e) {
+        log.error("Unhandled Auth Exception: " + e.toString());
+        throw ILPExceptionSupport.createILPUnauthorizedException();
+                                }
     }
 
     public static AuthInfo authenticate(RoutingContext context) {

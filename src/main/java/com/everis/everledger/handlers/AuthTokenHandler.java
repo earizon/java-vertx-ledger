@@ -12,6 +12,7 @@ import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.util.AuthManager;
 
 import io.jsonwebtoken.impl.crypto.MacProvider;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -25,7 +26,10 @@ import org.slf4j.LoggerFactory;
  */
 public class AuthTokenHandler extends RestEndpointHandler {
 
+    private static SignatureAlgorithm SigAlgth = SignatureAlgorithm.HS256;
     private static final Logger log = LoggerFactory.getLogger(AuthTokenHandler.class);
+    private static Key key = MacProvider.generateKey(SigAlgth);
+    public static JwtParser parser =  Jwts.parser().setSigningKey(AuthTokenHandler.key);
 
     private AuthTokenHandler() {
         super(new HttpMethod[]{HttpMethod.GET},  new String[] {"auth_token"});
@@ -57,11 +61,10 @@ public class AuthTokenHandler extends RestEndpointHandler {
             log.error(sError);
             throw new RuntimeException(sError);
         }
-        Key key = MacProvider.generateKey(); // TODO:(0) What's the real key?
         String compactJwsToken = Jwts.builder()
                 .setSubject(subject)
                 .setIssuer(Config.serverPublicHost /* config.server.base_uri */)
-                .signWith(SignatureAlgorithm.HS512 /*TODO:(0)*/, key).compact();
+                .signWith(SigAlgth, key).compact();
         HashMap<String, Object> result = new HashMap<>(); result.put("token", compactJwsToken);
         context.response()
            .putHeader("content-type", "application/json; charset=utf-8")

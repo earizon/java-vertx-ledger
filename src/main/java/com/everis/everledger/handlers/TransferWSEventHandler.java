@@ -96,7 +96,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     @Override
     protected void handleGet(RoutingContext context) {
         AuthInfo ai = AuthManager.authenticate(context, false);
-        String token = context.request().getParam("token"); // TODO:(0) check ussage in tests
+        // String token = context.request().getParam("token"); // TODO:(0) check ussage in tests
 //      String accountName = context.request().getParam(PARAM_NAME);
 //      IfaceLocalAccount account = accountManager.getAccountByName(accountName);
 //      // GET /accounts/alice/transfers -> Upgrade to websocket
