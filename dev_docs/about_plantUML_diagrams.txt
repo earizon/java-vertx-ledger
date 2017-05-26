@@ -1,0 +1,6 @@
+Plant-UML diagrams (sequence diagrams, component diagrams, ...) are embedded in code through.
+Check comments marked as @startuml ... @enduml.
+
+For Eclipse the plant UML plugin can be instaled as explained at  https://www.youtube.com/watch?v=60YlbB3szO8:
+
+A short ussage demo is available at: https://www.youtube.com/watch?v=hd2dG6Xvn58

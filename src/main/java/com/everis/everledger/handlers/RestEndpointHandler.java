@@ -27,7 +27,19 @@ import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.JsonObjectBuilder;
 
 /**
- * Rest endpoint handler
+ * @startuml 
+ * title RestEndpointHandler REST sequence
+ * participant "rest client" as c
+ * participant "RestEndpointHandler\nchild" as h
+ * participant "Controller" as k
+ * c -> h : http request
+ * h -> h : parse & check \n @tainted input
+ * h -> k : @untainted input
+ * k -> k : apply bussiness logic
+ * k -> h : result | error
+ * h -> h : convert to ILP \n format result|error
+ * h -> c : result
+ * @enduml
  */
 public abstract class RestEndpointHandler implements Handler<RoutingContext> {
 
