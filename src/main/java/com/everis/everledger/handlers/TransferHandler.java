@@ -299,10 +299,8 @@ public class TransferHandler extends RestEndpointHandler {
         }
         try { // TODO:(?) Refactor Next code for notification (next two loops) are
               // duplicated in FulfillmentHandler
-            String notification = ((SimpleTransfer) effectiveTransfer)
-                    .toMessageStringifiedFormat().encode();
-            log.info("send transfer update to ILP Connector through websocket: \n:"
-                    + notification + "\n");
+            JsonObject resource = ((SimpleTransfer) effectiveTransfer).toILPJSONStringifiedFormat();
+
             // Notify affected accounts:
             TransferWSEventHandler.EventType eventType = 
                     (receivedTransfer.getTransferStatus() == TransferStatus.PROPOSED)
@@ -311,7 +309,7 @@ public class TransferHandler extends RestEndpointHandler {
             Set<String> setAffectedAccounts = new HashSet<String>();
             for (Debit  debit  : receivedTransfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
             for (Credit credit : receivedTransfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
-            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification);
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, resource);
         } catch (Exception e) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to "
                     + e.toString());

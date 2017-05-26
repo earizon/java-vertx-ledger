@@ -16,6 +16,7 @@ import org.interledger.cryptoconditions.types.PreimageSha256Condition;
 import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 //import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 
+
 import javax.money.MonetaryAmount;
 
 import org.interledger.ledger.model.TransferStatus;
@@ -30,6 +31,7 @@ import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LedgerPartialEntry;
 import com.everis.everledger.transfer.LocalTransferID;
+import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.TimeUtils;
 
 // FIXME:(1) Allow multiple debit/credits (Remove all code related to index [0])
@@ -262,6 +264,8 @@ public class SimpleTransfer implements IfaceTransfer {
 
     @Override
     public void  setExecutionFulfillment(Fulfillment ff){
+        if (this.cancelationFF != FF_NOT_PROVIDED) throw new RuntimeException(
+            "Cancelation fulfillment was already provided");
         this.executionFF = ff;
     }
     
@@ -272,6 +276,8 @@ public class SimpleTransfer implements IfaceTransfer {
 
     @Override
     public void  setCancelationFulfillment(Fulfillment ff){
+        if (this.executionFF != FF_NOT_PROVIDED) throw new RuntimeException(
+                "execution fulfillment was already provided");
         this.cancelationFF = ff;
     }
     
@@ -326,29 +332,6 @@ public class SimpleTransfer implements IfaceTransfer {
         }
         return jo;
     }
-
-    public JsonObject toMessageStringifiedFormat() {
-        JsonObject jo = toILPJSONStringifiedFormat();
-        JsonObject jo2 = new JsonObject();
-        jo2.put("type", "transfer");
-        jo2.put("resource", jo);
-        boolean addRelatedResources = 
-                   this.getTransferStatus().equals(TransferStatus.EXECUTED)
-                || this.getTransferStatus().equals(TransferStatus.REJECTED);
-        
-        if ( addRelatedResources ) {
-                //  REF: sendNotifications @
-                //       five-bells-ledger/src/lib/notificationBroadcasterWebsocket.js
-                JsonObject related_resources = new JsonObject();
-                final Fulfillment FF = (this.getTransferStatus() == TransferStatus.EXECUTED)
-                        ? this.  getExecutionFulfillment()
-                        : this.getCancellationFulfillment();
-                related_resources.put("execution_condition_fulfillment", FF.toString());
-                jo2.put("related_resources", related_resources);
-            }
-        return jo2;
-    }
-
 
     private JsonArray entryList2Json(LedgerPartialEntry[] input_list) {
         JsonArray ja = new JsonArray();

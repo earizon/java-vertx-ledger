@@ -19,7 +19,7 @@ import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.JsonObjectBuilder;
-import com.everis.everledger.util.NumberConversionUtil;
+import com.everis.everledger.util.ConversionUtil;
 
 /**
  * Single Account handler
@@ -90,7 +90,7 @@ public class AccountsHandler extends RestEndpointHandler {
         String sMinAllowVal = data.getString(PARAM_MIN_ALLOWED_BALANCE);
         if (sMinAllowVal==null) sMinAllowVal = "0"; // TODO:(1) Arbitrary value. Use Config....
         sMinAllowVal = sMinAllowVal.toLowerCase().replace("infinity", "1000000000000000"); // TODO:(0) Arbitrary value. Use Config...
-        Number minAllowedBalance = NumberConversionUtil.toNumber(sMinAllowVal);
+        Number minAllowedBalance = ConversionUtil.toNumber(sMinAllowVal);
 
         if (!exists) {
             accountManager.store(new SimpleAccount(accountName));
@@ -99,7 +99,7 @@ public class AccountsHandler extends RestEndpointHandler {
         
         IfaceAccount account = accountManager.getAccountByName(accountName);
         if(data.containsKey(PARAM_BALANCE)) {
-            Number balance = NumberConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
+            Number balance = ConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
             account.setBalance(balance);
             log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
         }

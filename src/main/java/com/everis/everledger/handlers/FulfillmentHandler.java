@@ -6,10 +6,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Base64;
 
+
+
 //import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.cryptoconditions.Fulfillment;
@@ -29,6 +32,7 @@ import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
 import com.everis.everledger.util.AuthManager;
+import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
 /**
@@ -173,9 +177,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         }
         log.trace("ffExisted:"+ffExisted);
 
-        String response  = Base64.getEncoder().
-                encodeToString(inputFF.getEncoded());
-        response = response.substring(0, response.indexOf('='));
+        String response  = ConversionUtil.fulfillmentToBase64(inputFF);
         if (!sFulfillmentInput.equals(response)) {
             throw ILPExceptionSupport.createILPBadRequestException(
                 "Assert exception. Input '"+sFulfillmentInput+"'doesn't match output '"+response+"' ");
@@ -186,7 +188,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             .setStatusCode(!ffExisted ? HttpResponseStatus.CREATED.code() : HttpResponseStatus.OK.code())
             .end(response);
         try {
-            String notification = ((SimpleTransfer) transfer).toMessageStringifiedFormat().encode();
+            JsonObject notification = ((SimpleTransfer) transfer).toILPJSONStringifiedFormat();
             // Notify affected accounts:
             TransferWSEventHandler.EventType eventType = 
                     (transfer.getTransferStatus() == TransferStatus.PROPOSED)

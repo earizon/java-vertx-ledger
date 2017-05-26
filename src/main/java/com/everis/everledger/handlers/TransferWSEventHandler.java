@@ -70,9 +70,11 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             if (s.equals("message.*"      )) return MESSAGE_ANY    ;
             throw new RuntimeException(s + "can NOT be parsed as EventType ");
         }
+        
         @Override public String toString(){
             return s;
         }
+
     }
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
@@ -145,15 +147,19 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 JsonArray jsonAccounts = params.getJsonArray("accounts");
                 for (int idx=0; idx < jsonAccounts.size(); idx ++) {
                     String account = jsonAccounts.getString(idx);
+                    final int offset = account.indexOf("/accounts/");
+                    if (offset >= 0){
+                        account = account.substring(offset + "/accounts/".length());
+                    }
                     // TODO:(0) Check  channelAccountOwner..getLocalID() match account
-                    HashMap<EventType, ServerWebSocket> listener4Account = 
+                    HashMap<EventType, ServerWebSocket> listeners4Account = 
                         TransferWSEventHandler.listeners.get(account);
-                    if (listener4Account != null) {
+                    if (listeners4Account != null) {
                         // TODO:(0) Clear all previous subcriptions
                     }
-                    listener4Account = new HashMap< EventType, ServerWebSocket>();
-                    listeners.put(account, listener4Account);
-                    listener4Account.put(eventType, sws);
+                    listeners4Account = new HashMap< EventType, ServerWebSocket>();
+                    listeners4Account.put(eventType, sws);
+                    listeners.put(account, listeners4Account);
                 }
                 result = ""+jsonAccounts.size();
             } else if ( method.equals("subscribe_all_accounts") ) {
@@ -189,66 +195,35 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     }
 
     public static void notifyListener(
-            final Set<String> affectedAccounts, EventType type, String resource ) {
+            final Set<String> affectedAccounts, EventType type, JsonObject resource ) {
+        // REF: emitNotifcation@https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/notificationBroadcasterWebsocket.js
+
         for (String account : affectedAccounts){
-            HashMap<String, Object> response = new HashMap<String, Object>();
-            response.put("jsonrpc", "2.0");
-            response.put("id", null);
-            response.put("result", "TODO");
-            String message = (new JsonObject(response)).encode();
             HashMap<EventType, ServerWebSocket> listeners4account = listeners.get(account);
             if (listeners4account==null) continue;
+            HashMap<String, Object> response = new HashMap<String, Object>();
+            
+            response.put("jsonrpc", "2.0");
+            response.put("id", null);
+            response.put("method", "notify" );
+            
+            {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("event", type.s);
+                params.put("resource", resource);
+                
+                response.put("params", params);
+
+            }
+            String message = (new JsonObject(response)).encode();
+
             for (EventType typeI : listeners4account.keySet()) {
-                if (! typeI.equals(type)) continue;
+                System.out.println(type +" equals " + typeI         +"? ->"+ type.equals(typeI));
+                System.out.println(typeI +" equals " + EventType.ANY +"? ->"+ typeI.equals(EventType.ANY));
+                if (!type.equals(typeI) && !typeI.equals(EventType.ANY)) continue;
+                System.out.println("sendint message '"+message+"' to '"+account+"'");
                 listeners4account.get(typeI).writeFinalTextFrame(message);
             }
         }
     }
-
 }
-/**
- * class NotificationBroadcaster {
- *   this.listeners = new Map()
- * 
- *   async sendNotifications (transfer, transaction) {
- *     const affectedAccounts = _([transfer.debits, transfer.credits]).flatten().map('account').uniq().value()
- *     if (isTransferFinalized(transfer)) { // If the transfer is finalized, see if it was finalized by a fulfillment
- *       const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
- *       if (fulfillment) {
- *         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
- *           var relatedResources = { execution_condition_fulfillment: convertToExternalFulfillment(fulfillment) }
- *         } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
- *           var relatedResources = { cancellation_condition_fulfillment: convertToExternalFulfillment(fulfillment) }
- *         }
- *       }
- *     }
- *     const eventName = transfer.state === transferStates.TRANSFER_STATE_PREPARED ? 'transfer.create' : 'transfer.update'
- *     await this.emitNotification(affectedAccounts, eventName, convertToExternalTransfer(transfer), relatedResources)
- *   }
- * 
- *   sendMessage (destinationAccount, message) {
- *     return this.emitNotification([destinationAccount], 'message.send', message)
- *   }
- * 
- *   async emitNotification (affectedAccounts, eventType, resource, relatedResources) {
- *     // Always notify global listeners - as identified by the special "*" account name
- *     affectedAccounts = affectedAccounts.concat('*')
- * 
- *     const eventTypes = ['*', eventType]
- *     const eventParts = eventType.split('.')
- *     for (let i = 1; i < eventParts.length; i++) { eventTypes.push(eventParts.slice(0, i).join('.') + '.*') }
- *     const notification = { event: eventType, resource }
- *     if (relatedResources) notification.related_resources = relatedResources
- * 
- *     this.log.debug('emitting notification:{' + affectedAccounts.join(',') + '}:' + eventType)
- * 
- *     const selectedListeners = new Set()
- *     for (const account of affectedAccounts)
- *       for (const eventType of eventTypes)
- *           for (const listener of this.listeners.get(account).get(eventType)) selectedListeners.add(listener)
- * 
- *     for (const listener of selectedListeners) listener(notification)
- *     return !!selectedListeners.size
- *   }
- * }
- */

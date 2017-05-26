@@ -128,12 +128,11 @@ public class MessageHandler extends RestEndpointHandler {
         JsonObject notificationJSON = new JsonObject();
         notificationJSON.put("type", "message");
         notificationJSON.put("resource", jsonMessageReceived);
-        String notification = notificationJSON.encode(); // TODO:(0) Recheck
         // final IfaceAccount[] affectedAccounts, EventType type, String resource
         Set<String> affectedAccounts = new HashSet<String>();
         affectedAccounts.add(recipient.getLocalID());
         TransferWSEventHandler.notifyListener(
-                affectedAccounts, TransferWSEventHandler.EventType.MESSAGE_SEND, notification);
+                affectedAccounts, TransferWSEventHandler.EventType.MESSAGE_SEND, notificationJSON);
         String response = context.getBodyAsString();
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")

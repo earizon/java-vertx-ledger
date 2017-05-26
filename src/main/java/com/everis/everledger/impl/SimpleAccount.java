@@ -15,7 +15,7 @@ import org.javamoney.moneta.Money;
 import com.everis.everledger.Config;
 import com.everis.everledger.ifaces.account.IfaceAccount;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
-import com.everis.everledger.util.NumberConversionUtil;
+import com.everis.everledger.util.ConversionUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -68,7 +68,7 @@ public class SimpleAccount implements IfaceAccount {
 
     @JsonProperty("minimum_allowed_balance")
     public String getMinimumAllowedBalanceAsString() {
-        return NumberConversionUtil.toString(getMinimumAllowedBalance().getNumber());
+        return ConversionUtil.toString(getMinimumAllowedBalance().getNumber());
     }
 
     @Override

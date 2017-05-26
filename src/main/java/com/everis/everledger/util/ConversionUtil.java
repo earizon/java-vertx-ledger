@@ -1,13 +1,16 @@
 package com.everis.everledger.util;
 
+import java.util.Base64;
+
 import org.apache.commons.lang3.math.NumberUtils;
+import org.interledger.cryptoconditions.Fulfillment;
 
 /**
  * Various number conversion utility methods
  * 
  * @author mrmx
  */
-public class NumberConversionUtil {
+public class ConversionUtil {
     
     public static Number toNumber(Object value) {
         if (value == null) throw new RuntimeException("value can't be null");
@@ -23,5 +26,12 @@ public class NumberConversionUtil {
     
     public static String toString(Number value) {
         return value.toString();
+    }
+    
+    public static String fulfillmentToBase64(Fulfillment FF){
+        String response  = Base64.getEncoder().
+                encodeToString(FF.getEncoded());
+        response = response.substring(0, response.indexOf('='));
+        return response;
     }
 }
