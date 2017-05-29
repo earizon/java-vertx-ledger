@@ -304,6 +304,9 @@ public class SimpleTransfer implements IfaceTransfer {
         if (! this.getExecutionCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
             jo.put("execution_condition", this.getExecutionCondition().toString());
         }
+        if (! this.getCancellationCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
+            jo.put("cancellation_condition", this.getCancellationCondition().toString());
+        }
         jo.put("state", this.getTransferStatus().toString().toLowerCase());
 //        if (!this.getCancellationCondition().equals(Condition....NOT_PROVIDED)) {
 //            jo.put("cancellation_condition", this.getCancellationCondition());
