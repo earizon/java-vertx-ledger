@@ -161,12 +161,13 @@ public class SimpleTransferManager implements IfaceTransferManager {
     }
 
     @Override
-    public void executeRemoteILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment) {
+    public void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment) {
         // DisburseFunds:
         for (Credit debit : transfer.getCredits()) {
             __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
         }
         transfer.setTransferStatus(TransferStatus.EXECUTED);
+        transfer.setDTTM_executed(ZonedDateTime.now());
         transfer.setExecutionFulfillment(executionFulfillment);
     }
 

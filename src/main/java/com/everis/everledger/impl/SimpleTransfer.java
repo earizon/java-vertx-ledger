@@ -31,7 +31,6 @@ import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LedgerPartialEntry;
 import com.everis.everledger.transfer.LocalTransferID;
-import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.TimeUtils;
 
 // FIXME:(1) Allow multiple debit/credits (Remove all code related to index [0])
@@ -315,9 +314,10 @@ public class SimpleTransfer implements IfaceTransfer {
             JsonObject timeline = new JsonObject();
             if (Config.unitTestsActive) {
                 timeline.put("proposed_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter));
-                if (this.DTTM_prepared != TimeUtils.future) { timeline.put("prepared_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
-                if (this.DTTM_executed != TimeUtils.future) { timeline.put("executed_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
-                if (this.DTTM_rejected != TimeUtils.future) { timeline.put("rejected_at", TimeUtils.testingDate.format(TimeUtils.ilpFormatter)); }
+                String sTestingDate = TimeUtils.testingDate.format(TimeUtils.ilpFormatter);
+                if (this.DTTM_prepared != TimeUtils.future) { timeline.put("prepared_at",sTestingDate ); }
+                if (this.DTTM_executed != TimeUtils.future) { timeline.put("executed_at",sTestingDate ); }
+                if (this.DTTM_rejected != TimeUtils.future) { timeline.put("rejected_at",sTestingDate ); }
             }else {
                 timeline.put("proposed_at", this.DTTM_proposed.format(TimeUtils.ilpFormatter));
                 if (this.DTTM_prepared != TimeUtils.future) { timeline.put("prepared_at", this.DTTM_prepared.format(TimeUtils.ilpFormatter)); }

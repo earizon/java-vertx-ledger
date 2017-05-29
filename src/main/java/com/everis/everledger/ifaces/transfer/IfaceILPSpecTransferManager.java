@@ -11,7 +11,7 @@ public  interface IfaceILPSpecTransferManager {
 
     void createNewRemoteILPTransfer(IfaceTransfer newTransfer);
 
-    void executeRemoteILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
+    void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
 
     void abortRemoteILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
     

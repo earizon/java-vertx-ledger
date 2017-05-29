@@ -8,6 +8,7 @@ import java.util.Base64;
 
 
 
+
 //import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.AuthInfo;
+import com.everis.everledger.Config;
 import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
@@ -155,10 +157,10 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
 
-            if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
+            if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0 && Config.unitTestsActive == false) {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
             }
-            if ( transfer.getTransferStatus() != TransferStatus.EXECUTED) { TM.executeRemoteILPTransfer(transfer, inputFF); }
+            if ( transfer.getTransferStatus() != TransferStatus.EXECUTED) { TM.executeILPTransfer(transfer, inputFF); }
         } else if (transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
             if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
                 throw ILPExceptionSupport.createILPBadRequestException("Already executed");
