@@ -132,7 +132,7 @@ public class MessageHandler extends RestEndpointHandler {
         Set<String> affectedAccounts = new HashSet<String>();
         affectedAccounts.add(recipient.getLocalID());
         TransferWSEventHandler.notifyListener(
-                affectedAccounts, TransferWSEventHandler.EventType.MESSAGE_SEND, notificationJSON);
+                affectedAccounts, TransferWSEventHandler.EventType.MESSAGE_SEND, notificationJSON, null);
         String response = context.getBodyAsString();
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")

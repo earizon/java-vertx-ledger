@@ -195,7 +195,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     }
 
     public static void notifyListener(
-            final Set<String> affectedAccounts, EventType type, JsonObject resource ) {
+            final Set<String> affectedAccounts, EventType type, JsonObject resource, JsonObject related_resources ) {
         // REF: emitNotifcation@https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/notificationBroadcasterWebsocket.js
 
         for (String account : affectedAccounts){
@@ -211,6 +211,9 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 params.put("event", type.s);
                 params.put("resource", resource);
+                if (related_resources !=null ){
+                    params.put("related_resources", related_resources);
+                }
                 
                 response.put("params", params);
 

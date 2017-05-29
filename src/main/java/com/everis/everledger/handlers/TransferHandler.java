@@ -309,7 +309,7 @@ public class TransferHandler extends RestEndpointHandler {
             Set<String> setAffectedAccounts = new HashSet<String>();
             for (Debit  debit  : receivedTransfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
             for (Credit credit : receivedTransfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
-            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, resource);
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, resource, null);
         } catch (Exception e) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to "
                     + e.toString());

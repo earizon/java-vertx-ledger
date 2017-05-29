@@ -1,10 +1,12 @@
 package com.everis.everledger.handlers;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Base64;
+
 
 
 
@@ -200,8 +202,10 @@ public class FulfillmentHandler extends RestEndpointHandler {
             for (Debit  debit  : transfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
             for (Credit credit : transfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
             
-            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification);
-
+            HashMap<String, Object> relatedResources = new HashMap<String, Object>();
+            relatedResources.put("execution_condition_fulfillment", ConversionUtil.fulfillmentToBase64(inputFF));
+            JsonObject jsonRelatedResources = new JsonObject(relatedResources);
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification, jsonRelatedResources);
 
         } catch (Exception e) {
             log.warn("Fulfillment registrered correctly but ilp-connector couldn't be notified due to " + e.toString());
@@ -238,9 +242,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
             throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity");
         }
 
-        String response  = Base64.getEncoder().
-                encodeToString(fulfillment.getEncoded()); 
-        response = response.substring(0, response.indexOf('='));
+        String response  = ConversionUtil.fulfillmentToBase64(fulfillment); 
 
         context.response()
             .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
@@ -248,4 +250,5 @@ public class FulfillmentHandler extends RestEndpointHandler {
             .setStatusCode(HttpResponseStatus.OK.code())
             .end(response);
     }
+
 }
