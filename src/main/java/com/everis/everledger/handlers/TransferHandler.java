@@ -264,15 +264,15 @@ public class TransferHandler extends RestEndpointHandler {
                     + cancelation_condition + "' could not be parsed as URI");
         }
         TransferStatus status = TransferStatus.PROPOSED; // By default
-        if (requestBody.getString("state") != null) {
-            // TODO: Must status change be allowed or must we force it to be
-            // 'prepared'?
-            // (only Execution|Cancellation Fulfillments will change the state)
-            // At this moment it's allowed (to make it compliant with
-            // five-bells-ledger tests)
-            status = TransferStatus.parse(requestBody.getString("state"));
-            log.debug("transfer status " + status);
-        }
+//        if (requestBody.getString("state") != null) {
+//            // TODO: Must status change be allowed or must we force it to be
+//            // 'prepared'?
+//            // (only Execution|Cancellation Fulfillments will change the state)
+//            // At this moment it's allowed (to make it compliant with
+//            // five-bells-ledger tests)
+//            status = TransferStatus.parse(requestBody.getString("state"));
+//            log.debug("transfer status " + status);
+//        }
         
         IfaceTransfer receivedTransfer = new SimpleTransfer(transferID,
                 debitList, creditList, URIExecutionCond, URICancelationCond,
@@ -303,7 +303,7 @@ public class TransferHandler extends RestEndpointHandler {
 
             // Notify affected accounts:
             TransferWSEventHandler.EventType eventType = 
-                    (receivedTransfer.getTransferStatus() == TransferStatus.PROPOSED)
+                    (receivedTransfer.getTransferStatus() == TransferStatus.PREPARED)
                           ? TransferWSEventHandler.EventType.TRANSFER_CREATE
                           : TransferWSEventHandler.EventType.TRANSFER_UPDATE ;
             Set<String> setAffectedAccounts = new HashSet<String>();
