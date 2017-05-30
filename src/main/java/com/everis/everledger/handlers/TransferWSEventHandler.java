@@ -137,20 +137,19 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     }
 
     private static void registerServerWebSocket(AuthInfo ai, IfaceAccount channelAccountOwner, ServerWebSocket sws) {
-
         sws.frameHandler/* WebSocket input */(/*WebSocketFrame*/frame -> {
             String message = frame.  textData(); // TODO:(0) message can be bigger than ws frame?
             JsonObject jsonMessage = new JsonObject(message);
 
             String method = jsonMessage.getString("method");
             JsonObject params = jsonMessage.getJsonObject("params");
+            Integer id = jsonMessage.getInteger("id");
             int result;
             if (method.equals("subscribe_account") ) {
                 //  {"jsonrpc":"2.0","id":1, "method":"subscribe_account",
                 //     "params":{ "eventType":"*", "accounts":["..."]}
                 //  }
                 // Reset all previous subscriptions
-                Integer id = jsonMessage.getInteger("id");
                 if (id == null) { // TODO:(?) Refactor to make common
                     writeJsonRPCError(sws, id, 40000, "Invalid id");
                     return;
@@ -164,12 +163,16 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                     if (offset >= 0){
                         account = account.substring(offset + "/accounts/".length());
                     }
-                        try {
-                    AM.getAccountByName(account);
-                        }catch(InterledgerException e){
-                    writeJsonRPCError(sws, id, 40002, "Invalid account: "+account);
-                    return;
-                        }
+                    try {
+                        AM.getAccountByName(account);
+                    }catch(InterledgerException e){
+                        writeJsonRPCError(sws, id, 40002, "Invalid account: "+account);
+                        return;
+                    }
+                    if (!ai.isAdmin() && ! ai.getName().equals(account) /* TODO:(0) use account not in ai.associatedAccount/s*/) {
+                        writeJsonRPCError(sws, id, 40300, "Not authorized");
+                        return;
+                    }
                     // TODO:(0) Check  channelAccountOwner..getLocalID() match account
                     Set<EventType> listeners4Account = 
                         TransferWSEventHandler.listeners.get(sws).get(account);
@@ -183,7 +186,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 result = jsonAccounts.size();
             } else if ( method.equals("subscribe_all_accounts") ) {
                 if (!ai.isAdmin()) {
-                    writeJsonRPCError(sws, null, 40300, "Not authorized");
+                    writeJsonRPCError(sws, id, 40300, "Not authorized");
                     return;
                 }
 //                if (channelAccountOwner)
@@ -192,8 +195,8 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 //  }
                 throw new RuntimeException("TODO:(0) not implemented");
             } else {
-                // TODO:(0) throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
-                throw new RuntimeException("TODO:(0) not implemented");
+                writeJsonRPCError(sws, id, -32601, "Unknown method: "+method);
+                return;
             }
             writeJsonRPCResponse(sws, jsonMessage.getInteger("id"), "result", result , null /*method*/ );
         });
