@@ -128,12 +128,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
          *   // Send a message upon connection
          *   this.websocket.send(JSON.stringify({ type: 'connect' })) 
          */
-        sws.writeFinalTextFrame(
-                "{"
-              +   "\"jsonrpc\" : \"2.0\", "
-              +   "\"method\": \"connect\", "
-              +   "\"id\" : null "
-              + "}");
+        returnJsonRPC(sws, null, null, null, "connect");
 
         IfaceAccount account = AM.getAccountByName(ai.getName());
 
@@ -163,11 +158,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                     error.put("code", 40000);
                     error.put("message", "RpcError: Invalid id");
                     error.put("data", data);
-                    HashMap<String, Object > response = new HashMap<String, Object >();
-                    response.put("jsonrpc", "2.0");
-                    response.put("id", null);
-                    response.put("error", error);
-                    sws.writeFinalTextFrame((new JsonObject(response)).encode());
+                    returnJsonRPC(sws, null, "error", new JsonObject(error), null /*method*/);
                     return;
                 }
                 listeners.put(sws, new HashMap<String, Set<EventType>>()); 
@@ -199,12 +190,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 // TODO:(0) throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
                 throw new RuntimeException("TODO:(0) not implemented");
             }
-            HashMap<String, Object> response = new HashMap<String, Object>();
-            response.put("jsonrpc", "2.0");
-            response.put("id", jsonMessage.getInteger("id"));
-            response.put("result", result);
-            String jsonString = (new JsonObject(response)).encode();
-            sws.writeFinalTextFrame(jsonString);
+            returnJsonRPC(sws, jsonMessage.getInteger("id"), "result", result , null /*method*/ );
         });
 
         sws.closeHandler(new Handler<Void>() {
@@ -231,25 +217,12 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             for (String account : affectedAccounts){
                 Set<EventType> listeners4account = listeners.get(sws).get(account);
                 if (listeners4account==null) continue;
-                HashMap<String, Object> response = new HashMap<String, Object>();
-                
-                response.put("jsonrpc", "2.0");
-                response.put("id", null);
-                response.put("method", "notify" );
-                
-                {
                     HashMap<String, Object> params = new HashMap<String, Object>();
                     params.put("event", type.s);
                     params.put("resource", resource);
                     if (related_resources !=null ){
                         params.put("related_resources", related_resources);
                     }
-                    
-                    response.put("params", params);
-    
-                }
-                String message = (new JsonObject(response)).encode();
-    
                 for (EventType typeI : listeners4account) {
                     System.out.println(type +" equals " + typeI         +"? ->"+ type.equals(typeI));
                     System.out.println(typeI +" equals " + EventType.ANY +"? ->"+ typeI.equals(EventType.ANY));
@@ -259,10 +232,19 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                         ! (type.isTransfer() && typeI.equals(EventType.TRANSFER_ANY) ) && 
                         ! (type.isMessage() && typeI.equals(EventType.MESSAGE_ANY) ) 
                         ) continue;
-                    System.out.println("sendint message '"+message+"' to '"+account+"'");
-                    sws.writeFinalTextFrame(message);
+                    System.out.println("sendint notify to account:'"+account+"'");
+                    returnJsonRPC(sws, null , "params", params, "notify");
                 }
             }
         }
+    }
+
+    private static void returnJsonRPC(ServerWebSocket sws, Integer id, String key, Object value, String method) {
+        HashMap<String, Object > response = new HashMap<String, Object >();
+        response.put("jsonrpc", "2.0");
+        response.put("id", id);
+        if (key !=null ) { response.put(key, value);}
+        if (method != null ) { response.put("method", method); }
+        sws.writeFinalTextFrame((new JsonObject(response)).encode());
     }
 }
