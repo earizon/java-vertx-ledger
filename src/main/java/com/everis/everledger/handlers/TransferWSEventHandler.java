@@ -60,6 +60,16 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         private EventType(String s){
             this.s = s;
         }
+
+        public boolean isTransfer(){
+            return (
+                    this == TRANSFER_CREATE || this == TRANSFER_UPDATE || this == TRANSFER_ANY);
+        }
+
+        public boolean isMessage(){
+            return (
+                    this == MESSAGE_SEND || this == MESSAGE_ANY);
+        }
         
         public static EventType parse(final String s){
             Objects.nonNull(s);
@@ -228,7 +238,12 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 for (EventType typeI : listeners4account) {
                     System.out.println(type +" equals " + typeI         +"? ->"+ type.equals(typeI));
                     System.out.println(typeI +" equals " + EventType.ANY +"? ->"+ typeI.equals(EventType.ANY));
-                    if (!type.equals(typeI) && !typeI.equals(EventType.ANY)) continue;
+                    if (
+                        !type.equals(typeI) && 
+                        !typeI.equals(EventType.ANY) &&
+                        ! (type.isTransfer() && typeI.equals(EventType.TRANSFER_ANY) ) && 
+                        ! (type.isMessage() && typeI.equals(EventType.MESSAGE_ANY) ) 
+                        ) continue;
                     System.out.println("sendint message '"+message+"' to '"+account+"'");
                     sws.writeFinalTextFrame(message);
                 }
