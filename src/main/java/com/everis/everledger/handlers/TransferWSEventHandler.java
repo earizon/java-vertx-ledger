@@ -144,9 +144,8 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
 
         sws.frameHandler/* WebSocket input */(/*WebSocketFrame*/frame -> {
             String message = frame.  textData(); // TODO:(0) message can be bigger than ws frame?
-
             JsonObject jsonMessage = new JsonObject(message);
-            
+
             String method = jsonMessage.getString("method");
             JsonObject params = jsonMessage.getJsonObject("params");
             int result;
@@ -155,6 +154,22 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 //     "params":{ "eventType":"*", "accounts":["..."]}
                 //  }
                 // Reset all previous subscriptions
+                Integer id = jsonMessage.getInteger("id");
+                if (id == null) { // TODO:(?) Refactor to make common
+                    final HashMap<String, Object >data =new HashMap<String, Object >();
+                    data.put("name", "RpcError");
+                    data.put("message", "Invalid id");
+                    final HashMap<String, Object >error =new HashMap<String, Object >(); 
+                    error.put("code", 40000);
+                    error.put("message", "RpcError: Invalid id");
+                    error.put("data", data);
+                    HashMap<String, Object > response = new HashMap<String, Object >();
+                    response.put("jsonrpc", "2.0");
+                    response.put("id", null);
+                    response.put("error", error);
+                    sws.writeFinalTextFrame((new JsonObject(response)).encode());
+                    return;
+                }
                 listeners.put(sws, new HashMap<String, Set<EventType>>()); 
                 EventType eventType = EventType.parse(params.getString("eventType"));
                 JsonArray jsonAccounts = params.getJsonArray("accounts");
