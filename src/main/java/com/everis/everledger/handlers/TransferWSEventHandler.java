@@ -11,6 +11,7 @@ import io.vertx.ext.web.RoutingContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -43,9 +44,9 @@ import com.everis.everledger.util.AuthManager;
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
     // TODO:(0) Protect listeners access. Can be accesed from different threads
     //      simultaneously.
-    public static HashMap<
-            String /*account*/, HashMap<EventType ,ServerWebSocket /*channel*/>
-        > listeners = new HashMap<String , HashMap<EventType, ServerWebSocket>> ();
+    public static HashMap<ServerWebSocket,
+            HashMap<String /*account*/, Set<EventType> > > listeners = 
+              new HashMap<ServerWebSocket, HashMap<String /*account*/, Set<EventType> > >();
 
     public static enum EventType {
         ANY            ("*"),
@@ -143,6 +144,8 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 //  {"jsonrpc":"2.0","id":1, "method":"subscribe_account",
                 //     "params":{ "eventType":"*", "accounts":["..."]}
                 //  }
+                // Reset all previous subscriptions
+                listeners.put(sws, new HashMap<String, Set<EventType>>()); 
                 EventType eventType = EventType.parse(params.getString("eventType"));
                 JsonArray jsonAccounts = params.getJsonArray("accounts");
                 for (int idx=0; idx < jsonAccounts.size(); idx ++) {
@@ -152,14 +155,14 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                         account = account.substring(offset + "/accounts/".length());
                     }
                     // TODO:(0) Check  channelAccountOwner..getLocalID() match account
-                    HashMap<EventType, ServerWebSocket> listeners4Account = 
-                        TransferWSEventHandler.listeners.get(account);
+                    Set<EventType> listeners4Account = 
+                        TransferWSEventHandler.listeners.get(sws).get(account);
                     if (listeners4Account != null) {
                         // TODO:(0) Clear all previous subcriptions
                     }
-                    listeners4Account = new HashMap< EventType, ServerWebSocket>();
-                    listeners4Account.put(eventType, sws);
-                    listeners.put(account, listeners4Account);
+                    listeners4Account = new HashSet<EventType>();
+                    listeners4Account.add(eventType);
+                    listeners.get(sws).put(account, listeners4Account);
                 }
                 result = ""+jsonAccounts.size();
             } else if ( method.equals("subscribe_all_accounts") ) {
@@ -181,6 +184,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
 
         sws.closeHandler(new Handler<Void>() {
             @Override public void handle(final Void event) {
+                listeners.remove(sws);
                 log.debug("un-registering WS connection: "+channelAccountOwner.getLocalID());
             }
         });
@@ -198,34 +202,36 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             final Set<String> affectedAccounts, EventType type, JsonObject resource, JsonObject related_resources ) {
         // REF: emitNotifcation@https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/notificationBroadcasterWebsocket.js
 
-        for (String account : affectedAccounts){
-            HashMap<EventType, ServerWebSocket> listeners4account = listeners.get(account);
-            if (listeners4account==null) continue;
-            HashMap<String, Object> response = new HashMap<String, Object>();
-            
-            response.put("jsonrpc", "2.0");
-            response.put("id", null);
-            response.put("method", "notify" );
-            
-            {
-                HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("event", type.s);
-                params.put("resource", resource);
-                if (related_resources !=null ){
-                    params.put("related_resources", related_resources);
-                }
+        for (ServerWebSocket sws : listeners.keySet()) {
+            for (String account : affectedAccounts){
+                Set<EventType> listeners4account = listeners.get(sws).get(account);
+                if (listeners4account==null) continue;
+                HashMap<String, Object> response = new HashMap<String, Object>();
                 
-                response.put("params", params);
-
-            }
-            String message = (new JsonObject(response)).encode();
-
-            for (EventType typeI : listeners4account.keySet()) {
-                System.out.println(type +" equals " + typeI         +"? ->"+ type.equals(typeI));
-                System.out.println(typeI +" equals " + EventType.ANY +"? ->"+ typeI.equals(EventType.ANY));
-                if (!type.equals(typeI) && !typeI.equals(EventType.ANY)) continue;
-                System.out.println("sendint message '"+message+"' to '"+account+"'");
-                listeners4account.get(typeI).writeFinalTextFrame(message);
+                response.put("jsonrpc", "2.0");
+                response.put("id", null);
+                response.put("method", "notify" );
+                
+                {
+                    HashMap<String, Object> params = new HashMap<String, Object>();
+                    params.put("event", type.s);
+                    params.put("resource", resource);
+                    if (related_resources !=null ){
+                        params.put("related_resources", related_resources);
+                    }
+                    
+                    response.put("params", params);
+    
+                }
+                String message = (new JsonObject(response)).encode();
+    
+                for (EventType typeI : listeners4account) {
+                    System.out.println(type +" equals " + typeI         +"? ->"+ type.equals(typeI));
+                    System.out.println(typeI +" equals " + EventType.ANY +"? ->"+ typeI.equals(EventType.ANY));
+                    if (!type.equals(typeI) && !typeI.equals(EventType.ANY)) continue;
+                    System.out.println("sendint message '"+message+"' to '"+account+"'");
+                    sws.writeFinalTextFrame(message);
+                }
             }
         }
     }
