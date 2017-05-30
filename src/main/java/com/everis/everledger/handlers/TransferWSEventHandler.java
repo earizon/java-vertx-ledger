@@ -139,7 +139,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
             
             String method = jsonMessage.getString("method");
             JsonObject params = jsonMessage.getJsonObject("params");
-            String result;
+            int result;
             if (method.equals("subscribe_account") ) {
                 //  {"jsonrpc":"2.0","id":1, "method":"subscribe_account",
                 //     "params":{ "eventType":"*", "accounts":["..."]}
@@ -164,15 +164,15 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                     listeners4Account.add(eventType);
                     listeners.get(sws).put(account, listeners4Account);
                 }
-                result = ""+jsonAccounts.size();
+                result = jsonAccounts.size();
             } else if ( method.equals("subscribe_all_accounts") ) {
                 //  {"jsonrpc":"2.0","id":1, "method":"subscribe_all_accounts",
                 //     "params":{ "eventType":"*"}
                 //  }
-                result = "TODO:(0) not implemented";
+                throw new RuntimeException("TODO:(0) not implemented");
             } else {
                 // TODO:(0) throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
-                result = "TODO:(0) not implemented";
+                throw new RuntimeException("TODO:(0) not implemented");
             }
             HashMap<String, Object> response = new HashMap<String, Object>();
             response.put("jsonrpc", "2.0");
