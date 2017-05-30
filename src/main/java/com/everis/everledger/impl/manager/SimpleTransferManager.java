@@ -1,10 +1,14 @@
 package com.everis.everledger.impl.manager;
 
+import io.vertx.core.json.JsonObject;
+
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.money.MonetaryAmount;
@@ -17,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.AccountManagerFactory;
+import com.everis.everledger.handlers.TransferWSEventHandler;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
@@ -24,6 +29,7 @@ import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
+import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
 //import org.slf4j.Logger;
@@ -159,26 +165,57 @@ public class SimpleTransferManager implements IfaceTransferManager {
         // TODO: Next line commented to make tests pass, but looks to be sensible to do so.
         // newTransfer.setTransferStatus(TransferStatus.PROPOSED);
     }
+    
+    private static void notifyUpdate(IfaceTransfer transfer, Fulfillment FF, boolean isExecution){
+        try {
+            JsonObject notification = ((SimpleTransfer) transfer).toILPJSONStringifiedFormat();
+            // Notify affected accounts:
+            TransferWSEventHandler.EventType eventType = 
+                    (transfer.getTransferStatus() == TransferStatus.PROPOSED)
+                          ? TransferWSEventHandler.EventType.TRANSFER_CREATE
+                          : TransferWSEventHandler.EventType.TRANSFER_UPDATE ;
+            Set<String> setAffectedAccounts = new HashSet<String>();
+            for (Debit  debit  : transfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
+            for (Credit credit : transfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
+            
+            HashMap<String, Object> relatedResources = new HashMap<String, Object>();
+            String relatedResourceKey = isExecution ? "execution_condition_fulfillment":"cancellation_condition_fulfillment";
+            relatedResources.put(relatedResourceKey, ConversionUtil.fulfillmentToBase64(FF));
+            JsonObject jsonRelatedResources = new JsonObject(relatedResources);
+            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification, jsonRelatedResources);
 
-    @Override
-    public void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment) {
-        // DisburseFunds:
-        for (Credit debit : transfer.getCredits()) {
-            __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
+        } catch (Exception e) {
+            log.warn("Fulfillment registrered correctly but ilp-connector couldn't be notified due to " + e.toString());
         }
-        transfer.setTransferStatus(TransferStatus.EXECUTED);
-        transfer.setDTTM_executed(ZonedDateTime.now());
-        transfer.setExecutionFulfillment(executionFulfillment);
+    }
+
+    private void executeOrCancelILPTransfer(IfaceTransfer transfer, Fulfillment FF, boolean isExecution /*false => isCancellation*/) {
+        if (isExecution /* => DisburseFunds */) {
+            for (Credit credit : transfer.getCredits()) {
+                __executeLocalTransfer(HOLDS_URI, credit.account, credit.amount);
+            }
+            transfer.setTransferStatus(TransferStatus.EXECUTED);
+            transfer.setDTTM_executed(ZonedDateTime.now());
+            transfer.setExecutionFulfillment(FF);
+        } else /* => Cancellation/Rollback  */ {
+            for (Debit debit : transfer.getDebits()) {
+                __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
+            }
+            transfer.setTransferStatus(TransferStatus.REJECTED);
+            transfer.setDTTM_rejected(ZonedDateTime.now());
+            transfer.setCancelationFulfillment(FF);
+        }
+        notifyUpdate(transfer, FF, isExecution );
     }
 
     @Override
-    public void abortRemoteILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment) {
-        // Return Held Funds
-        for (Debit debit : transfer.getDebits()) {
-            __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount);
-        }
-        transfer.setTransferStatus(TransferStatus.REJECTED);
-        transfer.setCancelationFulfillment(cancellationFulfillment);
+    public void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment) {
+        executeOrCancelILPTransfer(transfer, executionFulfillment, true);
+    }
+
+    @Override
+    public void cancelILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment) {
+        executeOrCancelILPTransfer(transfer, cancellationFulfillment, false);
     }
 
     @Override

@@ -1,21 +1,12 @@
 package com.everis.everledger.handlers;
 
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Base64;
 
-
-
-
-
-//import javax.xml.bind.DatatypeConverter;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import org.interledger.cryptoconditions.Fulfillment;
@@ -32,8 +23,6 @@ import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
 import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
-import com.everis.everledger.transfer.Credit;
-import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
@@ -172,7 +161,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 if (!inputFF.verify(inputFF.getCondition(), message)){
                     throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
                 }
-                TM.abortRemoteILPTransfer(transfer, inputFF);
+                TM.cancelILPTransfer(transfer, inputFF);
             }
         } else {
             throw ILPExceptionSupport.
@@ -191,25 +180,6 @@ public class FulfillmentHandler extends RestEndpointHandler {
             .putHeader(HttpHeaders.CONTENT_LENGTH, ""+response.length())
             .setStatusCode(!ffExisted ? HttpResponseStatus.CREATED.code() : HttpResponseStatus.OK.code())
             .end(response);
-        try {
-            JsonObject notification = ((SimpleTransfer) transfer).toILPJSONStringifiedFormat();
-            // Notify affected accounts:
-            TransferWSEventHandler.EventType eventType = 
-                    (transfer.getTransferStatus() == TransferStatus.PROPOSED)
-                          ? TransferWSEventHandler.EventType.TRANSFER_CREATE
-                          : TransferWSEventHandler.EventType.TRANSFER_UPDATE ;
-            Set<String> setAffectedAccounts = new HashSet<String>();
-            for (Debit  debit  : transfer.getDebits() ) setAffectedAccounts.add( debit.account.getLocalID());
-            for (Credit credit : transfer.getCredits()) setAffectedAccounts.add(credit.account.getLocalID());
-            
-            HashMap<String, Object> relatedResources = new HashMap<String, Object>();
-            relatedResources.put("execution_condition_fulfillment", ConversionUtil.fulfillmentToBase64(inputFF));
-            JsonObject jsonRelatedResources = new JsonObject(relatedResources);
-            TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, notification, jsonRelatedResources);
-
-        } catch (Exception e) {
-            log.warn("Fulfillment registrered correctly but ilp-connector couldn't be notified due to " + e.toString());
-        }
     }
 
     @Override

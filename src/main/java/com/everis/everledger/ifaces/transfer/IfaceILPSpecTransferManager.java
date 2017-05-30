@@ -13,7 +13,7 @@ public  interface IfaceILPSpecTransferManager {
 
     void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
 
-    void abortRemoteILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
+    void cancelILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
     
     boolean doesTransferExists(UUID transferId);
 
