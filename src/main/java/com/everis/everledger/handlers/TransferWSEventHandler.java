@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import org.interledger.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +90,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     }
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
-    private final SimpleAccountManager AM = AccountManagerFactory.getLedgerAccountManagerSingleton();
+    private static final SimpleAccountManager AM = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     public TransferWSEventHandler() {
         super(
@@ -128,14 +129,14 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
          *   // Send a message upon connection
          *   this.websocket.send(JSON.stringify({ type: 'connect' })) 
          */
-        returnJsonRPC(sws, null, null, null, "connect");
+        writeJsonRPCResponse(sws, null, null, null, "connect");
 
         IfaceAccount account = AM.getAccountByName(ai.getName());
 
-        registerServerWebSocket(account, sws);
+        registerServerWebSocket(ai, account, sws);
     }
 
-    private static void registerServerWebSocket(IfaceAccount channelAccountOwner, ServerWebSocket sws) {
+    private static void registerServerWebSocket(AuthInfo ai, IfaceAccount channelAccountOwner, ServerWebSocket sws) {
 
         sws.frameHandler/* WebSocket input */(/*WebSocketFrame*/frame -> {
             String message = frame.  textData(); // TODO:(0) message can be bigger than ws frame?
@@ -151,14 +152,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 // Reset all previous subscriptions
                 Integer id = jsonMessage.getInteger("id");
                 if (id == null) { // TODO:(?) Refactor to make common
-                    final HashMap<String, Object >data =new HashMap<String, Object >();
-                    data.put("name", "RpcError");
-                    data.put("message", "Invalid id");
-                    final HashMap<String, Object >error =new HashMap<String, Object >(); 
-                    error.put("code", 40000);
-                    error.put("message", "RpcError: Invalid id");
-                    error.put("data", data);
-                    returnJsonRPC(sws, null, "error", new JsonObject(error), null /*method*/);
+                    writeJsonRPCError(sws, id, 40000, "Invalid id");
                     return;
                 }
                 listeners.put(sws, new HashMap<String, Set<EventType>>()); 
@@ -170,6 +164,12 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                     if (offset >= 0){
                         account = account.substring(offset + "/accounts/".length());
                     }
+                        try {
+                    AM.getAccountByName(account);
+                        }catch(InterledgerException e){
+                    writeJsonRPCError(sws, id, 40002, "Invalid account: "+account);
+                    return;
+                        }
                     // TODO:(0) Check  channelAccountOwner..getLocalID() match account
                     Set<EventType> listeners4Account = 
                         TransferWSEventHandler.listeners.get(sws).get(account);
@@ -182,6 +182,11 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 }
                 result = jsonAccounts.size();
             } else if ( method.equals("subscribe_all_accounts") ) {
+                if (!ai.isAdmin()) {
+                    writeJsonRPCError(sws, null, 40300, "Not authorized");
+                    return;
+                }
+//                if (channelAccountOwner)
                 //  {"jsonrpc":"2.0","id":1, "method":"subscribe_all_accounts",
                 //     "params":{ "eventType":"*"}
                 //  }
@@ -190,7 +195,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                 // TODO:(0) throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
                 throw new RuntimeException("TODO:(0) not implemented");
             }
-            returnJsonRPC(sws, jsonMessage.getInteger("id"), "result", result , null /*method*/ );
+            writeJsonRPCResponse(sws, jsonMessage.getInteger("id"), "result", result , null /*method*/ );
         });
 
         sws.closeHandler(new Handler<Void>() {
@@ -233,18 +238,31 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                         ! (type.isMessage() && typeI.equals(EventType.MESSAGE_ANY) ) 
                         ) continue;
                     System.out.println("sendint notify to account:'"+account+"'");
-                    returnJsonRPC(sws, null , "params", params, "notify");
+                    writeJsonRPCResponse(sws, null , "params", params, "notify");
                 }
             }
         }
     }
 
-    private static void returnJsonRPC(ServerWebSocket sws, Integer id, String key, Object value, String method) {
+    private static void writeJsonRPCResponse(ServerWebSocket sws, Integer id, String key, Object value, String method) {
         HashMap<String, Object > response = new HashMap<String, Object >();
         response.put("jsonrpc", "2.0");
         response.put("id", id);
         if (key !=null ) { response.put(key, value);}
         if (method != null ) { response.put("method", method); }
         sws.writeFinalTextFrame((new JsonObject(response)).encode());
+    }
+
+    private static void writeJsonRPCError(ServerWebSocket sws, Integer id, Integer code, String message){
+        final HashMap<String, Object >error =new HashMap<String, Object >();
+        error.put("code", code);
+        error.put("message", "RpcError: "  + message);
+        
+        final HashMap<String, Object >data =new HashMap<String, Object >();
+        data.put("name", "RpcError");
+        data.put("message", message);
+        error.put("data", data);
+        writeJsonRPCResponse(sws, id, "error", new JsonObject(error), null /*method*/);
+
     }
 }
