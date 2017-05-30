@@ -222,6 +222,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
         // REF: emitNotifcation@https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/notificationBroadcasterWebsocket.js
 
         for (ServerWebSocket sws : listeners.keySet()) {
+            websocketchannel:
             for (String account : affectedAccounts){
                 Set<EventType> listeners4account = listeners.get(sws).get(account);
                 if (listeners4account==null) continue;
@@ -242,6 +243,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                         ) continue;
                     System.out.println("sendint notify to account:'"+account+"'");
                     writeJsonRPCResponse(sws, null , "params", params, "notify");
+                    break websocketchannel;
                 }
             }
         }
