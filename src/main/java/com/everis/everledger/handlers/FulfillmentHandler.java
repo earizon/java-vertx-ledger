@@ -9,9 +9,10 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.cryptoconditions.Fulfillment;
-import org.interledger.cryptoconditions.der.CryptoConditionReader;
-import org.interledger.cryptoconditions.der.DEREncodingException;
+import org.interledger.Fulfillment;
+
+//import org.interledger.cryptoconditions.der.CryptoConditionReader;
+//import org.interledger.cryptoconditions.der.DEREncodingException;
 import org.interledger.ledger.model.TransferStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,22 +130,17 @@ public class FulfillmentHandler extends RestEndpointHandler {
 //        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
 //        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
         
-        Fulfillment inputFF;
-        try {
-            inputFF = CryptoConditionReader.readFulfillment(fulfillmentBytes);
-        } catch (DEREncodingException e1) {
-            throw ILPExceptionSupport.createILPBadRequestException(
-                "wrong fulfillment '"+ sFulfillmentInput + "' in request");
-        }
+        Fulfillment inputFF = new Fulfillment(fulfillmentBytes);
+
         byte[] message = new byte[]{};
         boolean ffExisted = false;
         log.trace("transfer.getExecutionCondition():"+transfer.getExecutionCondition().toString());
-        log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
+//        log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
         log.trace("request hexFulfillment:"+sFulfillmentInput);
         log.trace("request ff.getCondition():"+inputFF.getCondition().toString());
 
         if (transfer.getExecutionCondition().equals(inputFF.getCondition()) ) {
-            if (!inputFF.verify(inputFF.getCondition(), message)){
+            if ( !inputFF.validate(inputFF.getCondition()) ){
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate");
             }
 
@@ -152,17 +148,17 @@ public class FulfillmentHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired");
             }
             if ( transfer.getTransferStatus() != TransferStatus.EXECUTED) { TM.executeILPTransfer(transfer, inputFF); }
-        } else if (transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
-            if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
-                throw ILPExceptionSupport.createILPBadRequestException("Already executed");
-            }
-            ffExisted = transfer.getCancellationFulfillment().equals(inputFF);
-            if (!ffExisted) {
-                if (!inputFF.verify(inputFF.getCondition(), message)){
-                    throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
-                }
-                TM.cancelILPTransfer(transfer, inputFF);
-            }
+//        } else if (transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
+//            if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
+//                throw ILPExceptionSupport.createILPBadRequestException("Already executed");
+//            }
+//            ffExisted = transfer.getCancellationFulfillment().equals(inputFF);
+//            if (!ffExisted) {
+//                if (!inputFF.verify(inputFF.getCondition(), message)){
+//                    throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
+//                }
+//                TM.cancelILPTransfer(transfer, inputFF);
+//            }
         } else {
             throw ILPExceptionSupport.
                 createILPUnprocessableEntityException(

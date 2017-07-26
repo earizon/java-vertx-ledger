@@ -1,9 +1,12 @@
 package com.everis.everledger.handlers;
 
 import java.net.URI;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.time.ZonedDateTime;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -17,9 +20,8 @@ import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 
-import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.uri.CryptoConditionUri;
-import org.interledger.cryptoconditions.uri.URIEncodingException;
+import org.interledger.Condition;
+//import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.interledger.ilp.InterledgerError.ErrorCode;
 import org.interledger.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
@@ -41,6 +43,7 @@ import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
 import com.everis.everledger.util.AuthManager;
+import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.TimeUtils;
 
@@ -179,14 +182,8 @@ public class TransferHandler extends RestEndpointHandler {
         String execution_condition = requestBody
                 .getString("execution_condition");
         Condition URIExecutionCond;
-        try {
-            URIExecutionCond = (execution_condition != null) ? CryptoConditionUri
-                    .parse(URI.create(execution_condition))
-                    : SimpleTransfer.CC_NOT_PROVIDED;
-        } catch (URIEncodingException e1) {
-            throw ILPExceptionSupport.createILPBadRequestException("execution_condition '"
-                    + execution_condition + "' could not be parsed as URI");
-        }
+        URIExecutionCond = (execution_condition != null) ? ConversionUtil.parseURI(URI.create(execution_condition))
+                : SimpleTransfer.CC_NOT_PROVIDED;
         Credit[] creditList = new Credit[credits.size()];
 
         double totalCreditAmmount = 0.0;
@@ -255,14 +252,8 @@ public class TransferHandler extends RestEndpointHandler {
         String cancelation_condition = requestBody
                 .getString("cancellation_condition");
         Condition URICancelationCond;
-        try {
-            URICancelationCond = (cancelation_condition != null) ? CryptoConditionUri
-                    .parse(URI.create(cancelation_condition))
-                    : SimpleTransfer.CC_NOT_PROVIDED;
-        } catch (URIEncodingException e1) {
-            throw ILPExceptionSupport.createILPBadRequestException("cancelation_condition '"
-                    + cancelation_condition + "' could not be parsed as URI");
-        }
+        URICancelationCond = (cancelation_condition != null) ? ConversionUtil.parseURI(URI.create(cancelation_condition))
+                : SimpleTransfer.CC_NOT_PROVIDED;
         TransferStatus status = TransferStatus.PROPOSED; // By default
 //        if (requestBody.getString("state") != null) {
 //            // TODO: Must status change be allowed or must we force it to be

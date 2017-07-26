@@ -2,7 +2,7 @@ package com.everis.everledger.ifaces.transfer;
 
 import java.time.ZonedDateTime;
 
-import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.Fulfillment;
 import org.interledger.ledger.model.TransferStatus;
 
 import com.everis.everledger.transfer.Credit;

@@ -1,6 +1,7 @@
 package com.everis.everledger.impl;
 
 import java.time.ZonedDateTime;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -9,11 +10,11 @@ import io.vertx.core.json.JsonObject;
 
 import org.interledger.InterledgerAddress;
 import org.interledger.InterledgerAddressBuilder;
-import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.Fulfillment;
+//import org.interledger.cryptoconditions.Condition;
+import org.interledger.Condition;
+import org.interledger.Fulfillment;
 //import org.interledger.cryptoconditions.der.CryptoConditionReader;
-import org.interledger.cryptoconditions.types.PreimageSha256Condition;
-import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
+//import org.interledger.cryptoconditions.types.PreimageSha256Fulfillment;
 //import org.interledger.everledger.ledger.transfer.ILPSpecTransferID;
 
 
@@ -37,10 +38,12 @@ import com.everis.everledger.util.TimeUtils;
 
 public class SimpleTransfer implements IfaceTransfer {
 
-    public static final Fulfillment FF_NOT_PROVIDED = new PreimageSha256Fulfillment(new byte[]{});
-    public static final Condition   CC_NOT_PROVIDED =  new PreimageSha256Condition(
-            new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}, 1000);
+    // TODO:(0) The array 1,2,3,... must be random
+    public static final Fulfillment FF_NOT_PROVIDED = new Fulfillment(
+        new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2});
     
+    public static final Condition CC_NOT_PROVIDED =  new Condition(
+            new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2});
     static  final SimpleAccountManager  ledgerAccountManager = 
             AccountManagerFactory.getLedgerAccountManagerSingleton();
     final LocalTransferID transferID;
@@ -168,10 +171,10 @@ public class SimpleTransfer implements IfaceTransfer {
         return executionCond;
     }
 
-    @Override
-    public Condition getCancellationCondition() {
-        return cancelationCond;
-    }
+//    @Override
+//    public Condition getCancellationCondition() {
+//        return cancelationCond;
+//    }
 
     public ZonedDateTime getExpiresAt() {
         return DTTM_expires;
@@ -304,9 +307,9 @@ public class SimpleTransfer implements IfaceTransfer {
         if (! this.getExecutionCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
             jo.put("execution_condition", this.getExecutionCondition().toString());
         }
-        if (! this.getCancellationCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
-            jo.put("cancellation_condition", this.getCancellationCondition().toString());
-        }
+//        if (! this.getCancellationCondition().equals(SimpleTransfer.CC_NOT_PROVIDED)) {
+//            jo.put("cancellation_condition", this.getCancellationCondition().toString());
+//        }
         jo.put("state", this.getTransferStatus().toString().toLowerCase());
 //        if (!this.getCancellationCondition().equals(Condition....NOT_PROVIDED)) {
 //            jo.put("cancellation_condition", this.getCancellationCondition());
@@ -396,5 +399,8 @@ public class SimpleTransfer implements IfaceTransfer {
         return result;
     }
     
-
+    @Override
+    public boolean isAuthorized() {
+        return true;
+    }
 }

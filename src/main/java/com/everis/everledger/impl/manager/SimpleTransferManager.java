@@ -13,8 +13,8 @@ import java.util.UUID;
 
 import javax.money.MonetaryAmount;
 
-import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.Condition;
+import org.interledger.Fulfillment;
 import org.interledger.ledger.model.TransferStatus;
 //import org.javamoney.moneta.Money;
 import org.slf4j.Logger;

@@ -2,10 +2,10 @@ package com.everis.everledger.ifaces.transfer;
 
 import java.util.UUID;
 
-import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.Fulfillment;
+import org.interledger.Condition;
+import org.interledger.Fulfillment;
 
-public  interface IfaceILPSpecTransferManager {
+public interface IfaceILPSpecTransferManager {
 
     java.util.List<IfaceTransfer> getTransfersByExecutionCondition(Condition condition);
 

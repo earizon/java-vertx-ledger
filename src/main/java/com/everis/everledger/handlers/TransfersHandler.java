@@ -1,6 +1,7 @@
 package com.everis.everledger.handlers;
 
 import java.net.URI;
+
 import java.util.List;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -9,9 +10,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
 
-import org.interledger.cryptoconditions.Condition;
-import org.interledger.cryptoconditions.uri.CryptoConditionUri;
-import org.interledger.cryptoconditions.uri.URIEncodingException;
+import org.interledger.Condition;
+// import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +22,7 @@ import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
 import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
 import com.everis.everledger.util.AuthManager;
+import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
 /**
@@ -68,11 +69,8 @@ public class TransfersHandler extends RestEndpointHandler {
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
         Condition executionCondition;
-        try {
-            executionCondition = CryptoConditionUri.parse(URI.create(sExecCond));
-        } catch (URIEncodingException e) {
-            throw ILPExceptionSupport.createILPBadRequestException("'"+ sExecCond + "' can't be parsed as URI");
-        }
+        executionCondition = ConversionUtil.parseURI(URI.create(sExecCond));
+
         List<IfaceTransfer> transferList = TM.getTransfersByExecutionCondition(executionCondition);
         
         JsonArray ja = new JsonArray();
