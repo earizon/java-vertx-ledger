@@ -7,7 +7,7 @@
 [CI-url]: https://travis-ci.org/everis-innolab/java-ilp-master
 
 ## About
-Java ledger implementing the Rest/Websocket expected by ilp-plugin-bells and the java interfaces defined @ https://github.com/interledger/java-ilp-core/ 
+Java ledger implementing the Rest/Websocket expected by ilp-plugin-bells and the java interfaces defined @ https://github.com/interledger/java-ilp-core/ . It uses an in-memory database, so all changes are lost after reboot.
 
 Read developers docs @ dev_docs for more info
 
@@ -64,63 +64,11 @@ The files $DOMAIN.key and $DOMAIN.cert will be created. Update 'server.tls_key' 
   at application.conf  accordingly.
 ```
 
-## iConfiguration
+## Configuration
 
  * application.conf is the main configuration file. app.conf can be used to overload and customize the setup.
 
  * Loggin can be configured at: (src/main/resources/)logback.xml
-
-### Configuration - detailed
-The configuration package (`org.interledger.ilp.common.config`) contains a [Config](blob/master/src/main/java/org/interledger/ilp/common/config/Config) *façade* to a [Configuration](blob/master/src/main/java/org/interledger/ilp/common/config/core/Configuration.java) [implementation](blob/master/src/main/java/org/interledger/ilp/common/config/core/DefaultConfigurationImpl.java).
-
-This Config object enforces the use of enums as keys as a better method than static constants. There is a central enumeration [`Key`](blob/master/src/main/java/org/interledger/ilp/common/config/Key) holding all keys needed as a common repository/namespace.
-
-The access to the values is hiearchical (key1.key2) eg:
-
-- connector.host
-- user.name  
-
-The format used in current implementation is [HOCON] that is very flexible json-like human friendly configuration format.
-
-The default configuration file (*application.conf*) is loaded from the classpath. 
-
-The [HOCON] format allows include more configurations from local files and urls too.
-
-### Sample configuration.cfg:
-
-```
-#Java properties like:
-key.subkey = A string value
-key.subkey2 = 100 //An int value. Comments allowed here!!
-
-//HOCON format:
-
-key {
-    subkey: A string value that overwrites previously defined key.subkey
-    subkey2= 123 //Notice the = sign! Also overwrites previously defined key.subkey2
-    more {
-        nesting: is cool :-)
-    }
-}
-
-```
-
-### Sample code:
-
-``` java
-    import org.interledger.ilp.common.config.Config;
-    import static org.interledger.ilp.common.config.Key.*;
-    
-    ...
-    Config config = Config.load(); //COC load application.conf from classpath
-    //Read a String:
-    String host = config.getString(CONNECTOR,HOST);
-    //Read an int:
-    int port = config.getInt(CONNECTOR,PORT);
-    //Read a boolean:
-    boolean https = config.getBoolean(CONNECTOR,USE_HTTPS);
-    
-```
 
 
 
