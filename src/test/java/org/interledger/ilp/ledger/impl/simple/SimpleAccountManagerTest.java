@@ -58,10 +58,10 @@ public class SimpleAccountManagerTest {
     @Test
     public void testAddAccounts() {
         System.out.println("addAccounts");
-        assertEquals(0, instance.getTotalAccounts());
+        assertEquals(1, instance.getTotalAccounts());
         instance.store(new SimpleAccount("alice"));
         instance.store(new SimpleAccount("bob"));
-        assertEquals(2, instance.getTotalAccounts());        
+        assertEquals(3, instance.getTotalAccounts());        
     }
 
     /**
@@ -70,9 +70,9 @@ public class SimpleAccountManagerTest {
     @Test
     public void testAddAccount() {
         System.out.println("addAccount");
-        assertEquals(0, instance.getTotalAccounts());
-        instance.store(new SimpleAccount("alice"));
         assertEquals(1, instance.getTotalAccounts());
+        instance.store(new SimpleAccount("alice"));
+        assertEquals(2, instance.getTotalAccounts());
     }
 
     /**
@@ -84,7 +84,7 @@ public class SimpleAccountManagerTest {
         IfaceAccount bob = new SimpleAccount("bob");
         instance.store(bob);
         instance.store(new SimpleAccount("alice"));
-        assertEquals(2, instance.getTotalAccounts());
+        assertEquals(2+1, instance.getTotalAccounts());
         IfaceLocalAccount result = instance.getAccountByName("bob");
         assertEquals(bob, result);
     }
@@ -98,10 +98,10 @@ public class SimpleAccountManagerTest {
         IfaceAccount bob = new SimpleAccount("bob");
         instance.store(bob);
         instance.store(new SimpleAccount("alice"));
-        assertEquals(2, instance.getTotalAccounts());
+        assertEquals(2+1, instance.getTotalAccounts());
         Collection<IfaceLocalAccount> result = instance.getAccounts(1, 1);
         System.out.println("result:" + result);
-        assertEquals(2, result.size());        
+        assertEquals(2+1, result.size());        
     }
 
 }
