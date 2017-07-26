@@ -46,7 +46,7 @@ public class Config {
                 "due to " + e.toString() +"\n");
                 }
     }
-    public static final int vertxBodyLimit = getInteger("vertx.request.bodyLimit");
+    public static final long vertxBodyLimit = getInteger("vertx.request.bodyLimit");
 
     public static final boolean unitTestsActive = getBoolean("developer.unitTestsActive");
     
@@ -233,6 +233,8 @@ public class Config {
         @Override public PublicKey getConditionSignPublicKey(){ return conditionSignPublicKey; }
 
         @Override public PublicKey getNotificationSignPublicKey(){ return notificationSignPublicKey; }
+
+        @Override public String getId() { return ""; }
     }
 
     /**
@@ -241,4 +243,6 @@ public class Config {
     public static void main(String[] args) {
         System.out.println(Config.debug);
     }
+
+    
 }
