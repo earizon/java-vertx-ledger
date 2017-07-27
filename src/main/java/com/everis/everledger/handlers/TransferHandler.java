@@ -1,44 +1,14 @@
 package com.everis.everledger.handlers;
 
-import java.net.URI;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.time.ZonedDateTime;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
-
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
-import javax.money.MonetaryAmount;
-
-import org.interledger.Condition;
-//import org.interledger.cryptoconditions.uri.CryptoConditionUri;
-import org.interledger.ilp.InterledgerError.ErrorCode;
-import org.interledger.ledger.model.TransferStatus;
-import org.javamoney.moneta.Money;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.Config;
-import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager;
-import com.everis.everledger.ifaces.transfer.IfaceLocalTransferManager;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
 import com.everis.everledger.impl.SimpleTransfer;
-import com.everis.everledger.impl.manager.SimpleTransferManager;
+import com.everis.everledger.impl.manager.SimpleTransferManagerModKt;
 import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
@@ -46,7 +16,29 @@ import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.TimeUtils;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
+import org.interledger.Condition;
+import org.interledger.ilp.InterledgerError.ErrorCode;
+import org.interledger.ledger.model.TransferStatus;
+import org.javamoney.moneta.Money;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.money.MonetaryAmount;
+import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+//import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 /**
  * TransferHandler handler
  *
@@ -61,7 +53,7 @@ public class TransferHandler extends RestEndpointHandler {
     private static final IfaceLocalAccountManager ledgerAccountManager = AccountManagerFactory
             .getLedgerAccountManagerSingleton();
 
-    private static final IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
+    private static final IfaceTransferManager TM = SimpleTransferManagerModKt.getSingleton();
 
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
 
@@ -320,8 +312,6 @@ public class TransferHandler extends RestEndpointHandler {
     protected void handleGet(RoutingContext context) {
         log.debug(this.getClass().getName() + "handleGet invoqued ");
         AuthInfo ai = AuthManager.authenticate(context);
-
-        IfaceLocalTransferManager TM = SimpleTransferManager.getTransferManager();
         UUID ilpTransferID = UUID.fromString(context.request().getParam(
                 transferUUID));
         IfaceTransfer transfer = TM.getTransferById(

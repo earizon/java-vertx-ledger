@@ -20,11 +20,11 @@ import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
 import com.everis.everledger.impl.SimpleTransfer;
-import com.everis.everledger.impl.manager.SimpleTransferManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
+import com.everis.everledger.impl.manager.SimpleTransferManagerModKt;
 /**
  * TransferHandler handler
  *
@@ -34,7 +34,8 @@ public class TransfersHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TransfersHandler.class);
     private final static String execCondition = "execCondition";
-    // GET /transfers/byExecutionCondition/cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7 
+    IfaceTransferManager TM = SimpleTransferManagerModKt.getSingleton();
+    // GET /transfers/byExecutionCondition/cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7
 
     public TransfersHandler() {
         // REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
@@ -65,7 +66,6 @@ public class TransfersHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
         boolean transferMatchUser = false;
         
-        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         String sExecCond = context.request().getParam(execCondition);
         Condition executionCondition;

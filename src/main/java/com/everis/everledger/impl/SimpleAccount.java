@@ -79,7 +79,7 @@ public class SimpleAccount implements IfaceAccount {
 
     @Override
     public SimpleAccount setBalance(MonetaryAmount balance) {
-        Objects.nonNull(balance);
+        Objects.requireNonNull(balance);
         this.balance = balance;
         return this;
     }
