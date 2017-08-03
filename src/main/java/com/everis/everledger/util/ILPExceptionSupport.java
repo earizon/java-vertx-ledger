@@ -1,18 +1,21 @@
 package com.everis.everledger.util;
 
 import org.interledger.InterledgerAddress;
-import org.interledger.InterledgerAddressBuilder;
 import org.interledger.ilp.InterledgerError;
 import org.interledger.ilp.InterledgerError.ErrorCode;
 
 import com.everis.everledger.Config;
 import com.everis.everledger.HTTPInterledgerException;
 
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 // TODO:(?) Move "somewhere else". This util has dependencies in config. Ummmm,...
 public class ILPExceptionSupport {
-    private static InterledgerAddress triggeredBy = InterledgerAddressBuilder
-            .builder().value(Config.ilpPrefix).build();
+    private static InterledgerAddress selfAddress  = InterledgerAddress.builder().value(Config.ilpPrefix).build();
 
+    private static List<InterledgerAddress> forwardedByEmpty = new ArrayList<InterledgerAddress>();
     /**
      * Well known ILP Errors as defined in the RFCs
      * @param errCode
@@ -20,11 +23,9 @@ public class ILPExceptionSupport {
      */
     public static HTTPInterledgerException createILPException(int httpErrCode, ErrorCode errCode , String data){
         return new HTTPInterledgerException(httpErrCode, 
-                new InterledgerError(errCode, triggeredBy, data));
-        
+                new InterledgerError(errCode, /* triggeredBy */ selfAddress, ZonedDateTime.now(), forwardedByEmpty, /*self Address*/ selfAddress, data));
     }
 
-    
     // Next follow some wrappers arount createILPException, more human-readable.
     // ----------- Internal --------------
     public static HTTPInterledgerException createILPInternalException(String data) {

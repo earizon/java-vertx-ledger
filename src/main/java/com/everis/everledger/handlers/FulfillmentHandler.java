@@ -37,7 +37,8 @@ import com.everis.everledger.util.ILPExceptionSupport;
 public class FulfillmentHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(FulfillmentHandler.class);
-    private final static String transferUUID= "transferUUID";
+    private static final String transferUUID= "transferUUID";
+    private static final IfaceTransferManager TM = SimpleTransferManager.INSTANCE;
 
 	/*
 	 *  GET|PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
@@ -85,7 +86,6 @@ public class FulfillmentHandler extends RestEndpointHandler {
         UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
         
-        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 //        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
 //        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
 
@@ -130,7 +130,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
 //        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
 //        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
         
-        Fulfillment inputFF = new Fulfillment(fulfillmentBytes);
+        Fulfillment inputFF = Fulfillment.of(fulfillmentBytes);
 
         byte[] message = new byte[]{};
         boolean ffExisted = false;
@@ -185,8 +185,6 @@ public class FulfillmentHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context);
         
         boolean transferMatchUser = false;
-
-        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
 
         UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
         LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);

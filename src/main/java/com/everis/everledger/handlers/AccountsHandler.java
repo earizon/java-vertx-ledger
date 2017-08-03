@@ -12,14 +12,15 @@ import org.slf4j.LoggerFactory;
 import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.Config;
-import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceAccount;
-import com.everis.everledger.impl.SimpleAccount;
 import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.JsonObjectBuilder;
 import com.everis.everledger.util.ConversionUtil;
+import org.javamoney.moneta.Money;
+
+import com.everis.everledger.impl.SimpleAccount;
 
 /**
  * Single Account handler
@@ -92,22 +93,23 @@ public class AccountsHandler extends RestEndpointHandler {
         sMinAllowVal = sMinAllowVal.toLowerCase().replace("infinity", "1000000000000000"); // TODO:(0) Arbitrary value. Use Config...
         Number minAllowedBalance = ConversionUtil.toNumber(sMinAllowVal);
 
-        if (!exists) {
-            accountManager.store(new SimpleAccount(accountName));
-            AuthManager.setUser(accountName, password, "user"/*roll*/ /* TODO:(1) allow user|admin|...*/);
-        }
-        
-        IfaceAccount account = accountManager.getAccountByName(accountName);
-        if(data.containsKey(PARAM_BALANCE)) {
-            Number balance = ConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
-            account.setBalance(balance);
-            log.debug("Put account {} balance: {}{}", accountName, balance, Config.ledgerCurrencyCode);
-        }
-        account.setMinimumAllowedBalance(minAllowedBalance);
+        Number balance = (data.containsKey(PARAM_BALANCE))
+            ? ConversionUtil.toNumber(data.getValue(PARAM_BALANCE))
+            : ConversionUtil.toNumber(data.getValue(PARAM_BALANCE));
+
+        IfaceAccount account = new SimpleAccount(
+                accountName,
+                Money.of( balance, Config.ledgerCurrencyCode),
+                Money.of( minAllowedBalance, Config.ledgerCurrencyCode),
+                false
+        );
+
+        accountManager.store(account, true /*update if already exists*/);
+        AuthManager.setUser(accountName, password, "user"/*roll*/ /* TODO:(1) allow user|admin|...*/);
+
         // if(data.containsKey(PARAM_DISABLED)) {
         //     ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         // }
-        accountManager.store(account);
         response(context, exists ? HttpResponseStatus.OK : HttpResponseStatus.CREATED,
                 JsonObjectBuilder.create().from(account));
     }
@@ -133,12 +135,12 @@ public class AccountsHandler extends RestEndpointHandler {
                 .put("id", account.getId())
                 .put("name", account.getLocalID())
                 .put("ledger", ledger);
-        if (isAuthenticated){ 
+        if (isAuthenticated){
             build
                 .put("balance", account.getBalanceAsString())
                 // .put("connector", "??????" /* TODO:(?) Recheck */)
                 .put("is_disabled", account.isDisabled())
-                .put("minimum_allowed_balance", account.getMinimumAllowedBalance().getNumber().toString());
+                .put("minimum_allowed_balance", account.getILPMinimumAllowedBalance().getNumber().toString());
         }
 
         return build.get();

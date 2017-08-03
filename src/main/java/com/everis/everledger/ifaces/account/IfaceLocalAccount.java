@@ -20,30 +20,14 @@ public interface IfaceLocalAccount {
      * and internal or mapped database id, ...
      * @return
      */
-    public String getLocalID();
+    String getLocalID();
 
-    IfaceLocalAccount setMinimumAllowedBalance(Number balance);
-
-    IfaceLocalAccount setMinimumAllowedBalance(MonetaryAmount balance);
-
-    IfaceLocalAccount setBalance(Number balance);
-
-    IfaceLocalAccount setBalance(MonetaryAmount balance);
-
-    @JsonIgnore
     MonetaryAmount getLocalBalance();
 
-    @JsonProperty("balance")
     String getBalanceAsString();
-
-
-    String getConnector();
-
-    IfaceLocalAccount credit(Number amount);
 
     IfaceLocalAccount credit(MonetaryAmount amount);
 
-    IfaceLocalAccount debit(Number amount);
-
     IfaceLocalAccount debit(MonetaryAmount amount);
+
 }

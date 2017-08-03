@@ -18,7 +18,7 @@ import com.everis.everledger.impl.manager.SimpleTransferManager;
 public class DeveloperTestingRequestHandler extends RestEndpointHandler {
     private static final Logger log = LoggerFactory.getLogger(DeveloperTestingRequestHandler.class);
     
-    private SimpleTransferManager TM = (SimpleTransferManager)SimpleTransferManager.getTransferManager();
+    private SimpleTransferManager TM = (SimpleTransferManager)SimpleTransferManager.INSTANCE;
 
     public static DeveloperTestingRequestHandler create() {
         return new DeveloperTestingRequestHandler(); // TODO: return singleton?

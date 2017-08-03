@@ -65,7 +65,7 @@ public class ConversionUtil {
       }
 
       byte[] fingerprint = Base64.getUrlDecoder().decode(m.group(2));
-      return new Condition(fingerprint);
+      return Condition.builder().hash(fingerprint).build();
     }
 
 }

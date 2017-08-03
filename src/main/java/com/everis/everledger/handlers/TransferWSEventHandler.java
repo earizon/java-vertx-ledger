@@ -15,13 +15,12 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import org.interledger.InterledgerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
-import com.everis.everledger.handlers.RestEndpointHandler;
+// import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceAccount;
 import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
@@ -45,7 +44,7 @@ import com.everis.everledger.util.AuthManager;
 public class TransferWSEventHandler extends RestEndpointHandler/* implements ProtectedResource */ {
     // TODO:(0) Protect listeners access. Can be accesed from different threads
     //      simultaneously.
-    public static HashMap<ServerWebSocket,
+    private static HashMap<ServerWebSocket,
             HashMap<String /*account*/, Set<EventType> > > listeners = 
               new HashMap<ServerWebSocket, HashMap<String /*account*/, Set<EventType> > >();
 
@@ -165,7 +164,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
                     }
                     try {
                         AM.getAccountByName(account);
-                    }catch(InterledgerException e){
+                    }catch(Exception e){
                         writeJsonRPCError(sws, id, 40002, "Invalid account: "+account);
                         return;
                     }

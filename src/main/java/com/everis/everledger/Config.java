@@ -15,7 +15,6 @@ import javax.money.Monetary;
 import javax.money.format.MonetaryAmountFormat;
 
 import org.interledger.InterledgerAddress;
-import org.interledger.InterledgerAddressBuilder;
 import org.interledger.ledger.model.LedgerInfo;
 import org.interledger.ledger.money.format.LedgerSpecificDecimalMonetaryAmountFormat;
 import org.slf4j.Logger;
@@ -77,7 +76,7 @@ public class Config {
     private static final String sNoticificationSignPublicKey  = getString("ledger.ed25519.notificationSignPublicKey" );
 
     public static LedgerInfo ilpLedgerInfo = new Config.SimpleLedgerInfo(
-            InterledgerAddressBuilder.builder().value(ilpPrefix).build(),
+            InterledgerAddress.builder().value(ilpPrefix).build(),
             ledgerPrecision,
             ledgerScale,
             Monetary.getCurrency(ledgerCurrencyCode),

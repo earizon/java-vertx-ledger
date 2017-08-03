@@ -7,8 +7,6 @@ import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
-import com.everis.everledger.impl.SimpleTransfer;
-import com.everis.everledger.impl.manager.SimpleTransferManagerModKt;
 import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LocalTransferID;
@@ -38,6 +36,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.everis.everledger.impl.SimpleTransfer;
+import com.everis.everledger.impl.manager.SimpleTransferManager;
 //import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 /**
  * TransferHandler handler
@@ -53,7 +53,7 @@ public class TransferHandler extends RestEndpointHandler {
     private static final IfaceLocalAccountManager ledgerAccountManager = AccountManagerFactory
             .getLedgerAccountManagerSingleton();
 
-    private static final IfaceTransferManager TM = SimpleTransferManagerModKt.getSingleton();
+    private static final IfaceTransferManager TM = SimpleTransferManager.INSTANCE;
 
     // GET|PUT /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
 

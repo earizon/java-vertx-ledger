@@ -10,12 +10,7 @@ import com.everis.everledger.impl.manager.SimpleAccountManager;
  */
 public class AccountManagerFactory {
     // TODO:(?) Simplificar / eliminar esta clase??
-    private static final SimpleAccountManager instance;
-    static {
-        instance = new SimpleAccountManager();
-        // Create HOLD account required by ILP Protocol.
-        instance.store(instance.getHOLDAccountILP());
-    }
+    private static final SimpleAccountManager instance = new SimpleAccountManager();
 
     public static SimpleAccountManager getLedgerAccountManagerSingleton() {
         return instance;

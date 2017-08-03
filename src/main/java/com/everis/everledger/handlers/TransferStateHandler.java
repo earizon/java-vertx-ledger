@@ -82,7 +82,7 @@ public class TransferStateHandler extends RestEndpointHandler {
 
         String transferId = context.request().getParam(transferUUID);
         LocalTransferID transferID = new LocalTransferID(transferId);
-        IfaceTransferManager TM = SimpleTransferManager.getTransferManager();
+        IfaceTransferManager TM = SimpleTransferManager.INSTANCE;
         TransferStatus status = TransferStatus.PROPOSED; // default value
         boolean transferMatchUser = false;
         if (!TM.doesTransferExists(transferID))

@@ -7,16 +7,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.interledger.InterledgerException;
+import org.interledger.ilp.InterledgerError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.javamoney.moneta.Money;
+
+
+import com.everis.everledger.Config;
+import com.everis.everledger.impl.SimpleAccount;
 
 import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.ifaces.account.IfaceAccount;
 import com.everis.everledger.ifaces.account.IfaceAccountManager;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
-import com.everis.everledger.impl.SimpleAccount;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
 
@@ -31,7 +35,6 @@ public class SimpleAccountManager implements IfaceAccountManager {
     
     private void resetAccounts() {
         accountMap  = new TreeMap<String, IfaceAccount>();
-        store(getHOLDAccountILP());
     }
 
     public static void developerTestingReset(){
@@ -48,18 +51,22 @@ public class SimpleAccountManager implements IfaceAccountManager {
         final Map<AuthInfo, Integer /*blance*/> devUsers = AuthManager.configureDevelopmentEnvironment();
         Set<AuthInfo> users = devUsers.keySet();
         for (AuthInfo ai : users) {
-            SimpleAccount account = new SimpleAccount(ai.getId());
-            account.setBalance(devUsers.get(ai).intValue());
-            account.setMinimumAllowedBalance(0);
-            ledgerAccountManager.store(account);
+            SimpleAccount account = new SimpleAccount(ai.getId(),
+                    Money.of(0, Config.ledgerCurrencyCode), // TODO:(Kotlin) once kotlinified remove defaults
+                    Money.of(0, Config.ledgerCurrencyCode),
+                    false);
+            ledgerAccountManager.store(account, false);
         }
     }
 
     @Override
     public IfaceAccount getHOLDAccountILP() {
         if (accountMap.containsKey(ILP_HOLD_ACCOUNT)) { return accountMap.get(ILP_HOLD_ACCOUNT); }
-        SimpleAccount ilpHold = new SimpleAccount(ILP_HOLD_ACCOUNT);
-        store(ilpHold);
+        SimpleAccount ilpHold = new SimpleAccount(ILP_HOLD_ACCOUNT,
+                    Money.of(0, Config.ledgerCurrencyCode), // TODO:(Kotlin) once kotlinified remove defaults
+                    Money.of(0, Config.ledgerCurrencyCode),
+                    false);
+        store(ilpHold, false);
         return ilpHold;
     }
     // } end IfaceILPSpecAccountManager implementation
@@ -70,7 +77,10 @@ public class SimpleAccountManager implements IfaceAccountManager {
     }
 
     @Override
-    public void store(IfaceAccount account) {
+    public void store(IfaceAccount account, boolean update) {
+        if (update == false && hasAccount(account.getName())) {
+            throw ILPExceptionSupport.createILPForbiddenException("account already exists");
+        }
         accountMap.put(account.getName(), account);
     }
 
@@ -80,7 +90,7 @@ public class SimpleAccountManager implements IfaceAccountManager {
     }
 
     @Override
-    public IfaceAccount getAccountByName(String name) throws InterledgerException {
+    public IfaceAccount getAccountByName(String name) {
         if (!hasAccount(name)) {
             log.warn("'"+ name + "' account not found");
             throw ILPExceptionSupport.createILPNotFoundException();

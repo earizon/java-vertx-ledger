@@ -1,7 +1,7 @@
 package com.everis.everledger;
 
+import org.interledger.InterledgerProtocolException;
 import org.interledger.ilp.InterledgerError;
-import org.interledger.InterledgerException;
 
 /*
  * Wrapper around InterledgerException to allow adding HTTP expected Error Codes
@@ -10,7 +10,7 @@ import org.interledger.InterledgerException;
  * any transport channel (HTTP, WebSockets, gRPC, ...,...).
  */
 // TODO:(core) Port to java-ilp-core?
-public class HTTPInterledgerException extends InterledgerException {
+public class HTTPInterledgerException extends InterledgerProtocolException {
 
     private static final long serialVersionUID = 1L;
     private final int httpErrCode;

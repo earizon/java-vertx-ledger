@@ -25,5 +25,6 @@ public interface IfaceLocalAccountManager {
 
     Collection<IfaceLocalAccount> getAccounts(int page, int pageSize);
 
-    void store(IfaceAccount account);
+    // If update == false and account already registered => throw exception
+    void store(IfaceAccount account, boolean update);
 }

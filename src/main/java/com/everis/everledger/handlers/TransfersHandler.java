@@ -19,12 +19,12 @@ import com.everis.everledger.AuthInfo;
 import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
-import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
-import com.everis.everledger.impl.manager.SimpleTransferManagerModKt;
+import com.everis.everledger.impl.SimpleTransfer;
+import com.everis.everledger.impl.manager.SimpleTransferManager;
 /**
  * TransferHandler handler
  *
@@ -34,7 +34,7 @@ public class TransfersHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TransfersHandler.class);
     private final static String execCondition = "execCondition";
-    IfaceTransferManager TM = SimpleTransferManagerModKt.getSingleton();
+    IfaceTransferManager TM = SimpleTransferManager.INSTANCE;
     // GET /transfers/byExecutionCondition/cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7
 
     public TransfersHandler() {

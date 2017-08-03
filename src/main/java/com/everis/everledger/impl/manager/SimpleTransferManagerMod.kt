@@ -46,7 +46,6 @@ import com.everis.everledger.util.ILPExceptionSupport
  *    - ...
  */
 
-public val singleton       = SimpleTransferManager()
 private val log             = LoggerFactory.getLogger(SimpleTransferManager::class.java)
 private val accountManager  = AccountManagerFactory.getLedgerAccountManagerSingleton()
 private val HOLDS_URI       = accountManager.holdAccountILP
@@ -82,8 +81,7 @@ private fun notifyUpdate(transfer : IfaceTransfer, fulfillment : Fulfillment, is
 }
 
 
-class SimpleTransferManager // Make default constructor internal to avoid instantiating new classes.
-internal constructor() : IfaceTransferManager {
+object SimpleTransferManager : IfaceTransferManager {
     private val log          = LoggerFactory.getLogger(SimpleTransferManager::class.java)
     private val transferMap  = HashMap<LocalTransferID, IfaceTransfer>() // In-memory database of pending/executed/cancelled transfers
 

@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.interledger.InterledgerAddress;
-import org.interledger.InterledgerAddressBuilder;
 //import org.interledger.cryptoconditions.Condition;
 import org.interledger.Condition;
 import org.interledger.Fulfillment;
@@ -39,11 +38,11 @@ import com.everis.everledger.util.TimeUtils;
 public class SimpleTransfer implements IfaceTransfer {
 
     // TODO:(0) The array 1,2,3,... must be random
-    public static final Fulfillment FF_NOT_PROVIDED = new Fulfillment(
-        new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2});
+    public static final Fulfillment FF_NOT_PROVIDED = Fulfillment.builder().preimage(
+        new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}).build();
     
-    public static final Condition CC_NOT_PROVIDED =  new Condition(
-            new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2});
+    public static final Condition CC_NOT_PROVIDED =  Condition.builder().hash(
+            new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}).build();
     static  final SimpleAccountManager  ledgerAccountManager = 
             AccountManagerFactory.getLedgerAccountManagerSingleton();
     final LocalTransferID transferID;
@@ -120,14 +119,14 @@ public class SimpleTransfer implements IfaceTransfer {
     @Override
     public InterledgerAddress getFromAccount() {
         final InterledgerAddress result = new 
-                InterledgerAddressBuilder().value("TODO(0)").build();
+                InterledgerAddress.Builder().value("TODO(0)").build();
         return result;
     }
 
     @Override
     public InterledgerAddress getToAccount() {
         final InterledgerAddress result = new 
-                InterledgerAddressBuilder().value("TODO(0)").build();
+                InterledgerAddress.Builder().value("TODO(0)").build();
         return result;
     }
 
