@@ -22,13 +22,14 @@ import com.everis.everledger.Config;
 import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
-import com.everis.everledger.impl.SimpleTransfer;
-import com.everis.everledger.impl.manager.SimpleTransferManager;
 import com.everis.everledger.transfer.LocalTransferID;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
 
+import com.everis.everledger.impl.SimpleTransfer;
+import com.everis.everledger.impl.TransferKt;
+import com.everis.everledger.impl.manager.SimpleTransferManager;
 /**
  * Fulfillment handler
  * 
@@ -113,7 +114,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     conditions (which append a prefix to this empty message)
          **/
         IfaceTransfer transfer = TM.getTransferById(transferID);
-        if ( transfer.getExecutionCondition() == SimpleTransfer.CC_NOT_PROVIDED) {
+        if ( transfer.getExecutionCondition() == TransferKt.getCC_NOT_PROVIDED()) {
             throw ILPExceptionSupport.createILPUnprocessableEntityException(
                     this.getClass().getName() + "Transfer is not conditional");
         }
@@ -199,7 +200,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
         }
 
         Fulfillment fulfillment=  transfer.getExecutionFulfillment();
-        if ( fulfillment == SimpleTransfer.FF_NOT_PROVIDED) {
+        if ( fulfillment == TransferKt.getFF_NOT_PROVIDED()) {
             if (transfer.getExpiresAt().compareTo(ZonedDateTime.now())<0) {
                 throw ILPExceptionSupport.createILPNotFoundException("This transfer expired before it was fulfilled");
             }

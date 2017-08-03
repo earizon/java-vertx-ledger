@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.everis.everledger.impl.SimpleTransfer;
+import com.everis.everledger.impl.TransferKt;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
 import com.everis.everledger.impl.manager.SimpleAccountManager;
 //import org.interledger.cryptoconditions.uri.CryptoConditionUri;
@@ -173,7 +174,7 @@ public class TransferHandler extends RestEndpointHandler {
                 .getString("execution_condition");
         Condition URIExecutionCond;
         URIExecutionCond = (execution_condition != null) ? ConversionUtil.parseURI(URI.create(execution_condition))
-                : SimpleTransfer.CC_NOT_PROVIDED;
+                : TransferKt.getCC_NOT_PROVIDED();
         Credit[] creditList = new Credit[credits.size()];
 
         double totalCreditAmmount = 0.0;
@@ -237,12 +238,13 @@ public class TransferHandler extends RestEndpointHandler {
         String data = ""; // Not yet used
         String noteToSelf = ""; // Not yet used
         ZonedDateTime DTTM_proposed = ZonedDateTime.now();
+        ZonedDateTime DTTM_prepared = ZonedDateTime.now();
 
         String cancelation_condition = requestBody
                 .getString("cancellation_condition");
         Condition URICancelationCond;
         URICancelationCond = (cancelation_condition != null) ? ConversionUtil.parseURI(URI.create(cancelation_condition))
-                : SimpleTransfer.CC_NOT_PROVIDED;
+                : TransferKt.getCC_NOT_PROVIDED();
         TransferStatus status = TransferStatus.PROPOSED; // By default
 //        if (requestBody.getString("state") != null) {
 //            // TODO: Must status change be allowed or must we force it to be
@@ -254,9 +256,23 @@ public class TransferHandler extends RestEndpointHandler {
 //            log.debug("transfer status " + status);
 //        }
         
-        IfaceTransfer receivedTransfer = new SimpleTransfer(transferID,
-                debitList, creditList, URIExecutionCond, URICancelationCond,
-                DTTM_expires, DTTM_proposed, data, noteToSelf, status, sMemo);
+
+        IfaceTransfer receivedTransfer = new SimpleTransfer(
+              transferID,
+              debitList, creditList,
+              URIExecutionCond, URICancelationCond,
+              DTTM_proposed,
+              DTTM_prepared,
+              DTTM_expires, // = (sExpiresAt==null) ? TimeUtils.future : ZonedDateTime.parse(sExpiresAt);
+              TimeUtils.future,
+              TimeUtils.future,
+              data,
+              noteToSelf,
+              status,
+              sMemo,
+              TransferKt.getFF_NOT_PROVIDED(),
+              TransferKt.getFF_NOT_PROVIDED()
+        );
 
         // TODO:(0) Next logic must be on the Manager, not in the HTTP-protocol related handler
         boolean isNewTransfer = !TM.doesTransferExists(ilpTransferID);

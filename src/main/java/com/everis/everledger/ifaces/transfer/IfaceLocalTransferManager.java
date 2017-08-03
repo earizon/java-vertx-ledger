@@ -6,7 +6,7 @@ public interface IfaceLocalTransferManager {
 
     IfaceTransfer getTransferById(LocalTransferID transferId);
 
-    void executeLocalTransfer(IfaceTransfer transfer);
+    IfaceTransfer executeLocalTransfer(IfaceTransfer transfer); // TODO:(0) Check returned IfaceTransfer
     
     boolean doesTransferExists(LocalTransferID transferId);
 

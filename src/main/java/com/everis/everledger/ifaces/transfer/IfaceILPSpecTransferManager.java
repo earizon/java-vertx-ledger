@@ -11,9 +11,9 @@ public interface IfaceILPSpecTransferManager {
 
     void createNewRemoteILPTransfer(IfaceTransfer newTransfer);
 
-    void executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
+    IfaceTransfer executeILPTransfer(IfaceTransfer transfer, Fulfillment executionFulfillment);
 
-    void cancelILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
+    IfaceTransfer cancelILPTransfer(IfaceTransfer transfer, Fulfillment cancellationFulfillment);
     
     boolean doesTransferExists(UUID transferId);
 

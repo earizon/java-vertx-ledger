@@ -31,6 +31,7 @@ import com.everis.everledger.util.ConversionUtil
 import com.everis.everledger.util.ILPExceptionSupport
 
 import com.everis.everledger.impl.SimpleTransfer
+import com.everis.everledger.impl.CC_NOT_PROVIDED
 import com.everis.everledger.impl.manager.SimpleAccountManager
 /**
  * Simple in-memory {@code SimpleLedgerTransferManager}.
@@ -105,7 +106,7 @@ object SimpleTransferManager : IfaceTransferManager {
         return result
     }
 
-    override fun executeLocalTransfer(transfer : IfaceTransfer ) {
+    override fun executeLocalTransfer(transfer : IfaceTransfer ) : IfaceTransfer {
         // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
         val debit_list : Array<Debit> = transfer.getDebits()
         val debit0 = debit_list[0]
@@ -123,10 +124,12 @@ object SimpleTransferManager : IfaceTransferManager {
         for (credit in transfer.credits) {
             __executeLocalTransfer(sender, credit.account, credit.amount)
         }
-        transfer.transferStatus = TransferStatus.PREPARED
-        transfer.transferStatus = TransferStatus.EXECUTED
-        transfer.dttM_prepared = ZonedDateTime.now()
-        transfer.dttM_executed = ZonedDateTime.now()
+
+        return (transfer as SimpleTransfer).copy(
+                    int_transferStatus=TransferStatus.EXECUTED,
+                    int_DTTM_prepared=ZonedDateTime.now(),
+                    int_DTTM_executed=ZonedDateTime.now()
+                    )
     }
 
     override fun doesTransferExists(transferId : LocalTransferID) :Boolean {
@@ -162,7 +165,7 @@ object SimpleTransferManager : IfaceTransferManager {
                 newTransfer.getTransferID().transferID+", status: "+newTransfer.getTransferStatus().toString())
 
         transferMap.put(newTransfer.getTransferID(), newTransfer)
-        if (newTransfer.executionCondition == SimpleTransfer.CC_NOT_PROVIDED) {
+        if (newTransfer.executionCondition == CC_NOT_PROVIDED) {
             // local transfer with no execution condition => execute and "forget"
             log.debug("createNewRemoteILPTransfer execute locally and forget")
             executeLocalTransfer(newTransfer)
@@ -178,31 +181,35 @@ object SimpleTransferManager : IfaceTransferManager {
     }
 
 
-    private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) {
+    private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) : IfaceTransfer {
         if (isExecution /* => DisburseFunds */) {
             for (credit in transfer.getCredits()) {
-                __executeLocalTransfer(HOLDS_URI, credit.account, credit.amount)
+                __executeLocalTransfer(sender = HOLDS_URI, recipient = credit.account, amount = credit.amount)
             }
-            transfer.setTransferStatus(TransferStatus.EXECUTED)
-            transfer.setDTTM_executed(ZonedDateTime.now())
-            transfer.setExecutionFulfillment(FF)
+            return (transfer as SimpleTransfer).copy(
+                    int_transferStatus=TransferStatus.EXECUTED,
+                    int_DTTM_executed=ZonedDateTime.now(),
+                    executionFF=FF )
         } else /* => Cancellation/Rollback  */ {
             for (debit in transfer.getDebits()) {
-                __executeLocalTransfer(HOLDS_URI, debit.account, debit.amount)
+                __executeLocalTransfer(sender = HOLDS_URI, recipient = debit.account, amount = debit.amount)
             }
-            transfer.setTransferStatus(TransferStatus.REJECTED)
-            transfer.setDTTM_rejected(ZonedDateTime.now())
-            transfer.setCancelationFulfillment(FF)
+            return (transfer as SimpleTransfer).copy(
+                    int_transferStatus=TransferStatus.REJECTED,
+                    int_DTTM_executed=ZonedDateTime.now(),
+                    executionFF=FF )
         }
         notifyUpdate(transfer = transfer, fulfillment = FF, isExecution = isExecution)
     }
 
-    override fun executeILPTransfer(transfer : IfaceTransfer, executionFulfillment : Fulfillment) {
-        executeOrCancelILPTransfer(transfer, executionFulfillment, true)
+    // TODO:(0) Update returned instance in ddbb if needed
+    override fun executeILPTransfer(transfer : IfaceTransfer,    executionFulfillment : Fulfillment ) : IfaceTransfer {
+        return executeOrCancelILPTransfer(transfer, executionFulfillment, true)
     }
 
-    override fun cancelILPTransfer(transfer : IfaceTransfer , cancellationFulfillment : Fulfillment ) {
-        executeOrCancelILPTransfer(transfer, cancellationFulfillment, false)
+    // TODO:(0) Update returned instance in ddbb if needed
+    override fun cancelILPTransfer (transfer : IfaceTransfer, cancellationFulfillment : Fulfillment ) : IfaceTransfer {
+        return executeOrCancelILPTransfer(transfer, cancellationFulfillment, false)
     }
 
     override fun doesTransferExists(transferId : UUID ) : Boolean  {
