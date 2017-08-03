@@ -12,14 +12,14 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.Config;
-import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceAccount;
-import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
+
+
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * TransferHandler handler
@@ -31,7 +31,7 @@ public class MessageHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
 
-    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
+    private final SimpleAccountManager AM = SimpleAccountManager.INSTANCE;
 
     public MessageHandler() {
         super(new HttpMethod[] {HttpMethod.POST},
@@ -53,7 +53,7 @@ public class MessageHandler extends RestEndpointHandler {
         
         AuthInfo ai = AuthManager.authenticate(context);
         JsonObject jsonMessageReceived = getBodyAsJson(context); // TODO:(?) Mark as Tainted object
-        IfaceAccount fromAccount = accountManager.getAccountByName(jsonMessageReceived.getString("from"));
+        IfaceAccount fromAccount = AM.getAccountByName(jsonMessageReceived.getString("from"));
 
         log.debug("handlePost context.getBodyAsString():\n   "+context.getBodyAsString());
 
@@ -111,7 +111,7 @@ public class MessageHandler extends RestEndpointHandler {
             jsonMessageReceived.put("to",jsonMessageReceived.getString("account"));
             jsonMessageReceived.put("from", Config.publicURL + "accounts/" + ai.getId());
         }
-        IfaceAccount recipient = accountManager.getAccountByName(jsonMessageReceived.getString("to"));
+        IfaceAccount recipient = AM.getAccountByName(jsonMessageReceived.getString("to"));
         boolean transferMatchUser = ai.getId().equals(fromAccount.getLocalID()) || ai.getId().equals(recipient.getLocalID());
         if (!ai.isAdmin() && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();

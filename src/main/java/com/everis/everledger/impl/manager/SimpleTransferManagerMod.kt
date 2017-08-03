@@ -20,18 +20,18 @@ import org.interledger.ledger.model.TransferStatus
 // import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.everis.everledger.AccountManagerFactory
 import com.everis.everledger.handlers.TransferWSEventHandler
 import com.everis.everledger.ifaces.account.IfaceLocalAccount
 import com.everis.everledger.ifaces.transfer.IfaceTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager
-import com.everis.everledger.impl.SimpleTransfer
-// import com.everis.everledger.transfer.Credit
+
 import com.everis.everledger.transfer.Debit
 import com.everis.everledger.transfer.LocalTransferID
 import com.everis.everledger.util.ConversionUtil
 import com.everis.everledger.util.ILPExceptionSupport
 
+import com.everis.everledger.impl.SimpleTransfer
+import com.everis.everledger.impl.manager.SimpleAccountManager
 /**
  * Simple in-memory {@code SimpleLedgerTransferManager}.
  *
@@ -47,7 +47,7 @@ import com.everis.everledger.util.ILPExceptionSupport
  */
 
 private val log             = LoggerFactory.getLogger(SimpleTransferManager::class.java)
-private val accountManager  = AccountManagerFactory.getLedgerAccountManagerSingleton()
+private val accountManager  = SimpleAccountManager
 private val HOLDS_URI       = accountManager.holdAccountILP
 
 // fun getTransferManager() : IfaceTransferManager {

@@ -1,6 +1,5 @@
 package com.everis.everledger.handlers;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.Config;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
@@ -38,6 +37,7 @@ import java.util.UUID;
 
 import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 //import org.interledger.cryptoconditions.uri.CryptoConditionUri;
 /**
  * TransferHandler handler
@@ -50,8 +50,7 @@ public class TransferHandler extends RestEndpointHandler {
             .getLogger(TransferHandler.class);
     private final static String transferUUID = "transferUUID";
 
-    private static final IfaceLocalAccountManager ledgerAccountManager = AccountManagerFactory
-            .getLedgerAccountManagerSingleton();
+    private static final IfaceLocalAccountManager AM = SimpleAccountManager.INSTANCE;
 
     private static final IfaceTransferManager TM = SimpleTransferManager.INSTANCE;
 
@@ -148,8 +147,7 @@ public class TransferHandler extends RestEndpointHandler {
             if (debit_ammount.getNumber().floatValue() == 0.0) {
                 throw ILPExceptionSupport.createILPException(422, ErrorCode.F00_BAD_REQUEST , "debit is zero"); 
             }
-            IfaceLocalAccount debitor = ledgerAccountManager
-                    .getAccountByName(account_name);
+            IfaceLocalAccount debitor = AM.getAccountByName(account_name);
             log.debug("check123 debit_ammount (must match jsonDebit ammount: "
                     + debit_ammount.toString());
             debitList[idx] = new Debit(debitor, debit_ammount);
@@ -206,8 +204,7 @@ public class TransferHandler extends RestEndpointHandler {
                 throw ILPExceptionSupport.createILPException(422,
                         ErrorCode.F00_BAD_REQUEST , "credit is zero"); 
             }
-            IfaceLocalAccount creditor = ledgerAccountManager
-                    .getAccountByName(account_name);
+            IfaceLocalAccount creditor = AM.getAccountByName(account_name);
 
 
             // COMMENTED OLD API String ilp_ph_ilp_dst_address = jsonMemoILPHeader

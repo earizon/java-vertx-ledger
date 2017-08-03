@@ -1,6 +1,7 @@
 package com.everis.everledger.handlers;
 
 // TESTING FROM COMMAND LINE: https://blogs.oracle.com/PavelBucek/entry/websocket_command_line_client
+import com.everis.everledger.ifaces.account.IfaceAccountManager;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.ServerWebSocket;
@@ -18,12 +19,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 // import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceAccount;
-import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
+
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * @author earizon TransferWSEventHandler handler Wrapper to HTTP GET request to
@@ -47,7 +48,7 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     private static HashMap<ServerWebSocket,
             HashMap<String /*account*/, Set<EventType> > > listeners = 
               new HashMap<ServerWebSocket, HashMap<String /*account*/, Set<EventType> > >();
-
+    private static IfaceAccountManager AM = SimpleAccountManager.INSTANCE;
     public static enum EventType {
         ANY            ("*"),
         TRANSFER_CREATE("transfer.create"),
@@ -89,7 +90,6 @@ public class TransferWSEventHandler extends RestEndpointHandler/* implements Pro
     }
 
     private static final Logger log = LoggerFactory.getLogger(TransferWSEventHandler.class);
-    private static final SimpleAccountManager AM = AccountManagerFactory.getLedgerAccountManagerSingleton();
 
     public TransferWSEventHandler() {
         super(

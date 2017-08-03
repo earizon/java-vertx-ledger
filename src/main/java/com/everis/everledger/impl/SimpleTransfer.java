@@ -22,16 +22,17 @@ import javax.money.MonetaryAmount;
 import org.interledger.ledger.model.TransferStatus;
 import org.javamoney.moneta.Money;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.Config;
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
-import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.transfer.Credit;
 import com.everis.everledger.transfer.Debit;
 import com.everis.everledger.transfer.LedgerPartialEntry;
 import com.everis.everledger.transfer.LocalTransferID;
 import com.everis.everledger.util.TimeUtils;
+
+
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 // FIXME:(1) Allow multiple debit/credits (Remove all code related to index [0])
 
@@ -43,8 +44,7 @@ public class SimpleTransfer implements IfaceTransfer {
     
     public static final Condition CC_NOT_PROVIDED =  Condition.builder().hash(
             new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2}).build();
-    static  final SimpleAccountManager  ledgerAccountManager = 
-            AccountManagerFactory.getLedgerAccountManagerSingleton();
+    static  final SimpleAccountManager AM = SimpleAccountManager.INSTANCE;
     final LocalTransferID transferID;
     final IfaceLocalAccount fromAccount;
     final Credit[] credit_list;
@@ -103,8 +103,7 @@ public class SimpleTransfer implements IfaceTransfer {
          *  we need the "accountId" to fetch the correct local "from" Account
          */
 
-        this.fromAccount = ledgerAccountManager.
-                    getAccountByName(credit_list[0].account.getLocalID());
+        this.fromAccount = AM.getAccountByName(credit_list[0].account.getLocalID());
     }
 
     // Implement ILPSpec interface{

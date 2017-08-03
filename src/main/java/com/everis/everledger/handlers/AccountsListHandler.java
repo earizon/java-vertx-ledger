@@ -8,12 +8,12 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
-import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
+
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * Accounts handler
@@ -40,10 +40,10 @@ public class AccountsListHandler extends RestEndpointHandler {
         JsonObject request = getBodyAsJson(context);
         int page = request.getInteger("page", 1);
         int pageSize = request.getInteger("pageSize", 10);
-        IfaceLocalAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
+        IfaceLocalAccountManager AM = SimpleAccountManager.INSTANCE;
         context.response()
                 .putHeader("content-type", "application/json; charset=utf-8") //TODO create decorator
-                .end(Json.encode(accountManager.getAccounts(page, pageSize)));
+                .end(Json.encode(AM.getAccounts(page, pageSize)));
     }
 
 }

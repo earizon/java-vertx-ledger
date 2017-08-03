@@ -9,11 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.everis.everledger.AccountManagerFactory;
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.Config;
 import com.everis.everledger.ifaces.account.IfaceAccount;
-import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.util.JsonObjectBuilder;
@@ -21,6 +19,7 @@ import com.everis.everledger.util.ConversionUtil;
 import org.javamoney.moneta.Money;
 
 import com.everis.everledger.impl.SimpleAccount;
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * Single Account handler
@@ -29,7 +28,7 @@ import com.everis.everledger.impl.SimpleAccount;
 public class AccountsHandler extends RestEndpointHandler {
 
     private static final Logger log = LoggerFactory.getLogger(AccountsHandler.class);
-    private final SimpleAccountManager accountManager = AccountManagerFactory.getLedgerAccountManagerSingleton();
+    private final SimpleAccountManager AM = SimpleAccountManager.INSTANCE;
 
     private final static String PARAM_NAME = "name";
     private final static String PARAM_BALANCE = "balance";
@@ -52,7 +51,7 @@ public class AccountsHandler extends RestEndpointHandler {
         AuthInfo ai = AuthManager.authenticate(context, true);
         String accountName = getAccountName(context);
         boolean isAuthenticated = ai.getRoll().equals("admin") || ai.getId().equals(accountName); 
-        IfaceAccount account = accountManager.getAccountByName(accountName);
+        IfaceAccount account = AM.getAccountByName(accountName);
         JsonObject result = accountToJsonObject(account, isAuthenticated);
         response(context, HttpResponseStatus.OK, result);
     }
@@ -62,7 +61,7 @@ public class AccountsHandler extends RestEndpointHandler {
         log.debug("Handing put account");
         AuthManager.authenticate(context);
         String accountName = getAccountName(context);
-        boolean exists = accountManager.hasAccount(accountName);
+        boolean exists = AM.hasAccount(accountName);
         JsonObject data = getBodyAsJson(context);
         String password; String data_id;
         data_id = data.getString("id");
@@ -104,7 +103,7 @@ public class AccountsHandler extends RestEndpointHandler {
                 false
         );
 
-        accountManager.store(account, true /*update if already exists*/);
+        AM.store(account, true /*update if already exists*/);
         AuthManager.setUser(accountName, password, "user"/*roll*/ /* TODO:(1) allow user|admin|...*/);
 
         // if(data.containsKey(PARAM_DISABLED)) {

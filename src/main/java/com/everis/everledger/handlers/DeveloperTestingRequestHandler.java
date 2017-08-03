@@ -7,8 +7,8 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.everis.everledger.impl.manager.SimpleAccountManager;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
+import com.everis.everledger.impl.manager.SimpleAccountManager;
 
 /**
  * Helper handler for testing. 
@@ -37,7 +37,7 @@ public class DeveloperTestingRequestHandler extends RestEndpointHandler {
     public void handle(RoutingContext context) {
         log.info("reseting ...");
         TM.developerTestingResetTransfers();
-        SimpleAccountManager.developerTestingReset();
+        SimpleAccountManager.INSTANCE.developerTestingReset();
         response(
                 context,
                 HttpResponseStatus.OK,

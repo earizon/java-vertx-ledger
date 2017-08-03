@@ -21,10 +21,10 @@ public interface IfaceLocalAccountManager {
 
     boolean hasAccount(String name);
 
-    IfaceLocalAccount getAccountByName(String name);
+    IfaceAccount getAccountByName(String name);
 
     Collection<IfaceLocalAccount> getAccounts(int page, int pageSize);
 
     // If update == false and account already registered => throw exception
-    void store(IfaceAccount account, boolean update);
+    IfaceAccount store(IfaceAccount account, boolean update);
 }
