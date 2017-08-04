@@ -130,11 +130,9 @@ private constructor() : RestEndpointHandler(
             DTTM_expires = if (sExpiresAt == null) TimeUtils.future else ZonedDateTime.parse(sExpiresAt)
         } catch (e: Exception) {
             throw ILPExceptionSupport.createILPBadRequestException("unparseable expires_at")
-
         }
 
-        val execution_condition = requestBody
-                .getString("execution_condition")
+        val execution_condition = requestBody.getString("execution_condition")
         val URIExecutionCond: Condition = if (execution_condition != null)
             ConversionUtil.parseURI(URI.create(execution_condition))
             else CC_NOT_PROVIDED
