@@ -17,11 +17,9 @@ import org.apache.commons.lang3.StringUtils
 import org.javamoney.moneta.Money
 import org.slf4j.LoggerFactory
 
+private val AM = SimpleAccountManager
 class AccountsHandler
-// private final static String PARAM_DISABLED = "is_disabled";
-
 private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST), arrayOf("accounts/:" + PARAM_NAME)) {
-    private val AM = SimpleAccountManager
 
     override fun handleGet(context: RoutingContext) {
         val ai = AuthManager.authenticate(context, true)
@@ -147,7 +145,6 @@ class AccountsListHandler private constructor() : RestEndpointHandler(arrayOf(Ht
         val request = RestEndpointHandler.getBodyAsJson(context)
         val page = request.getInteger("page", 1)!!
         val pageSize = request.getInteger("pageSize", 10)!!
-        val AM = SimpleAccountManager
         context.response()
                 .putHeader("content-type", "application/json; charset=utf-8") //TODO create decorator
                 .end(Json.encode(AM.getAccounts(page, pageSize)))
