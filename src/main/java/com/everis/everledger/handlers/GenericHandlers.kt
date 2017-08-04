@@ -1,6 +1,8 @@
 package com.everis.everledger.handlers
 
 import com.everis.everledger.Config
+import com.everis.everledger.impl.manager.SimpleAccountManager
+import com.everis.everledger.impl.manager.SimpleTransferManager
 import com.everis.everledger.util.AuthManager
 import io.jsonwebtoken.Jwts
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -77,3 +79,23 @@ class AuthTokenHandler private constructor() : RestEndpointHandler(arrayOf(HttpM
         fun create(): RestEndpointHandler = AuthTokenHandler()
     }
 }
+
+class DeveloperTestingRequestHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("developerTesting/reset")) {
+    private val TM = SimpleTransferManager
+
+    override fun handle(context: RoutingContext) {
+        log.info("reseting ...")
+        TM.developerTestingResetTransfers()
+        SimpleAccountManager.developerTestingReset()
+        response(context, HttpResponseStatus.OK, RestEndpointHandler.buildJSON("", ""))
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(DeveloperTestingRequestHandler::class.java)
+        fun create(): DeveloperTestingRequestHandler = DeveloperTestingRequestHandler()
+    }
+
+}// REF:
+// https://github.com/interledgerjs/five-bells-ledger/blob/master/src/lib/app.js
+
+

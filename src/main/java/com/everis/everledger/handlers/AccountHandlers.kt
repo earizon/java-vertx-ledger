@@ -10,6 +10,7 @@ import com.everis.everledger.util.ILPExceptionSupport
 import com.everis.everledger.util.JsonObjectBuilder
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import org.apache.commons.lang3.StringUtils
@@ -37,14 +38,12 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
         val accountName = getAccountName(context)
         val exists = AM.hasAccount(accountName)
         val data = RestEndpointHandler.getBodyAsJson(context)
-        var password: String?
-        var data_id: String?
-        data_id = data.getString("id")
+        var data_id: String? = data.getString("id")
         if (data_id == null) data_id = data.getString("name") // Second chance
         if (data_id == null) {
             throw ILPExceptionSupport.createILPBadRequestException("id no provided")
         }
-        password = data.getString("password")
+        var password = data.getString("password")
         if (password == null && exists == true) {
             password = AuthManager.getUsers()[accountName]!!.pass
         }
@@ -135,4 +134,28 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
             return AccountsHandler()
         }
     }
+}
+
+
+class AccountsListHandler private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("accounts")) {
+
+    override fun handleGet(context: RoutingContext) {
+        val ai = AuthManager.authenticate(context)
+        if (!ai.isAdmin) {
+            throw ILPExceptionSupport.createILPForbiddenException()
+        }
+        val request = RestEndpointHandler.getBodyAsJson(context)
+        val page = request.getInteger("page", 1)!!
+        val pageSize = request.getInteger("pageSize", 10)!!
+        val AM = SimpleAccountManager
+        context.response()
+                .putHeader("content-type", "application/json; charset=utf-8") //TODO create decorator
+                .end(Json.encode(AM.getAccounts(page, pageSize)))
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AccountsListHandler::class.java)
+        fun create(): AccountsListHandler = AccountsListHandler()
+    }
+
 }
