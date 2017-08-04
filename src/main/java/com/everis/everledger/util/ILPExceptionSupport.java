@@ -15,7 +15,7 @@ import java.util.List;
 public class ILPExceptionSupport {
     private static InterledgerAddress selfAddress  = InterledgerAddress.builder().value(Config.ilpPrefix).build();
 
-    private static List<InterledgerAddress> forwardedByEmpty = new ArrayList<InterledgerAddress>();
+
     /**
      * Well known ILP Errors as defined in the RFCs
      * @param errCode
@@ -23,7 +23,7 @@ public class ILPExceptionSupport {
      */
     public static HTTPInterledgerException createILPException(int httpErrCode, ErrorCode errCode , String data){
         return new HTTPInterledgerException(httpErrCode, 
-                new InterledgerError(errCode, /* triggeredBy */ selfAddress, ZonedDateTime.now(), forwardedByEmpty, /*self Address*/ selfAddress, data));
+                new InterledgerError(errCode, /* triggeredBy */ selfAddress, ZonedDateTime.now(), new ArrayList<InterledgerAddress>(), /*self Address*/ selfAddress, data));
     }
 
     // Next follow some wrappers arount createILPException, more human-readable.
