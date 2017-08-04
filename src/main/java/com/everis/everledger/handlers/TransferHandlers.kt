@@ -18,6 +18,7 @@ import com.everis.everledger.util.TimeUtils
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.json.JsonArray
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.web.RoutingContext
 import org.interledger.Condition
@@ -282,8 +283,63 @@ private constructor() : RestEndpointHandler(
     companion object {
         private val log = LoggerFactory.getLogger(AccountsHandler::class.java)
         private val transferUUID = "transferUUID";
-        fun create(): TransferHandler {
-            return TransferHandler()
-        }
+        fun create(): TransferHandler =  TransferHandler()
     }
 }
+
+
+// GET /transfers/byExecutionCondition/cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7
+
+class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("transfers/byExecutionCondition/:" + execCondition)) {
+    override fun handleGet(context: RoutingContext) {
+        /*
+         *  GET /transfers/byExecutionCondition/cc:0:3:vmvf6B7EpFalN...I:7 HTTP/1.1
+         *      HTTP/1.1 200 OK
+         *      [{"ledger":"http://localhost",
+         *        "execution_condition":"cc:0:3:vmvf6B7EpFalN...I:7",
+         *        "cancellation_condition":"cc:0:3:I3TZF5S3n0-...:6",
+         *        "id":"http://localhost/transfers/9e97a403-f604-44de-9223-4ec36aa466d9",
+         *        "state":"executed",
+         *        "debits":[
+         *          {"account":"http://localhost/accounts/alice","amount":"10","authorized":true}],
+         *        "credits":[{"account":"http://localhost/accounts/bob","amount":"10"}]}]
+         */
+        log.trace(this.javaClass.name + "handleGet invoqued ")
+        val ai = AuthManager.authenticate(context)
+        var transferMatchUser = false
+
+        //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
+        val sExecCond = context.request().getParam(execCondition)
+        val executionCondition: Condition
+        executionCondition = ConversionUtil.parseURI(URI.create(sExecCond))
+
+        val transferList = TM.getTransfersByExecutionCondition(executionCondition)
+
+        val ja = JsonArray()
+        for (transfer in transferList) {
+            if (ai.isAdmin
+                    || transfer.debits[0].account.localID == ai.getId()
+                    || transfer.credits[0].account.localID == ai.getId()) {
+                ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
+                transferMatchUser = true
+            }
+        }
+        if (!ai.isAdmin && !transferMatchUser) {
+            throw ILPExceptionSupport.createILPForbiddenException()
+        }
+        val response = ja.encode()
+        context.response()
+                .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .putHeader(HttpHeaders.CONTENT_LENGTH, "" + response.length)
+                .setStatusCode(HttpResponseStatus.OK.code())
+                .end(response)
+    }
+
+    companion object {
+        private val log = org.slf4j.LoggerFactory.getLogger(TransfersHandler::class.java)
+        private val execCondition = "execCondition"
+
+        fun create(): TransfersHandler = TransfersHandler()
+    }
+
+}// REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
