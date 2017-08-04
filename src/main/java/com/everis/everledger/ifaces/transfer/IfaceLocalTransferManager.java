@@ -1,6 +1,6 @@
 package com.everis.everledger.ifaces.transfer;
 
-import com.everis.everledger.transfer.LocalTransferID;
+import com.everis.everledger.ifaces.transfer.ILocalTransfer.LocalTransferID;
 
 public interface IfaceLocalTransferManager {
 

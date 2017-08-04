@@ -2,12 +2,12 @@ package com.everis.everledger.ifaces.transfer;
 
 import java.time.ZonedDateTime;
 
+import com.everis.everledger.ifaces.account.IfaceLocalAccount;
 import org.interledger.Fulfillment;
 import org.interledger.ledger.model.TransferStatus;
 
-import com.everis.everledger.transfer.Credit;
-import com.everis.everledger.transfer.Debit;
-import com.everis.everledger.transfer.LocalTransferID;
+import javax.money.MonetaryAmount;
+
 
 /*
  * Note: This interfaces implement local (non-ILP-related)
@@ -20,6 +20,16 @@ import com.everis.everledger.transfer.LocalTransferID;
  */
 public interface ILocalTransfer {
 
+    interface LocalTransferID {
+       String getUniqueID();
+    };
+
+    interface TransferHalfEntry {
+        IfaceLocalAccount getLocalAccount();
+        MonetaryAmount    getAmount();
+    }
+    interface  Debit extends TransferHalfEntry {}; // "marker" interface
+    interface Credit extends TransferHalfEntry {}; // "marker" interface
     /*
      * Get the transfer Unique ID
      */

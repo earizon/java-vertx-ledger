@@ -2,15 +2,11 @@ package com.everis.everledger.handlers
 
 import com.everis.everledger.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager
+import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager
-import com.everis.everledger.impl.CC_NOT_PROVIDED
-import com.everis.everledger.impl.FF_NOT_PROVIDED
-import com.everis.everledger.impl.SimpleTransfer
+import com.everis.everledger.impl.*
 import com.everis.everledger.impl.manager.SimpleAccountManager
 import com.everis.everledger.impl.manager.SimpleTransferManager
-import com.everis.everledger.transfer.Credit
-import com.everis.everledger.transfer.Debit
-import com.everis.everledger.transfer.LocalTransferID
 import com.everis.everledger.util.*
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpHeaders
@@ -76,7 +72,7 @@ private constructor() : RestEndpointHandler(
                     "'" + context.request().getParam(transferUUID) + "' is not a valid UUID")
         }
 
-        val transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID)
+        val transferID : ILocalTransfer.LocalTransferID = ILPSpec2LocalTransferID(ilpTransferID)
 
         // TODO: Check requestBody.getString("ledger") match ledger host/port
 
@@ -89,7 +85,7 @@ private constructor() : RestEndpointHandler(
             throw ILPExceptionSupport.createILPBadRequestException("Only one debitor supported by ledger")
         }
         var totalDebitAmmount = 0.0
-        val debitList = Array<Debit>(debits.size(), { idx ->
+        val debitList = Array<ILocalTransfer.Debit>(debits.size(), { idx ->
             val jsonDebit = debits.getJsonObject(idx)
             log.debug("check123 jsonDebit: " + jsonDebit.encode())
             // debit0 will be similar to
@@ -137,7 +133,7 @@ private constructor() : RestEndpointHandler(
             ConversionUtil.parseURI(URI.create(execution_condition))
             else CC_NOT_PROVIDED
         var totalCreditAmmount = 0.0
-        val creditList = Array<Credit>(credits.size() , { idx ->
+        val creditList = Array<ILocalTransfer.Credit>(credits.size() , { idx ->
             val jsonCredit = credits.getJsonObject(idx)
             /* { "account":"http://localhost:3002/accounts/ilpconnector",
              * "amount":"1.01", "memo":{ "ilp_header":{
@@ -183,7 +179,7 @@ private constructor() : RestEndpointHandler(
             // COMMENTED OLD API InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(
             // COMMENTED OLD API         dstAddress, ammount, ilp_ph_condition, zdt);
             // In five-bells-ledger, memo goes into transfer_adjustments table (@ src/sql/pg/...)
-            Credit(creditor, credit_ammount/*, memo_ph*/)
+            Credit(creditor, credit_ammount/*, memo_ph*/) as ILocalTransfer.Credit
         })
         if (totalCreditAmmount != totalDebitAmmount) {
             throw ILPExceptionSupport.createILPException(422,
@@ -210,7 +206,7 @@ private constructor() : RestEndpointHandler(
         //        }
 
         val receivedTransfer = SimpleTransfer(
-                transferID, debitList, creditList,
+                transferID as LocalTransferID, debitList, creditList,
                 URIExecutionCond, URICancelationCond,
                 DTTM_proposed, DTTM_prepared, DTTM_expires, TimeUtils.future, TimeUtils.future,
                 data, noteToSelf,
@@ -243,8 +239,8 @@ private constructor() : RestEndpointHandler(
                       TransferWSEventHandler.EventType.TRANSFER_CREATE
                  else TransferWSEventHandler.EventType.TRANSFER_UPDATE
             val setAffectedAccounts = HashSet<String>()
-            for (debit in receivedTransfer.debits) setAffectedAccounts.add(debit.account.localID)
-            for (credit in receivedTransfer.credits) setAffectedAccounts.add(credit.account.localID)
+            for (debit  in receivedTransfer.debits)  setAffectedAccounts.add((debit  as Debit ).account.localID)
+            for (credit in receivedTransfer.credits) setAffectedAccounts.add((credit as Credit).account.localID)
             TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, resource, null)
         } catch (e: Exception) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to " + e.toString())
@@ -265,9 +261,9 @@ private constructor() : RestEndpointHandler(
         log.debug(this.javaClass.name + "handleGet invoqued ")
         val ai = AuthManager.authenticate(context)
         val ilpTransferID = UUID.fromString(context.request().getParam(transferUUID))
-        val transfer = TM.getTransferById(LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID))
+        val transfer = TM.getTransferById(ILPSpec2LocalTransferID(ilpTransferID))
 
-        val debit0_account = transfer.debits[0].account.localID
+        val debit0_account = (transfer.debits[0] as Debit).account.localID
         val transferMatchUser = ai.getId() == debit0_account
         if (!transferMatchUser && ai.getRoll() != "admin") {
             log.error("transferMatchUser false: "
@@ -316,8 +312,8 @@ class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("t
         val ja = JsonArray()
         for (transfer in transferList) {
             if (ai.isAdmin
-                    || transfer.debits[0].account.localID == ai.getId()
-                    || transfer.credits[0].account.localID == ai.getId()) {
+                    || (transfer. debits[0] as  Debit).account.localID == ai.getId()
+                    || (transfer.credits[0] as Credit).account.localID == ai.getId()) {
                 ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
                 transferMatchUser = true
             }
@@ -372,7 +368,8 @@ class TransferStateHandler : RestEndpointHandler(
 
         val transfer = TM.getTransferById(transferID)
         status = transfer.transferStatus
-        transferMatchUser = ai.getId() == transfer.debits[0].account.localID || ai.getId() == transfer.credits[0].account.localID
+        transferMatchUser = ai.getId() == (transfer. debits[0] as  Debit).account.localID
+                         || ai.getId() == (transfer.credits[0] as Credit).account.localID
 
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()

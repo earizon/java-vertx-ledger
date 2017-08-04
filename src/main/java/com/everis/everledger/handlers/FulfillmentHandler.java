@@ -22,7 +22,7 @@ import com.everis.everledger.Config;
 import com.everis.everledger.handlers.RestEndpointHandler;
 import com.everis.everledger.ifaces.transfer.IfaceTransfer;
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager;
-import com.everis.everledger.transfer.LocalTransferID;
+import com.everis.everledger.ifaces.transfer.ILocalTransfer;
 import com.everis.everledger.util.AuthManager;
 import com.everis.everledger.util.ConversionUtil;
 import com.everis.everledger.util.ILPExceptionSupport;
@@ -30,6 +30,9 @@ import com.everis.everledger.util.ILPExceptionSupport;
 import com.everis.everledger.impl.SimpleTransfer;
 import com.everis.everledger.impl.TransferKt;
 import com.everis.everledger.impl.manager.SimpleTransferManager;
+
+import static com.everis.everledger.impl.TransferKt.ILPSpec2LocalTransferID;
+
 /**
  * Fulfillment handler
  * 
@@ -85,7 +88,7 @@ public class FulfillmentHandler extends RestEndpointHandler {
          *     cf:0:ZXhlY3V0ZQ
          */
         UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
-        LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
+        ILocalTransfer.LocalTransferID      transferID = ILPSpec2LocalTransferID(ilpTransferID);
         
 //        IfaceILPSpecTransferManager ilpTM = SimpleLedgerTransferManager.getILPSpecTransferManager();
 //        IfaceLocalTransferManager localTM = SimpleLedgerTransferManager.getLocalTransferManager();
@@ -119,8 +122,8 @@ public class FulfillmentHandler extends RestEndpointHandler {
                     this.getClass().getName() + "Transfer is not conditional");
         }
         boolean transferMatchUser = // TODO:(?) Recheck 
-            ai.getId().equals(transfer.getDebits ()[0].account.getLocalID())
-         || ai.getId().equals(transfer.getCredits()[0].account.getLocalID()) ;
+            ai.getId().equals(transfer.getDebits ()[0].getLocalAccount().getLocalID())
+         || ai.getId().equals(transfer.getCredits()[0].getLocalAccount().getLocalID()) ;
         if ( !ai.isAdmin()  &&  !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException();
         }
@@ -187,14 +190,14 @@ public class FulfillmentHandler extends RestEndpointHandler {
         
         boolean transferMatchUser = false;
 
-        UUID ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
-        LocalTransferID      transferID = LocalTransferID.ILPSpec2LocalTransferID(ilpTransferID);
+        UUID                             ilpTransferID = UUID.fromString(context.request().getParam(transferUUID));
+        ILocalTransfer.LocalTransferID      transferID = ILPSpec2LocalTransferID(ilpTransferID);
 
         IfaceTransfer transfer = TM.getTransferById(transferID);
         
         transferMatchUser = false 
-                || ai.getId().equals(transfer.getDebits ()[0].account.getLocalID())
-                || ai.getId().equals(transfer.getCredits()[0].account.getLocalID()) ;
+                || ai.getId().equals(transfer.getDebits ()[0].getLocalAccount().getLocalID())
+                || ai.getId().equals(transfer.getCredits()[0].getLocalAccount().getLocalID()) ;
         if ( !ai.isAdmin()  &&  !(ai.isConnector() && transferMatchUser)  ){
             throw ILPExceptionSupport.createILPForbiddenException();
         }

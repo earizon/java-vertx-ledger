@@ -18,11 +18,9 @@ import org.interledger.ledger.model.TransferStatus
 
 import com.everis.everledger.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccount
+import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransfer
-import com.everis.everledger.transfer.Credit
-import com.everis.everledger.transfer.Debit
-import com.everis.everledger.transfer.LedgerPartialEntry
-import com.everis.everledger.transfer.LocalTransferID
+
 import com.everis.everledger.util.TimeUtils
 
 import com.everis.everledger.impl .manager.SimpleAccountManager
@@ -35,9 +33,34 @@ public val FF_NOT_PROVIDED : Fulfillment = { random.nextBytes(a) ; Fulfillment.b
 public val CC_NOT_PROVIDED : Condition   = { random.nextBytes(a) ; Condition  .builder().hash(a)    .build() }()
 internal val AM = SimpleAccountManager
 
+
+// TODO:(?) Recheck this Credit/Debit classes
+public data class Credit (val account: IfaceLocalAccount, val _amount: MonetaryAmount/*, InterledgerPacketHeader ph*/)//        this.ph = ph;
+    : ILocalTransfer.Debit {
+    override fun   getLocalAccount() : IfaceLocalAccount = account
+    override fun         getAmount() :    MonetaryAmount = amount
+
+}
+
+public data class  Debit (val account: IfaceLocalAccount, val _amount: MonetaryAmount, val authorized : Boolean = true)
+    : ILocalTransfer.Debit {
+    override fun   getLocalAccount() : IfaceLocalAccount = account
+    override fun         getAmount() :    MonetaryAmount = amount
+}
+
+data class LocalTransferID(val transferID: String) : ILocalTransfer.LocalTransferID {
+
+    override fun getUniqueID() : String = transferID
+
+}
+
+public fun ILPSpec2LocalTransferID(ilpTransferID: UUID): LocalTransferID {
+    return LocalTransferID(ilpTransferID.toString())
+}
+
 data class SimpleTransfer (
         val id: LocalTransferID,
-        val debit_list: Array<Debit>, val credit_list: Array<Credit>,
+        val debit_list: Array<ILocalTransfer.Debit>, val credit_list: Array<ILocalTransfer.Credit>,
         val executionCond: Condition,
         val cancelationCond: Condition,
         val int_DTTM_proposed: ZonedDateTime = ZonedDateTime.now(),
@@ -56,7 +79,7 @@ data class SimpleTransfer (
 
         init { // TODO:(0) Check this is executed after val initialization
             checkBalancedTransaction()
-            fromAccount = AM.getAccountByName(credit_list[0].account.localID)
+            fromAccount = AM.getAccountByName(credit_list[0].localAccount.localID)
             // TODO:(1) Check that debit_list[idx].ammount.currency is always the same and match the ledger
             // TODO:(1) Check that credit_list[idx].ammount.currency is always the same.
             // FIXME: TODO: If fromAccount.ledger != "our ledger" throw RuntimeException.
@@ -150,11 +173,11 @@ data class SimpleTransfer (
             return id
         }
 
-        override fun getDebits(): Array<Debit> {
+        override fun getDebits(): Array<ILocalTransfer.Debit> {
             return debit_list
         }
 
-        override fun getCredits(): Array<Credit> {
+        override fun getCredits(): Array<ILocalTransfer.Credit> {
             return credit_list
         }
 
@@ -203,8 +226,8 @@ data class SimpleTransfer (
             val id = /* TODO:(doubt) add ledger as prefix ?? */"/transfers/" /* TODO:(1) Get from Config */ + transferID.transferID
             jo.put("id", id)
             jo.put("ledger", ledger)
-            jo.put("debits", entryList2Json(debit_list))
-            jo.put("credits", entryList2Json(credit_list))
+            jo.put("debits", entryList2Json(debit_list as Array<ILocalTransfer.TransferHalfEntry>))
+            jo.put("credits", entryList2Json(credit_list as Array<ILocalTransfer.TransferHalfEntry>))
             if (this.executionCondition != CC_NOT_PROVIDED) {
                 jo.put("execution_condition", this.executionCondition.toString())
             }
@@ -254,12 +277,12 @@ data class SimpleTransfer (
             return jo
         }
 
-        private fun entryList2Json(input_list: Array<out LedgerPartialEntry>): JsonArray {
+        private fun entryList2Json(input_list: Array<out ILocalTransfer.TransferHalfEntry>): JsonArray {
             val ja = JsonArray()
             for (entry in input_list) {
                 // FIXME: This code to calculate amount is PLAIN WRONG. Just to pass five-bells-ledger tests
                 val jo = JsonObject()
-                jo.put("account", "/accounts/" /* TODO: Get from config.*/ + entry.account.localID)
+                jo.put("account", "/accounts/" /* TODO: Get from config.*/ + entry.localAccount.localID)
                 val sAmount = "" + entry.amount.number.toFloat().toLong()
                 jo.put("amount", sAmount)
                 if (entry is Debit) {

@@ -25,13 +25,14 @@ import com.everis.everledger.ifaces.account.IfaceLocalAccount
 import com.everis.everledger.ifaces.transfer.IfaceTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager
 
-import com.everis.everledger.transfer.Debit
-import com.everis.everledger.transfer.LocalTransferID
 import com.everis.everledger.util.ConversionUtil
 import com.everis.everledger.util.ILPExceptionSupport
 
+import com.everis.everledger.impl.Debit
 import com.everis.everledger.impl.SimpleTransfer
 import com.everis.everledger.impl.CC_NOT_PROVIDED
+import com.everis.everledger.ifaces.transfer.ILocalTransfer
+import com.everis.everledger.impl.ILPSpec2LocalTransferID
 import com.everis.everledger.impl.manager.SimpleAccountManager
 /**
  * Simple in-memory {@code SimpleLedgerTransferManager}.
@@ -65,8 +66,8 @@ private fun notifyUpdate(transfer : IfaceTransfer, fulfillment : Fulfillment, is
                      TransferWSEventHandler.EventType.TRANSFER_CREATE
                 else TransferWSEventHandler.EventType.TRANSFER_UPDATE
         val setAffectedAccounts = HashSet<String>()
-        for (debit  in transfer.debits ) setAffectedAccounts.add( debit.account.localID)
-        for (credit in transfer.credits) setAffectedAccounts.add(credit.account.localID)
+        for (debit  in transfer.debits ) setAffectedAccounts.add( debit.localAccount.localID)
+        for (credit in transfer.credits) setAffectedAccounts.add(credit.localAccount.localID)
 
         val relatedResources = HashMap<String, Any>()
         val relatedResourceKey = if (isExecution) "execution_condition_fulfillment"
@@ -84,7 +85,7 @@ private fun notifyUpdate(transfer : IfaceTransfer, fulfillment : Fulfillment, is
 
 object SimpleTransferManager : IfaceTransferManager {
     private val log          = LoggerFactory.getLogger(SimpleTransferManager::class.java)
-    private val transferMap  = HashMap<LocalTransferID, IfaceTransfer>() // In-memory database of pending/executed/cancelled transfers
+    private val transferMap  = HashMap<ILocalTransfer.LocalTransferID, IfaceTransfer>() // In-memory database of pending/executed/cancelled transfers
 
     fun developerTestingResetTransfers() { // TODO:(?) Make static?
         if (! com.everis.everledger.Config.unitTestsActive) {
@@ -96,8 +97,8 @@ object SimpleTransferManager : IfaceTransferManager {
 
 
     // START IfaceLocalTransferManager implementation {
-    override fun getTransferById(transferId : LocalTransferID ) : IfaceTransfer  {
-        val result = transferMap[transferId] ?: throw ILPExceptionSupport.createILPNotFoundException("transfer '${transferId.transferID}' not found")
+    override fun getTransferById(transferId : ILocalTransfer.LocalTransferID ) : IfaceTransfer  {
+        val result = transferMap[transferId] ?: throw ILPExceptionSupport.createILPNotFoundException("transfer '${transferId.uniqueID}' not found")
         if (result.transferStatus == TransferStatus.REJECTED) {
             throw ILPExceptionSupport.createILPUnprocessableEntityException(
                     "This transfer has already been rejected")
@@ -108,21 +109,21 @@ object SimpleTransferManager : IfaceTransferManager {
 
     override fun executeLocalTransfer(transfer : IfaceTransfer ) : IfaceTransfer {
         // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
-        val debit_list : Array<Debit> = transfer.getDebits()
+        val debit_list : Array<ILocalTransfer.Debit> = transfer.debits // TODO:(0) This function is not simetrict between debits and credits!!!
         val debit0 = debit_list[0]
         if (debit_list.size > 1) {
             // STEP 1: Pass all debits to first account.
             for ( debit in debit_list) {
-                val    sender : IfaceLocalAccount = debit.account
-                val recipient : IfaceLocalAccount = debit0.account
+                val    sender : IfaceLocalAccount = debit.localAccount
+                val recipient : IfaceLocalAccount = debit0.localAccount
                 val amount : MonetaryAmount = debit.amount
                 __executeLocalTransfer(sender, recipient, amount)
             }
         }
         // STEP 2: Pay crediters from first account:
-        val sender : IfaceLocalAccount  = debit0.account
+        val sender : IfaceLocalAccount  = debit0.localAccount
         for (credit in transfer.credits) {
-            __executeLocalTransfer(sender, credit.account, credit.amount)
+            __executeLocalTransfer(sender, credit.localAccount, credit.amount)
         }
 
         return (transfer as SimpleTransfer).copy(
@@ -132,7 +133,7 @@ object SimpleTransferManager : IfaceTransferManager {
                     )
     }
 
-    override fun doesTransferExists(transferId : LocalTransferID) :Boolean {
+    override fun doesTransferExists(transferId : ILocalTransfer.LocalTransferID) :Boolean {
         return transferMap.containsKey(transferId)
     }
 
@@ -144,7 +145,7 @@ object SimpleTransferManager : IfaceTransferManager {
         // For this simple implementation just run over existing transfers until
         val result = ArrayList<IfaceTransfer>()
         //   = HashMap<LocalTransferID, IfaceTransfer>();// In-memory database of pending/executed/cancelled transfers
-        for ( transferId : LocalTransferID in transferMap.keys) {
+        for ( transferId : ILocalTransfer.LocalTransferID in transferMap.keys) {
             val transfer = transferMap.get(transferId) ?: throw RuntimeException("null found for transferId "+transferId)
             if (transfer.getExecutionCondition() == condition) {
                 result.add(transfer)
@@ -162,7 +163,7 @@ object SimpleTransferManager : IfaceTransferManager {
                     + "Check transfer with SimpleLedgerTransferManager.transferExists before invoquing this function")
         }
         log.debug("createNewRemoteILPTransfer newTransfer "+
-                newTransfer.getTransferID().transferID+", status: "+newTransfer.getTransferStatus().toString())
+                newTransfer.getTransferID().uniqueID+", status: "+newTransfer.getTransferStatus().toString())
 
         transferMap.put(newTransfer.getTransferID(), newTransfer)
         if (newTransfer.executionCondition == CC_NOT_PROVIDED) {
@@ -174,7 +175,7 @@ object SimpleTransferManager : IfaceTransferManager {
 
         // PUT Money on-hold:
         for (debit in newTransfer.getDebits()) {
-            __executeLocalTransfer(debit.account, HOLDS_URI, debit.amount)
+            __executeLocalTransfer(debit.localAccount, HOLDS_URI, debit.amount)
         }
         // TODO:(0) Next line commented to make tests pass, but looks to be sensible to do so.
         // newTransfer.setTransferStatus(TransferStatus.PROPOSED)
@@ -184,7 +185,7 @@ object SimpleTransferManager : IfaceTransferManager {
     private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) : IfaceTransfer {
         if (isExecution /* => DisburseFunds */) {
             for (credit in transfer.getCredits()) {
-                __executeLocalTransfer(sender = HOLDS_URI, recipient = credit.account, amount = credit.amount)
+                __executeLocalTransfer(sender = HOLDS_URI, recipient = credit.localAccount, amount = credit.amount)
             }
             return (transfer as SimpleTransfer).copy(
                     int_transferStatus=TransferStatus.EXECUTED,
@@ -192,7 +193,7 @@ object SimpleTransferManager : IfaceTransferManager {
                     executionFF=FF )
         } else /* => Cancellation/Rollback  */ {
             for (debit in transfer.getDebits()) {
-                __executeLocalTransfer(sender = HOLDS_URI, recipient = debit.account, amount = debit.amount)
+                __executeLocalTransfer(sender = HOLDS_URI, recipient = debit.localAccount, amount = debit.amount)
             }
             return (transfer as SimpleTransfer).copy(
                     int_transferStatus=TransferStatus.REJECTED,
@@ -213,7 +214,7 @@ object SimpleTransferManager : IfaceTransferManager {
     }
 
     override fun doesTransferExists(transferId : UUID ) : Boolean  {
-        return doesTransferExists(LocalTransferID.ILPSpec2LocalTransferID(transferId))
+        return doesTransferExists(ILPSpec2LocalTransferID(transferId))
     }
 
     // } END IfaceILPSpecTransferManager implementation
