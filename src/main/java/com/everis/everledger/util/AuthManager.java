@@ -12,12 +12,22 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.Key;
+import io.jsonwebtoken.impl.crypto.MacProvider;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.SignatureAlgorithm;
+
 import com.everis.everledger.AuthInfo;
 import com.everis.everledger.handlers.AuthTokenHandler;
 
 public class AuthManager {
 
     private static final Logger log = LoggerFactory.getLogger(AuthManager.class);
+    public static SignatureAlgorithm SigAlgth = SignatureAlgorithm.HS256;
+    public static Key key = MacProvider.generateKey(SigAlgth);
+    public static JwtParser parser =  Jwts.parser().setSigningKey(key);
+
     
 //    private final AuthProvider authProvider = new -();
 //    String realm = authConfig.getString(DEFAULT_BASIC_REALM, Auth.realm);
@@ -65,10 +75,10 @@ public class AuthManager {
         //  "GET /websocket?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJodHRwOi8vMTcyLjE3LjAuMTozMDAxLy9hY2NvdW50cy9hZG1pbiIsImlzcyI6IjE3Mi4xNy4wLjEifQ.yt95JiNCOzwn80MVP25KfXNhyHfxZmiclwCFATSN7wVNm3ODazPmaEqf8TLkvkiDJoHM49LqvDzgvzbKe_rSxw
         String token = request.getParam("token");
         if (token != null) {// REF: ./services/auth.js
-            if ( ! AuthTokenHandler.parser.isSigned(token)) {
+            if ( ! parser.isSigned(token)) {
                 throw ILPExceptionSupport.createILPUnauthorizedException();
             }
-            String URLAccount = AuthTokenHandler.parser.parseClaimsJws(token).getBody().getSubject();
+            String URLAccount = parser.parseClaimsJws(token).getBody().getSubject();
             int offset = URLAccount.lastIndexOf("/accounts/");
             String suser = URLAccount.substring(offset+"/accounts/".length());
             AuthInfo authInfo = users.get(suser);
