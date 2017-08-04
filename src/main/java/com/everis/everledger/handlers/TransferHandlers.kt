@@ -11,14 +11,12 @@ import com.everis.everledger.impl.manager.SimpleTransferManager
 import com.everis.everledger.transfer.Credit
 import com.everis.everledger.transfer.Debit
 import com.everis.everledger.transfer.LocalTransferID
-import com.everis.everledger.util.AuthManager
-import com.everis.everledger.util.ConversionUtil
-import com.everis.everledger.util.ILPExceptionSupport
-import com.everis.everledger.util.TimeUtils
+import com.everis.everledger.util.*
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.web.RoutingContext
 import org.interledger.Condition
@@ -26,6 +24,8 @@ import org.interledger.ilp.InterledgerError
 import org.interledger.ledger.model.TransferStatus
 import org.javamoney.moneta.Money
 import java.net.URI
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 import java.time.ZonedDateTime
 import java.util.*
 import javax.money.Monetary
@@ -342,4 +342,129 @@ class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("t
         fun create(): TransfersHandler = TransfersHandler()
     }
 
+}// REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
+
+
+// GET /transfers/25644640-d140-450e-b94b-badbe23d3389/state|state?type=sha256
+class TransferStateHandler : RestEndpointHandler(
+        arrayOf(HttpMethod.GET), arrayOf("transfers/:$transferUUID/state")) {
+
+    override fun handleGet(context: RoutingContext) {
+        /* GET transfer by UUID & type
+         * *****************************
+         * GET /transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state?type=sha256 HTTP/1.1
+         * {"type":"sha256",
+         *  "message":{
+         *    "id":"http:.../transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+         *    "state":"proposed",
+         *    "token":"xy9kB4n......Cg=="
+         *   },
+         *   "signer":"http://localhost",
+         *   "digest":"P6K2HEaZxAthBeGmbjeyPau0BIKjgkaPqW781zmSvf4="
+         * } */
+        log.debug(this.javaClass.name + "handleGet invoqued ")
+        val ai = AuthManager.authenticate(context)
+
+        val transferId = context.request().getParam(transferUUID)
+        val transferID = LocalTransferID(transferId)
+        var status = TransferStatus.PROPOSED // default value
+        var transferMatchUser = false
+        if (!TM.doesTransferExists(transferID))
+            throw ILPExceptionSupport.createILPNotFoundException()
+
+        val transfer = TM.getTransferById(transferID)
+        status = transfer.transferStatus
+        transferMatchUser = ai.getId() == transfer.debits[0].account.localID || ai.getId() == transfer.credits[0].account.localID
+
+        if (!ai.isAdmin && !transferMatchUser) {
+            throw ILPExceptionSupport.createILPForbiddenException()
+        }
+        // REF: getStateResource @ transfers.js
+
+        var receiptType: String? = context.request().getParam("type")
+        // REF: getTransferStateReceipt(id, receiptType, conditionState) @ five-bells-ledger/src/models/transfers.js
+        if (receiptType == null) {
+            receiptType = RECEIPT_TYPE_ED25519
+        }
+        if (receiptType != RECEIPT_TYPE_ED25519 &&
+                receiptType != RECEIPT_TYPE_SHA256 &&
+                true) {
+            throw ILPExceptionSupport.createILPBadRequestException(
+                    "type not in := $RECEIPT_TYPE_ED25519* | $RECEIPT_TYPE_SHA256 "
+            )
+        }
+        val jo = JsonObject()
+        val signer = ""      // FIXME: config.getIn(['server', 'base_uri']),
+        if (receiptType == RECEIPT_TYPE_ED25519) {
+            // REF: makeEd25519Receipt(transferId, transferState) @
+            //      @ five-bells-ledger/src/models/transfers.js
+            val message = makeTransferStateMessage(transferID, status, RECEIPT_TYPE_ED25519)
+            val signature = ""   // FIXME: sign(hashJSON(message))
+            jo.put("type", RECEIPT_TYPE_ED25519)
+            jo.put("message", message)
+            jo.put("signer", signer)
+            jo.put("public_key", DSAPrivPubKeySupport.savePublicKey(Config.ilpLedgerInfo.notificationSignPublicKey))
+            jo.put("signature", signature)
+        } else {
+            // REF: makeSha256Receipt(transferId, transferState, conditionState) @
+            //      @ five-bells-ledger/src/models/transfers.js
+            val message = makeTransferStateMessage(transferID, status, RECEIPT_TYPE_SHA256)
+            val digest = sha256(message.encode())
+            jo.put("type", RECEIPT_TYPE_SHA256)
+            jo.put("message", message)
+            jo.put("signer", signer)
+            jo.put("digest", digest)
+            val conditionState = context.request().getParam("condition_state")
+            if (conditionState != null) {
+                val conditionMessage = makeTransferStateMessage(transferID, status, RECEIPT_TYPE_SHA256)
+                val condition_digest = sha256(conditionMessage.encode())
+                jo.put("condition_state", conditionState)
+                jo.put("condition_digest", condition_digest)
+            }
+        }
+
+        val response = jo.encode()
+        context.response()
+                .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .putHeader(HttpHeaders.CONTENT_LENGTH, "" + response.length)
+                .setStatusCode(HttpResponseStatus.OK.code())
+                .end(response)
+    }
+
+    companion object {
+
+        private val log = org.slf4j.LoggerFactory.getLogger(TransferStateHandler::class.java)
+        private val transferUUID = "transferUUID"
+        private val RECEIPT_TYPE_ED25519 = "ed25519-sha512"
+        private val RECEIPT_TYPE_SHA256 = "sha256"
+        private val md256: MessageDigest
+
+        init {
+            try {
+                md256 = MessageDigest.getInstance("SHA-256")
+            } catch (e: NoSuchAlgorithmException) {
+                throw RuntimeException(e.toString(), e)
+            }
+        }
+
+        fun create(): TransferStateHandler = TransferStateHandler()
+
+        private fun makeTransferStateMessage(transferId: LocalTransferID, state: TransferStatus, receiptType: String): JsonObject {
+            val jo = JsonObject()
+            // <-- TODO:(0) Move URI logic to Iface ILPTransferSupport and add iface to SimpleLedgerTransferManager
+            jo.put("id", Config.publicURL.toString() + "transfers/" + transferId.transferID)
+            jo.put("state", state.toString())
+            if (receiptType == RECEIPT_TYPE_SHA256) {
+                val token = "" // FIXME: sign(sha512(transferId + ':' + state))
+                jo.put("token", token)
+            }
+            return jo
+        }
+
+        private fun sha256(input: String): String {
+            md256.reset()
+            md256.update(input.toByteArray())
+            return String(md256.digest())
+        }
+    }
 }// REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
