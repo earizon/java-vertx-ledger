@@ -24,7 +24,7 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
     override fun handleGet(context: RoutingContext) {
         val ai = AuthManager.authenticate(context, true)
         val accountName = getAccountName(context)
-        val isAuthenticated = ai.getRoll() == "admin" || ai.getId() == accountName
+        val isAuthenticated = ai.roll == "admin" || ai.id  == accountName
         val account = AM.getAccountByName(accountName)
         val result = accountToJsonObject(account, isAuthenticated)
         response(context, HttpResponseStatus.OK, result)

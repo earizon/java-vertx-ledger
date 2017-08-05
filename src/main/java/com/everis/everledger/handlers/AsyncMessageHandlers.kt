@@ -88,10 +88,10 @@ class MessageHandler : RestEndpointHandler(arrayOf(HttpMethod.POST), arrayOf("me
                 jsonMessageReceived.getString("from") == null &&
                 jsonMessageReceived.getString("to") == null) {
             jsonMessageReceived.put("to" as String?,jsonMessageReceived.getString("account") as String?)
-            jsonMessageReceived.put("from", Config.publicURL.toString() + "accounts/" + ai.getId())
+            jsonMessageReceived.put("from", Config.publicURL.toString() + "accounts/" + ai.id)
         }
         val recipient = AM.getAccountByName(jsonMessageReceived.getString("to"))
-        val transferMatchUser = ai.getId() == fromAccount.localID || ai.getId() == recipient.localID
+        val transferMatchUser = ai.id  == fromAccount.localID || ai.id == recipient.localID
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()
         }
@@ -192,7 +192,7 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
          */
         writeJsonRPCResponse(sws, -1 , "null", "null", "connect")
 
-        val account = AM.getAccountByName(ai.getName())
+        val account = AM.getAccountByName(ai.name)
 
         registerServerWebSocket(ai, account, sws)
     }
@@ -244,7 +244,7 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
                             return@frameHandler
                         }
 
-                        if (!ai.isAdmin && ai.getName() != account /* TODO:(0) use account not in ai.associatedAccount/s*/) {
+                        if (!ai.isAdmin && ai.name != account /* TODO:(0) use account not in ai.associatedAccount/s*/) {
                             writeJsonRPCError(sws, id, 40300, "Not authorized")
                             return@frameHandler
                         }

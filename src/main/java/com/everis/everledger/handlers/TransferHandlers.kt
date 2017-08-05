@@ -95,7 +95,7 @@ private constructor() : RestEndpointHandler(
             if (account_name.lastIndexOf('/') > 0) {
                 account_name = account_name.substring(account_name.lastIndexOf('/') + 1)
             }
-            if (ai.getId() == account_name) { transferMatchUser = true }
+            if (ai.id  == account_name) { transferMatchUser = true }
             val debit_ammount: MonetaryAmount = try {
                 val auxDebit = java.lang.Double.parseDouble(jsonDebit.getString("amount"))
                 totalDebitAmmount += auxDebit
@@ -265,10 +265,10 @@ private constructor() : RestEndpointHandler(
         val transfer = TM.getTransferById(ILPSpec2LocalTransferID(ilpTransferID))
 
         val debit0_account = (transfer.debits[0] as Debit).account.localID
-        val transferMatchUser = ai.getId() == debit0_account
-        if (!transferMatchUser && ai.getRoll() != "admin") {
+        val transferMatchUser = ai.id == debit0_account
+        if (!transferMatchUser && ai.roll != "admin") {
             log.error("transferMatchUser false: "
-                    + "\n    ai.getId()    :" + ai.getId()
+                    + "\n    ai.id    :" + ai.id
                     + "\n    debit0_account:" + debit0_account)
             throw ILPExceptionSupport.createILPForbiddenException()
         }
@@ -313,8 +313,8 @@ class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("t
         val ja = JsonArray()
         for (transfer in transferList) {
             if (ai.isAdmin
-                    || (transfer. debits[0] as  Debit).account.localID == ai.getId()
-                    || (transfer.credits[0] as Credit).account.localID == ai.getId()) {
+                    || (transfer. debits[0] as  Debit).account.localID == ai.id
+                    || (transfer.credits[0] as Credit).account.localID == ai.id) {
                 ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
                 transferMatchUser = true
             }
@@ -369,8 +369,8 @@ class TransferStateHandler : RestEndpointHandler(
 
         val transfer = TM.getTransferById(transferID)
         status = transfer.transferStatus
-        transferMatchUser = ai.getId() == (transfer. debits[0] as  Debit).account.localID
-                         || ai.getId() == (transfer.credits[0] as Credit).account.localID
+        transferMatchUser = ai.id == (transfer. debits[0] as  Debit).account.localID
+                         || ai.id == (transfer.credits[0] as Credit).account.localID
 
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()
@@ -511,7 +511,7 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
                     this.javaClass.name + "Transfer is not conditional")
         }
         val transferMatchUser = // TODO:(?) Recheck
-                ai.getId() == transfer.debits[0].localAccount.localID || ai.getId() == transfer.credits[0].localAccount.localID
+                ai.id == transfer.debits[0].localAccount.localID || ai.id == transfer.credits[0].localAccount.localID
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()
         }
@@ -573,8 +573,8 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
         val transfer = TM.getTransferById(transferID)
 
         var transferMatchUser =
-                   ai.getId() == transfer.debits[0].localAccount.localID
-                || ai.getId() == transfer.credits[0].localAccount.localID
+                   ai.id == transfer.debits[0].localAccount.localID
+                || ai.id == transfer.credits[0].localAccount.localID
         if (!ai.isAdmin && !(ai.isConnector && transferMatchUser))
             throw ILPExceptionSupport.createILPForbiddenException()
 

@@ -87,7 +87,7 @@ public object SimpleAccountManager
         val devUsers = AuthManager.configureDevelopmentEnvironment()/*blance*/
         val users = devUsers.keys
         for (ai in users) {
-            val account = SimpleAccount(ai.getId(),
+            val account = SimpleAccount(ai.id,
                     Money.of(0, Config.ledgerCurrencyCode), // TODO:(Kotlin) once kotlinified remove defaults
                     Money.of(0, Config.ledgerCurrencyCode),
                     false)
