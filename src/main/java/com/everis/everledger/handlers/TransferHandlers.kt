@@ -16,6 +16,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.web.RoutingContext
 import org.interledger.Condition
+import org.interledger.Fulfillment
 import org.interledger.ilp.InterledgerError
 import org.interledger.ledger.model.TransferStatus
 import org.javamoney.moneta.Money
@@ -463,3 +464,143 @@ class TransferStateHandler : RestEndpointHandler(
         }
     }
 }// REF: https://github.com/interledger/five-bells-ledger/blob/master/src/lib/app.js
+
+
+/*
+	 *  GET|PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
+	 *  fulfillment can be execution or cancellation
+	 *  Note: Rejection != cancellation. Rejection in five-bells-ledger refers
+	 *      to the rejection in the proposed (not-yet prepared) transfer (or part of the
+	 *      transfer).
+	 *      In the java-vertx-ledger there is not yet (2017-05) concept of proposed
+	 *      state.
+	 */
+class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.PUT), arrayOf("transfers/:$transferUUID/fulfillment")) {
+
+    override fun handlePut(context: RoutingContext) {
+        val ai = AuthManager.authenticate(context)
+        log.trace(this.javaClass.name + "handlePut invoqued ")
+
+        /* (request from ILP Connector)
+         * PUT /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment HTTP/1.1 */
+        val ilpTransferID = UUID.fromString(context.request().getParam(transferUUID))
+        val transferID = ILPSpec2LocalTransferID(ilpTransferID)
+
+        /*
+         * REF: https://gitter.im/interledger/Lobby
+         * Enrique Arizon Benito @earizon 17:51 2016-10-17
+         *     Hi, I'm trying to figure out how the five-bells-ledger implementation validates fulfillments.
+         *     Following the node.js code I see the next route:
+         *
+         *          router.put('/transfers/:id/fulfillment', transfers.putFulfillment)
+         *
+         *     I understand the fulfillment is validated at this (PUT) point against the stored condition
+         *     in the existing ":id" transaction.
+         *     Following the stack for this request it looks to me that the method
+         *
+         *     (/five-bells-condition/index.js)validateFulfillment (serializedFulfillment, serializedCondition, message)
+         *
+         *     is always being called with an undefined message and so an empty one is being used.
+         *     I'm missing something or is this the expected behaviour?
+         *
+         * Stefan Thomas @justmoon 18:00 2016-10-17
+         *     @earizon Yes, this is expected. We're using crypto conditions as a trigger, not to verify the
+         *     authenticity of a message!
+         *     Note that the actual cryptographic signature might still be against a message - via prefix
+         *     conditions (which append a prefix to this empty message)
+         **/
+        val transfer = TM.getTransferById(transferID)
+        if (transfer.executionCondition === CC_NOT_PROVIDED) {
+            throw ILPExceptionSupport.createILPUnprocessableEntityException(
+                    this.javaClass.name + "Transfer is not conditional")
+        }
+        val transferMatchUser = // TODO:(?) Recheck
+                ai.getId() == transfer.debits[0].localAccount.localID || ai.getId() == transfer.credits[0].localAccount.localID
+        if (!ai.isAdmin && !transferMatchUser) {
+            throw ILPExceptionSupport.createILPForbiddenException()
+        }
+
+        val sFulfillmentInput = context.bodyAsString
+        val fulfillmentBytes = Base64.getDecoder().decode(sFulfillmentInput)
+        //        // REF: http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+        //        byte[] fulfillmentBytes = DatatypeConverter.parseHexBinary(sFulfillment);
+        val inputFF = Fulfillment.of(fulfillmentBytes)
+        val message = byteArrayOf()
+        var ffExisted = false // TODO:(0) Recheck usage
+        log.trace("transfer.getExecutionCondition():" + transfer.executionCondition.toString())
+        //        log.trace("transfer.getCancellationCondition():"+transfer.getCancellationCondition().toString());
+        log.trace("request hexFulfillment:" + sFulfillmentInput)
+        log.trace("request ff.getCondition():" + inputFF.condition.toString())
+        if (transfer.executionCondition == inputFF.condition) {
+            if (!inputFF.validate(inputFF.condition))
+                throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate")
+            if (transfer.expiresAt.compareTo(ZonedDateTime.now()) < 0 && Config.unitTestsActive == false)
+                throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired")
+            if (transfer.transferStatus != TransferStatus.EXECUTED)
+                TM.executeILPTransfer(transfer, inputFF)
+            //        } else if (transfer.getCancellationCondition().equals(inputFF.getCondition()) ){
+            //            if ( transfer.getTransferStatus() == TransferStatus.EXECUTED) {
+            //                throw ILPExceptionSupport.createILPBadRequestException("Already executed");
+            //            }
+            //            ffExisted = transfer.getCancellationFulfillment().equals(inputFF);
+            //            if (!ffExisted) {
+            //                if (!inputFF.verify(inputFF.getCondition(), message)){
+            //                    throw ILPExceptionSupport.createILPUnprocessableEntityException("cancelation fulfillment doesn't validate");
+            //                }
+            //                TM.cancelILPTransfer(transfer, inputFF);
+            //            }
+        } else {
+            throw ILPExceptionSupport.createILPUnprocessableEntityException(
+                    "Fulfillment does not match any condition")
+        }
+
+        val response = ConversionUtil.fulfillmentToBase64(inputFF)
+        if (sFulfillmentInput != response) {
+            throw ILPExceptionSupport.createILPBadRequestException(
+                    "Assert exception. Input '$sFulfillmentInput'doesn't match output '$response' ")
+        }
+        context.response()
+                .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
+                .putHeader(HttpHeaders.CONTENT_LENGTH, "" + response.length)
+                .setStatusCode(if (!ffExisted) HttpResponseStatus.CREATED.code() else HttpResponseStatus.OK.code())
+                .end(response)
+    }
+
+    override fun handleGet(context: RoutingContext) {
+        // GET /transfers/25644640-d140-450e-b94b-badbe23d3389/fulfillment
+        val ai = AuthManager.authenticate(context)
+
+
+        val ilpTransferID = UUID.fromString(context.request().getParam(transferUUID))
+        val transferID = ILPSpec2LocalTransferID(ilpTransferID)
+
+        val transfer = TM.getTransferById(transferID)
+
+        var transferMatchUser =
+                   ai.getId() == transfer.debits[0].localAccount.localID
+                || ai.getId() == transfer.credits[0].localAccount.localID
+        if (!ai.isAdmin && !(ai.isConnector && transferMatchUser))
+            throw ILPExceptionSupport.createILPForbiddenException()
+
+        val fulfillment = transfer.executionFulfillment
+        if (fulfillment === FF_NOT_PROVIDED) {
+            if (transfer.expiresAt.compareTo(ZonedDateTime.now()) < 0) {
+                throw ILPExceptionSupport.createILPNotFoundException("This transfer expired before it was fulfilled")
+            }
+            throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity")
+        }
+
+        val response = ConversionUtil.fulfillmentToBase64(fulfillment)
+
+        context.response().putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
+                .putHeader(HttpHeaders.CONTENT_LENGTH, "" + response.length)
+                .setStatusCode(HttpResponseStatus.OK.code()).end(response)
+    }
+
+    companion object {
+        private val log = org.slf4j.LoggerFactory.getLogger(FulfillmentHandler::class.java)
+        private val transferUUID = "transferUUID"
+
+        fun create(): FulfillmentHandler = FulfillmentHandler()
+    }
+}
