@@ -436,11 +436,7 @@ class TransferStateHandler : RestEndpointHandler(
         private val md256: MessageDigest
 
         init {
-            try {
-                md256 = MessageDigest.getInstance("SHA-256")
-            } catch (e: NoSuchAlgorithmException) {
-                throw RuntimeException(e.toString(), e)
-            }
+            md256 = MessageDigest.getInstance("SHA-256")
         }
 
         fun create(): TransferStateHandler = TransferStateHandler()
