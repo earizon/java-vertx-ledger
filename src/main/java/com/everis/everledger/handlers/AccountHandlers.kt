@@ -1,6 +1,6 @@
 package com.everis.everledger.handlers
 
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.impl.SimpleAccount
 import com.everis.everledger.impl.manager.SimpleAccountManager

@@ -1,7 +1,7 @@
 package com.everis.everledger.handlers
 
 import com.everis.everledger.AuthInfo
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.impl.manager.SimpleAccountManager
 import com.everis.everledger.util.AuthManager

@@ -1,5 +1,5 @@
 package com.everis.everledger.impl.manager
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.ifaces.account.IfaceAccountManager
 import com.everis.everledger.ifaces.account.IfaceLocalAccount
@@ -77,7 +77,7 @@ public object SimpleAccountManager
     }
 
     fun developerTestingReset() {
-        if (!com.everis.everledger.Config.unitTestsActive) {
+        if (!Config.unitTestsActive) {
             throw RuntimeException("developer.unitTestsActive must be true @ application.conf " + "to be able to reset tests")
         }
         //

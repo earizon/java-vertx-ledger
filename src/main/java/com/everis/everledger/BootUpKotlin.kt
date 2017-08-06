@@ -9,6 +9,7 @@ import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.web.Router
 //import io.vertx.ext.web.handler.AuthHandler
+import com.everis.everledger.util.Config
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.LoggerFormat
 import io.vertx.ext.web.handler.LoggerHandler

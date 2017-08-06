@@ -16,7 +16,7 @@ import org.javamoney.moneta.Money
 
 import org.interledger.ledger.model.TransferStatus
 
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccount
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransfer

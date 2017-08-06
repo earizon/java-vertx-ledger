@@ -1,6 +1,6 @@
 package com.everis.everledger.impl
 
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import org.interledger.InterledgerAddress
 import java.net.URI

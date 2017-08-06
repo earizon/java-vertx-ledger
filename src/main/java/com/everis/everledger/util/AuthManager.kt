@@ -1,6 +1,7 @@
 package com.everis.everledger.util
 
 import com.everis.everledger.AuthInfo
+import com.everis.everledger.util.Config
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.impl.crypto.MacProvider
@@ -27,7 +28,7 @@ object AuthManager {
     fun configureDevelopmentEnvironment(): Map<AuthInfo, Int>/*blance*/ {
         // TODO:(0) This is a temporal "patch". Ideally functional-test will recreate the accounts
         //   through HTTP-requests.
-        if (!com.everis.everledger.Config.unitTestsActive) {
+        if (!Config.unitTestsActive) {
             throw RuntimeException("developer.unitTestsActive must be true @ application.conf " + "to be able to reset tests")
         }
         val result = HashMap<AuthInfo, Int>/*blance*/()/*blance*/

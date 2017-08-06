@@ -28,7 +28,7 @@ import com.everis.everledger.ifaces.transfer.IfaceTransferManager
 import com.everis.everledger.util.ConversionUtil
 import com.everis.everledger.util.ILPExceptionSupport
 
-import com.everis.everledger.impl.Debit
+import com.everis.everledger.util.Config
 import com.everis.everledger.impl.SimpleTransfer
 import com.everis.everledger.impl.CC_NOT_PROVIDED
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
@@ -88,7 +88,7 @@ object SimpleTransferManager : IfaceTransferManager {
     private val transferMap  = HashMap<ILocalTransfer.LocalTransferID, IfaceTransfer>() // In-memory database of pending/executed/cancelled transfers
 
     fun developerTestingResetTransfers() { // TODO:(?) Make static?
-        if (! com.everis.everledger.Config.unitTestsActive) {
+        if (! Config.unitTestsActive) {
             throw RuntimeException("developer.unitTestsActive must be true @ application.conf "
                     + "to be able to reset tests")
         }

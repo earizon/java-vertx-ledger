@@ -1,6 +1,6 @@
 package com.everis.everledger.handlers
 
-import com.everis.everledger.Config
+import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.ifaces.transfer.IfaceTransferManager
