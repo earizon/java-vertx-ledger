@@ -1,28 +1,84 @@
 package com.everis.everledger.util
 
-import com.everis.everledger.HTTPInterledgerException
+import com.everis.everledger.util.HTTPInterledgerException
+import io.vertx.core.AsyncResult
+import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
+import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
 import org.apache.commons.lang3.math.NumberUtils
 import org.interledger.Condition
 import org.interledger.Fulfillment
 import org.interledger.InterledgerAddress
+import org.interledger.InterledgerProtocolException
 import org.interledger.ilp.InterledgerError
 import org.interledger.ledger.model.LedgerInfo
 import org.interledger.ledger.money.format.LedgerSpecificDecimalMonetaryAmountFormat
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.lang.Long
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
+import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
+import java.util.function.Supplier
 import java.util.regex.Pattern
 import javax.money.CurrencyUnit
 import javax.money.Monetary
 import javax.money.format.MonetaryAmountFormat
+
+class JsonObjectBuilder : Supplier<JsonObject> {
+
+    private var beanMap: MutableMap<String, Any> = HashMap<String, Any>()
+
+    override fun get(): JsonObject {
+        return JsonObject(beanMap)
+    }
+
+    // TODO:(1) recheck SuppressWarnings
+    fun from(value: Any): JsonObjectBuilder {
+        // TODO:(0) beanMap = Json.mapper.convertValue(value, Map<*, *>::class.java)
+        return this
+    }
+
+    fun with(vararg pairs: Any): JsonObjectBuilder {
+        if (pairs.size % 2 != 0) {
+            throw IllegalArgumentException("Argument pairs must be even! " + pairs.size)
+        }
+        var i = 0
+        while (i < pairs.size) {
+            put(pairs[i], pairs[i + 1])
+            i += 2
+        }
+        return this
+    }
+
+    fun put(key: Any, value: Any): JsonObjectBuilder {
+        beanMap.put(key.toString(), value)
+        return this
+    }
+
+
+    companion object {
+        fun create(): JsonObjectBuilder = JsonObjectBuilder()
+    }
+
+
+}
 
 object TimeUtils {
     val future = ZonedDateTime.ofInstant( Date(Long.MAX_VALUE).toInstant(), ZoneId.of("Europe/Paris"))
@@ -301,8 +357,170 @@ object Config {
     /**
      * Execute this Config.main as java application to check that config is OK!
      */
-    @JvmStatic fun main(args: Array<String>) {
+    @JvmStatic fun main(args: Array<String>) { // TODO:(0) Move to Unit tests
         println(Config.debug)
     }
 
 }
+
+
+object DSAPrivPubKeySupport {
+    fun loadPrivateKey(key64: String): PrivateKey {
+        val clear = Base64.getDecoder().decode(key64)
+        val keySpec = PKCS8EncodedKeySpec(clear)
+        try {
+            val fact = KeyFactory.getInstance("DSA")
+            val priv = fact.generatePrivate(keySpec)
+            Arrays.fill(clear, 0.toByte())
+            return priv
+        } catch (e: Exception) {
+            throw RuntimeException(e.toString())
+        }
+
+    }
+
+    fun loadPublicKey(stored: String): PublicKey {
+        val data = Base64.getDecoder().decode(stored)
+        val spec = X509EncodedKeySpec(data)
+        try {
+            val fact = KeyFactory.getInstance("DSA")
+            return fact.generatePublic(spec)
+        } catch (e: Exception) {
+            throw RuntimeException(e.toString())
+        }
+
+    }
+
+    fun savePrivateKey(priv: PrivateKey): String {
+        try {
+            val fact = KeyFactory.getInstance("DSA")
+            val spec = fact.getKeySpec(priv,
+                    PKCS8EncodedKeySpec::class.java)
+            val packed = spec.encoded
+            val key64 = String(Base64.getEncoder().encode(packed))
+            Arrays.fill(packed, 0.toByte())
+            return key64
+        } catch (e: Exception) {
+            throw RuntimeException(e.toString())
+        }
+
+    }
+
+    fun savePublicKey(publ: PublicKey): String {
+        // TODO:(0) FIXME:
+        // It's supposed to return something similar to
+        //    2A5PxZUtFUuoL64r8oxzrsV73Y5ma76NZLUV8P2DG1M=
+        // but it's actually returning something like:
+        //    MIIBtzCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdSPO9EAMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVClpJ+f6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith1yrv8iIDGZ3RSAHHAhUAl2BQjxUjC8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoDgYQAAoGAARbabwyUW4v/xtnQjbRd4iEPvHnOCQpZx5d1RbaNe1XkmYj4JNdD1kmqjBhIDD8nKSdBk2oPWpujzjPs+T//7xWxixZ6BFrhAQ8qNWXF4tZKkmjtHqxo3JWhBe5OvGwNmBR9VJ4K7Xyk/YbZX2dK6o/Gl87yh/zWiUXfGAkua7A=
+        try {
+            val fact = KeyFactory.getInstance("DSA")
+            val spec = fact.getKeySpec(publ,
+                    X509EncodedKeySpec::class.java)
+            return String(Base64.getEncoder().encode(spec.encoded))
+        } catch (e: Exception) {
+            throw RuntimeException(e.toString())
+        }
+
+    }
+
+    @Throws(Exception::class)
+    @JvmStatic fun main(args: Array<String>) { // TODO:(0) Move to UnitTests
+        val gen = KeyPairGenerator.getInstance("DSA")
+        val pair = gen.generateKeyPair()
+        val pubKey = savePublicKey(pair.public)
+        val privKey = savePrivateKey(pair.private)
+        println("privKey:" + privKey)
+        println("pubKey :" + pubKey)
+        // PublicKey pubSaved = loadPublicKey(pubKey);
+        // System.out.println(pair.getPublic()+"\n"+pubSaved);
+        // PrivateKey privSaved = loadPrivateKey(privKey);
+        // System.out.println(pair.getPrivate()+"\n"+privSaved);
+    }
+}
+
+
+object VertxRunner {
+
+    private val log = LoggerFactory.getLogger(VertxRunner::class.java)
+
+    fun run(clazz: Class<*>) {
+        val verticleID = clazz.name
+        var baseDir = ""
+        val options = VertxOptions().setClustered(false)
+        // Smart cwd detection
+
+        // Based on the current directory (.) and the desired directory (baseDir), we try to compute the vertx.cwd
+        // directory:
+        try {
+            // We need to use the canonical file. Without the file name is .
+            val current = File(".").canonicalFile
+            if (baseDir.startsWith(current.name) && baseDir != current.name) {
+                baseDir = baseDir.substring(current.name.length + 1)
+            }
+        } catch (e: IOException) {
+            // Ignore it.
+        }
+
+        System.setProperty("vertx.cwd", baseDir)
+        val deployLatch = CountDownLatch(1)
+        val deployHandler = { result : AsyncResult<String> ->
+            if (result.succeeded()) {
+                log.info("Deployed verticle {}", result.result())
+                deployLatch.countDown()
+            } else {
+                log.error("Deploying verticle", result.cause())
+            }
+        }
+        val runner = { vertx : io.vertx.core.Vertx ->
+            try {
+                vertx.deployVerticle(verticleID, deployHandler)
+                // Alt: vertx.deployVerticle(verticleID, deploymentOptions, deployHandler);
+            } catch (e: Throwable) {
+                log.error("Deploying verticle " + verticleID, e)
+                throw e
+            }
+        }
+        //DefaultChannelId.newInstance();//Warm up java ipv6 localhost dns
+        if (options.isClustered) {
+            Vertx.clusteredVertx(options) { res ->
+                if (res.succeeded()) {
+                    val vertx = res.result()
+                    // runner.accept(vertx)
+                    runner.invoke(vertx)
+                } else {
+                    log.error("Deploying clustered verticle " + verticleID, res.cause())
+                }
+            }
+        } else {
+            val vertx = Vertx.vertx(options)
+            // runner.accept(vertx)
+            runner.invoke(vertx)
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() {
+                    log.info("Shutting down")
+                    vertx.close()
+                }
+            })
+        }
+
+        while (true) {
+            try {
+                if (!deployLatch.await(40, TimeUnit.SECONDS)) {
+                    log.error("Timed out waiting to start")
+                    System.exit(3)
+                }
+                break
+            } catch (e: InterruptedException) {
+                //ignore
+            }
+
+        }
+        log.info("Launched")
+    }
+}
+
+/*
+ * Wrapper class around InterledgerError to store the http error code
+ */
+class HTTPInterledgerException(val httpErrorCode: Int, interledgerError: InterledgerError) : InterledgerProtocolException(interledgerError)
+

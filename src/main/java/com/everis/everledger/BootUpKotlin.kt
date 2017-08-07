@@ -180,7 +180,6 @@ DeveloperTestingRequestHandler.create(),
 
 }
 
-
 fun main(args : Array<String>) {
     val bootUp : BootUpKotlin = BootUpKotlin()
     bootUp.configureDevelopmentEnvironment()

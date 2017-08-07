@@ -1,7 +1,7 @@
 package com.everis.everledger.handlers
 
 import com.everis.everledger.util.Config
-import com.everis.everledger.HTTPInterledgerException
+import com.everis.everledger.util.HTTPInterledgerException
 import com.everis.everledger.impl.manager.SimpleAccountManager
 import com.everis.everledger.impl.manager.SimpleTransferManager
 import com.everis.everledger.util.AuthManager
