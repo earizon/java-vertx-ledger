@@ -25,13 +25,13 @@ object AuthManager {
 
     private var users: MutableMap<String, AuthInfo> = HashMap()
 
-    fun configureDevelopmentEnvironment(): Map<AuthInfo, Int>/*blance*/ {
+    fun configureDevelopmentEnvironment(): Map<AuthInfo, IntArray/*[balance,minAllowedBalance]*/> {
         // TODO:(0) This is a temporal "patch". Ideally functional-test will recreate the accounts
         //   through HTTP-requests.
         if (!Config.unitTestsActive) {
             throw RuntimeException("developer.unitTestsActive must be true @ application.conf " + "to be able to reset tests")
         }
-        val result = HashMap<AuthInfo, Int>/*blance*/()/*blance*/
+        val result = HashMap<AuthInfo, IntArray/*balance*/>()
         val admin = AuthInfo("admin", "admin", "admin", "admin")
         val ilpconnector = AuthInfo("ilpconnector", "ilpconnector", "ilpconnector", "connector")
         val alice = AuthInfo("alice", "alice", "alice", "user")
@@ -40,15 +40,15 @@ object AuthManager {
         val eve = AuthInfo("eve", "eve", "eve", "user")
         users = HashMap<String, AuthInfo>()
         users.put("admin", admin)
-        result.put(admin, 10000)
+        result.put(admin, intArrayOf(10000,-1000000000))
         users.put("ilpconnector", ilpconnector)
-        result.put(ilpconnector, 100)
+        result.put(ilpconnector, intArrayOf(100,0))
         users.put("alice", alice)
-        result.put(alice, 100)
+        result.put(alice, intArrayOf(100,0))
         users.put("bob", bob)
-        result.put(bob, 0)
+        result.put(bob, intArrayOf(0,0))
         users.put("eve", eve)
-        result.put(eve, 0)
+        result.put(eve, intArrayOf(0,0))
         // users.put("nobalance"   , noBalance   ); result.put(noBalance   ,     0);
         return result
     }

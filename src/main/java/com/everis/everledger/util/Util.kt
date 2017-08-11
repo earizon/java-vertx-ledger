@@ -311,7 +311,7 @@ object Config {
         services.put("transfer_fulfillment", base + "transfers/:id/fulfillment")
         services.put("message", base + "messages")
         services.put("auth_token", base + "auth_token")
-        services.put("transfer_rejection", base + "not_available") // required by ilp-kit not RFCs
+        // services.put("transfer_rejection", base + "not_available") // required by ilp-kit not RFCs
         indexHandlerMap.put("urls", services)
         indexHandlerMap.put("condition_sign_public_key",
                 DSAPrivPubKeySupport.savePublicKey(Config.ilpLedgerInfo.conditionSignPublicKey))

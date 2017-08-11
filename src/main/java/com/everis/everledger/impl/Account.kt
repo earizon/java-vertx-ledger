@@ -11,8 +11,8 @@ import org.javamoney.moneta.Money
 
 data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
         val uniqId: String,
-        val balance: MonetaryAmount = Money.of(0, Config.ledgerCurrencyCode),
-        val minimumAllowedBalance: MonetaryAmount = Money.of(0, Config.ledgerCurrencyCode),
+        val balance: MonetaryAmount,
+        val minimumAllowedBalance: MonetaryAmount,
         val disabled: Boolean = false
         ) : IfaceAccount {
 
@@ -73,9 +73,7 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
         return byteArrayOf() // TODO:(0) FIXME
     }
 
-    override fun getILPMinimumAllowedBalance(): MonetaryAmount {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun getILPMinimumAllowedBalance(): MonetaryAmount = minimumAllowedBalance
     // } END   IMPLEMENTATION IfaceILPSpecAccount
 
 }

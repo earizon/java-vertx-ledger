@@ -1,4 +1,5 @@
 package com.everis.everledger.impl.manager
+import com.everis.everledger.AuthInfo
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.ifaces.account.IfaceAccountManager
@@ -84,14 +85,15 @@ public object SimpleAccountManager
         SimpleAccountManager.resetAccounts() // STEP 1: Reset accounts to initial state
 
         // STEP 2: Create an account for each pre-configured user in AuthManager:
-        val devUsers = AuthManager.configureDevelopmentEnvironment()/*blance*/
-        val users = devUsers.keys
-        for (ai in users) {
-            val account = SimpleAccount(ai.id,
-                    Money.of(0, Config.ledgerCurrencyCode), // TODO:(Kotlin) once kotlinified remove defaults
-                    Money.of(0, Config.ledgerCurrencyCode),
-                    false)
+        val devUsers : Map<AuthInfo, IntArray/*[balance,minAllowedBalance]*/> = AuthManager.configureDevelopmentEnvironment()/*blance*/
+        for ( (auth, bal_l) in devUsers) {
+println(">>>>> deleteme : "+auth.id + ", "+ bal_l[0] + ", "+bal_l[1])
+             val account = SimpleAccount(auth.id,
+                 Money.of(bal_l[0], Config.ledgerCurrencyCode),
+                 Money.of(bal_l[1], Config.ledgerCurrencyCode),
+                 false)
             SimpleAccountManager.store(account, false)
+
         }
     }
 

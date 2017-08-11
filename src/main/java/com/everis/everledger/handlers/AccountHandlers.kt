@@ -68,7 +68,7 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
         val balance = if (data.containsKey(PARAM_BALANCE))
             ConversionUtil.toNumber(data.getValue(PARAM_BALANCE))
         else
-            ConversionUtil.toNumber(data.getValue(PARAM_BALANCE))
+            ConversionUtil.toNumber("0")
 
         val account = SimpleAccount(
                 accountName,
