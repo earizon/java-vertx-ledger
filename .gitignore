@@ -1,0 +1,22 @@
+# Package Files #
+*.jar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+/bin/
+/*/bin/
+/.gradle/
+**/build/
+/.nb-gradle/
+**/target/
+.classpath
+.project
+.settings/*
+/*/.settings/*
+/*/.gitignore
+*~
+**/*.log
+**/nbactions.xml
+java-ilp-ledger-api/.selfsigned.jks
+/build/
+.idea
