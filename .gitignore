@@ -20,3 +20,6 @@ hs_err_pid*
 java-ilp-ledger-api/.selfsigned.jks
 /build/
 .idea
+java-vertx-ledger.iml
+ledger1.crt
+ledger1.key
