@@ -50,7 +50,6 @@ import com.everis.everledger.impl.manager.SimpleAccountManager
 
 private val log             = LoggerFactory.getLogger(SimpleTransferManager::class.java)
 private val accountManager  = SimpleAccountManager
-private val HOLDS_URI       = accountManager.holdAccountILP
 
 // fun getTransferManager() : IfaceTransferManager {
 //     // TODO:(1) Move function to factory similar to LedgerAccountManagerFactory
@@ -175,7 +174,7 @@ object SimpleTransferManager : IfaceTransferManager {
 
         // PUT Money on-hold:
         for (debit in newTransfer.getDebits()) {
-            __executeLocalTransfer(debit.localAccount, HOLDS_URI, debit.amount)
+            __executeLocalTransfer(debit.localAccount, accountManager.holdAccountILP, debit.amount)
         }
         // TODO:(0) Next line commented to make tests pass, but looks to be sensible to do so.
         // newTransfer.setTransferStatus(TransferStatus.PROPOSED)
@@ -185,7 +184,7 @@ object SimpleTransferManager : IfaceTransferManager {
     private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) : IfaceTransfer {
         if (isExecution /* => DisburseFunds */) {
             for (credit in transfer.getCredits()) {
-                __executeLocalTransfer(sender = HOLDS_URI, recipient = credit.localAccount, amount = credit.amount)
+                __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = credit.localAccount, amount = credit.amount)
             }
             return (transfer as SimpleTransfer).copy(
                     int_transferStatus=TransferStatus.EXECUTED,
@@ -193,7 +192,7 @@ object SimpleTransferManager : IfaceTransferManager {
                     executionFF=FF )
         } else /* => Cancellation/Rollback  */ {
             for (debit in transfer.getDebits()) {
-                __executeLocalTransfer(sender = HOLDS_URI, recipient = debit.localAccount, amount = debit.amount)
+                __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = debit.localAccount, amount = debit.amount)
             }
             return (transfer as SimpleTransfer).copy(
                     int_transferStatus=TransferStatus.REJECTED,
