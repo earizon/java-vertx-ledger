@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.3"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.4"
     }
 }
 
@@ -49,8 +49,8 @@ repositories {
 }
 
 dependencies {
-//  compile     project(':java-ilp-core')
-    compile     "org.web3j:core:2.2.3"
+//  compile     projece(':java-ilp-core')
+    compile     "org.web3j:core:2.3.0"
     compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
     compile     "javax.money:money-api:${money_api_version}"
     compile     "org.javamoney:moneta:${moneta_version}"
@@ -63,7 +63,6 @@ dependencies {
     compile     "io.jsonwebtoken:jjwt:${jsonwebtoken_version}"
     compile     "org.jetbrains.kotlin:kotlin-stdlib-jre8"
     compile     "org.jetbrains.kotlin:kotlin-reflect"
-
     testCompile "junit:junit:${junit_version}"
     testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
 	testCompile "org.jetbrains.kotlin:kotlin-test"
