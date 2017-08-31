@@ -1,0 +1,10 @@
+SOLIDITY_SRC_DIR=solidityContracts
+SRC_CONTRACT_NAME=GenericLogContract01
+SRC_CONTRACT=${SRC_CONTRACT_NAME}.sol
+
+KEY_STORE_DIR_PATH=` grep "^keystore.dir.path=" $CONF_FILE | sed "s/^.*=//" `
+PUB_ADDRESS_ESCROW=`ls -l ../wallets/bob   | sed "s/^.*--\(.*\).json/\1/"`
+PUB_ADDRESS_ADMIN=` ls -l ../wallets/admin | sed "s/^.*--\(.*\).json/\1/"`
+PUB_ADDRESS_ALICE=` ls -l ../wallets/alice | sed "s/^.*--\(.*\).json/\1/"`
+PUB_ADDRESS_BOB=`   ls -l ../wallets/bob   | sed "s/^.*--\(.*\).json/\1/"`
+PUB_ADDRESS_ILPCN=` ls -l ../wallets/alice | sed "s/^.*--\(.*\).json/\1/"`
