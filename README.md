@@ -7,7 +7,10 @@
 [CI-url]: https://travis-ci.org/everis-innolab/java-ilp-master
 
 ## About
-Java ledger implementing the Rest/Websocket expected by ilp-plugin-bells and the java interfaces defined @ https://github.com/interledger/java-ilp-core/ . It uses an in-memory database, so all changes are lost after reboot.
+Java ledger implementing HTLA Interledger RFC .
+https://github.com/interledger/rfcs/tree/master/0022-hashed-timelock-agreements
+
+ expected by ilp-plugin-bells and the java interfaces defined @ https://github.com/interledger/java-ilp-core/ . It uses an in-memory database, so all changes are lost after reboot.
 
 Read developers docs @ dev_docs for more info
 
