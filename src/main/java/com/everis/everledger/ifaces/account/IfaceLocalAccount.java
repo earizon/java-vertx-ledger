@@ -1,5 +1,6 @@
 package com.everis.everledger.ifaces.account;
 
+import com.everis.everledger.AuthInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +31,7 @@ public interface IfaceLocalAccount {
     // Use *Manager instead
     String getBalanceAsString();
 
-
+    AuthInfo getAuthInfo();
  // @Deprecated
  // // Use *Manager instead
  // IfaceLocalAccount credit(MonetaryAmount amount);

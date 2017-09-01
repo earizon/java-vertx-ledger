@@ -16,7 +16,7 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
         val balance: MonetaryAmount,
         val minimumAllowedBalance: MonetaryAmount,
         val disabled: Boolean = false,
-        val authInfo : AuthInfo
+        private val authInfo : AuthInfo
         ) : IfaceAccount {
 
     // START IMPLEMENTATION IfaceLocalAccount {
@@ -68,4 +68,5 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
     override fun getILPMinimumAllowedBalance(): MonetaryAmount = minimumAllowedBalance
     // } END   IMPLEMENTATION IfaceILPSpecAccount
 
+    override fun getAuthInfo() : AuthInfo  = authInfo
 }

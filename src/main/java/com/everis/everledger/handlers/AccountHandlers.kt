@@ -30,8 +30,8 @@ private fun accountToJsonObject(account: IfaceAccount, isAuthenticated: Boolean)
     // TODO:(0) Move to JSON Support?
 
     val build = JsonObjectBuilder.create()
-            .put("id", Config.publicURL.toString()+"/"+account.id)
-            .put("name", account.id)
+            .put("id", Config.publicURL.toString()+"/accounts/"+account.id)
+            .put("name", account.authInfo.login)
             .put("ledger", Config.publicURL.toString())
     if (isAuthenticated) {
         build
