@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory
 private val PARAM_ID = "id"
 private val PARAM_NAME = "name"
 private val PARAM_BALANCE = "balance"
-private val PARAM_ETH_ADDRESS = "ethereum_address"
 private val PARAM_MIN_ALLOWED_BALANCE = "minimum_allowed_balance"
 private val PARAM_PASSWORD = "password"
 
@@ -96,9 +95,6 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
             ConversionUtil.toNumber(data.getValue(PARAM_BALANCE))
         else
             ConversionUtil.toNumber("0")
-
-        val eth_address : String = data.getString(PARAM_ETH_ADDRESS)
-                 ?: throw RuntimeException(PARAM_ETH_ADDRESS + " not provided ")
 
         val ai = AuthInfo(data_id, data_name, data_password, AccessRoll.USER )
 
