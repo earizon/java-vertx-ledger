@@ -44,7 +44,8 @@ private fun accountToJsonObject(account: IfaceAccount, isAuthenticated: Boolean)
 }
 
 class AccountsHandler
-private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST), arrayOf("accounts/:" + PARAM_ID)) {
+private constructor() : RestEndpointHandler(
+        arrayOf(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST), arrayOf("accounts/:" + PARAM_ID)) {
 
     override fun handleGet(context: RoutingContext) {
         val ai = AuthManager.authenticate(context, true)
@@ -65,9 +66,17 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
     override fun handlePut(context: RoutingContext) {
         log.debug("Handing put account")
         AuthManager.authenticate(context)
-        val data_id = ConversionUtil.parseNonEmptyString(context.request().getParam(PARAM_ID))
-        val exists = SimpleAccountManager.hasAccount(data_id)
+        val id = ConversionUtil.parseNonEmptyString(context.request().getParam(PARAM_ID))
+        val exists = SimpleAccountManager.hasAccount(id)
         val data = RestEndpointHandler.getBodyAsJson(context)
+        val data_id01 = data.getString(PARAM_ID)
+        val data_id01_offset = data_id01.lastIndexOf('/')
+        val data_id = if (data_id01_offset >= 0) data_id01.substring(data_id01_offset+1) else data_id01
+
+        if (id != data_id) {
+            throw ILPExceptionSupport.createILPBadRequestException(
+                    "id in body '$data_id' doesn't match account id '$id' in URL")
+        }
 
         // TODO:(0) Check data_id is valid (for example valid Ethereum address)
         val data_name: String = data.getString(PARAM_NAME)
@@ -77,10 +86,7 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
                 if (exists)  AuthManager.getUsers()[data_name]!!.pass
                 else throw ILPExceptionSupport.createILPBadRequestException("password not provided for id:" + data_id)
 
-        if (data_name != data_id) {
-            throw ILPExceptionSupport.createILPBadRequestException(
-                    "id in body '$data_id'doesn't match account name '$data_name' in URL")
-        }
+
         if (exists && !data_name.equals(data_name, ignoreCase = true)) {
             throw ILPExceptionSupport.createILPBadRequestException()
         }

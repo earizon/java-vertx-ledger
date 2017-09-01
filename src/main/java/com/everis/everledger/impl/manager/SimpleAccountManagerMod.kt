@@ -91,7 +91,6 @@ public object SimpleAccountManager
         // STEP 2: Create an account for each pre-configured user in AuthManager:
         val devUsers : Map<AuthInfo, IntArray/*[balance,minAllowedBalance]*/> = AuthManager.configureDevelopmentEnvironment()/*blance*/
         for ( (auth, bal_l) in devUsers) {
-println(">>>>> deleteme : "+auth.id + ", "+ bal_l[0] + ", "+bal_l[1])
              val account = SimpleAccount(auth.id,
                  Money.of(bal_l[0], Config.ledgerCurrencyCode),
                  Money.of(bal_l[1], Config.ledgerCurrencyCode),
