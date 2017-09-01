@@ -220,7 +220,7 @@ class AuthTokenHandler private constructor() : RestEndpointHandler(arrayOf(HttpM
          * }
          */
         // REF: https://github.com/jwtk/jjwt/
-        val urlAccount = Config.publicURL.toString() + "/accounts/" + ai.name.toLowerCase()
+        val urlAccount = Config.publicURL.toString() + "/accounts/" + ai.id.toLowerCase()
         val subject: String
         try {
             subject = java.net.URI(urlAccount).toString()
@@ -232,7 +232,8 @@ class AuthTokenHandler private constructor() : RestEndpointHandler(arrayOf(HttpM
 
         val compactJwsToken = Jwts.builder()
                 .setSubject(subject)
-                .setIssuer(Config.serverPublicHost /* config.server.base_uri */)
+                .setIssuer(Config.serverPublicHost
+                        + if (Config.serverPublicPort.isEmpty()) "" else Config.serverPublicPort)
                 .signWith(AuthManager.SigAlgth, AuthManager.key).compact()
         val result = HashMap<String, Any>()
         result.put("token", compactJwsToken)

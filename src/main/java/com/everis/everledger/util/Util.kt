@@ -1,11 +1,11 @@
 package com.everis.everledger.util
 
-import com.everis.everledger.util.HTTPInterledgerException
 import io.vertx.core.AsyncResult
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.interledger.Condition
 import org.interledger.Fulfillment
@@ -124,6 +124,13 @@ object ConversionUtil {
         val fingerprint = Base64.getUrlDecoder().decode(m.group(2))
         return Condition.builder().hash(fingerprint).build()
     }
+
+    fun parseNonEmptyString(input: String) : String {
+        val result = input.trim()
+        if ( StringUtils.isEmpty(result) )
+           throw RuntimeException("Trimmed string is empty")
+        return result
+    }
 }
 
 object ILPExceptionSupport {
@@ -209,7 +216,8 @@ object Config {
     val unitTestsActive = getBoolean("developer.unitTestsActive")
 
     val debug = getBoolean("server.debug")
-    val ilpPrefix = getString("ledger.ilp.prefix")
+    val ilpPrefix01 = getString("ledger.ilp.prefix")
+    val ilpPrefix = if (ilpPrefix01.endsWith(".")) ilpPrefix01 else ilpPrefix01+"."
     val ledgerCurrencyCode = getString("ledger.currency.code")
     val ledgerCurrencySymbol = getString("ledger.currency.symbol")
     val ledgerPathPrefix = getString("ledger.path.prefix")
@@ -227,6 +235,12 @@ object Config {
     val tls_key = getString("server.tls_key")
     val tls_crt = getString("server.tls_cert")
 
+    val test_ethereum_address_escrow       = getString("test.ethereum.address.escrow")
+    val test_ethereum_address_admin        = getString("test.ethereum.address.admin")
+    val test_ethereum_address_ilpconnector = getString("test.ethereum.address.ilpconnector")
+    val test_ethereum_address_alice        = getString("test.ethereum.address.alice")
+    val test_ethereum_address_bob          = getString("test.ethereum.address.bob")
+    val test_ethereum_address_eve          = getString("test.ethereum.address.eve")
 
     // Note: DSAPrivPubKeySupport.main support is used to configure pub/priv.key
     //    private static final String sConditionSignPrivateKey = getString("ledger.ed25519.conditionSignPrivateKey");
@@ -331,7 +345,7 @@ object Config {
 
     private fun getString(key: String): String {
         val result = prop.getProperty(key) ?: throw RuntimeException(key + " was not found in " + CONFIG_FILE)
-        return result
+        return result.trim()
     }
 
     private fun getBoolean(key: String): Boolean {
@@ -522,5 +536,8 @@ object VertxRunner {
 /*
  * Wrapper class around InterledgerError to store the http error code
  */
-class HTTPInterledgerException(val httpErrorCode: Int, interledgerError: InterledgerError) : InterledgerProtocolException(interledgerError)
+// TODO:(0) Change to
+//     data class HTTPInterledgerException(val httpErrorCode: Int, ILPException: InterledgerProtocolException)
+class HTTPInterledgerException(val httpErrorCode: Int, interledgerError: InterledgerError) :
+        InterledgerProtocolException(interledgerError)
 

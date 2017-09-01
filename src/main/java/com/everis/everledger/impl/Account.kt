@@ -1,7 +1,9 @@
 package com.everis.everledger.impl
 
+import com.everis.everledger.AuthInfo
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
+import io.vertx.core.json.JsonObject
 import org.interledger.InterledgerAddress
 import java.net.URI
 import java.net.URISyntaxException
@@ -13,7 +15,8 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
         val uniqId: String,
         val balance: MonetaryAmount,
         val minimumAllowedBalance: MonetaryAmount,
-        val disabled: Boolean = false
+        val disabled: Boolean = false,
+        val authInfo : AuthInfo
         ) : IfaceAccount {
 
     // START IMPLEMENTATION IfaceLocalAccount {
@@ -28,20 +31,20 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
                    _balance.doubleValueExact().toString()
     }
 
-    override fun credit(amount: MonetaryAmount): SimpleAccount {
-        assert(amount.isPositive)
-        return copy(balance = balance.add(amount))
-    }
+ // override fun credit(amount: MonetaryAmount): SimpleAccount {
+ //     assert(amount.isPositive)
+ //     return copy(balance = balance.add(amount))
+ // }
 
-    override fun debit(amount: MonetaryAmount): SimpleAccount {
-        assert(amount.isPositive)
-        return  copy(balance = balance.subtract(amount))
-    }
+ // override fun debit(amount: MonetaryAmount): SimpleAccount {
+ //     assert(amount.isPositive)
+ //     return  copy(balance = balance.subtract(amount))
+ // }
     // } END   IMPLEMENTATION IfaceLocalAccount
 
     // START IMPLEMENTATION IfaceILPSpecAccount {
-    override fun getILPLedger(): InterledgerAddress =
-            InterledgerAddress.builder().value(Config.ilpPrefix).build()
+    val ilpLedger = InterledgerAddress.builder().value(Config.ilpPrefix).build()
+    override fun getILPLedger(): InterledgerAddress = ilpLedger
 
     override fun getId(): String {
         val baseURI = Config.publicURL.toString()
@@ -59,7 +62,7 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
     }
 
     override fun getAddress(): InterledgerAddress =
-            InterledgerAddress.builder().value(Config.ilpPrefix + "." + uniqId).build()
+            InterledgerAddress.builder().value(Config.ilpPrefix + uniqId).build()
 
     override fun getILPBalance(): MonetaryAmount =  localBalance
 
@@ -76,4 +79,13 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
     override fun getILPMinimumAllowedBalance(): MonetaryAmount = minimumAllowedBalance
     // } END   IMPLEMENTATION IfaceILPSpecAccount
 
+    // Json Support {
+    public fun toJson() : JsonObject {
+        return JsonObject()
+            .put("id", uniqId)
+            .put("balance", balance.number.toString())
+            .put("minimumAllowedBalance", minimumAllowedBalance.number.toString())
+            .put("disabled", disabled.toString())
+    }
+    // }
 }

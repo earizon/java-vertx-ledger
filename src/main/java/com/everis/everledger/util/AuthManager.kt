@@ -1,5 +1,6 @@
 package com.everis.everledger.util
 
+import com.everis.everledger.AccessRoll
 import com.everis.everledger.AuthInfo
 import com.everis.everledger.util.Config
 import io.jsonwebtoken.Jwts
@@ -32,23 +33,21 @@ object AuthManager {
             throw RuntimeException("developer.unitTestsActive must be true @ application.conf " + "to be able to reset tests")
         }
         val result = HashMap<AuthInfo, IntArray/*balance*/>()
-        val admin = AuthInfo("admin", "admin", "admin", "admin")
-        val ilpconnector = AuthInfo("ilpconnector", "ilpconnector", "ilpconnector", "connector")
-        val alice = AuthInfo("alice", "alice", "alice", "user")
-        val bob = AuthInfo("bob", "bob", "bob", "user")
+        val admin = AuthInfo(Config.test_ethereum_address_admin, "admin", "admin", AccessRoll.ADMIN)
+        val ilpconnector = AuthInfo(Config.test_ethereum_address_ilpconnector, "ilpconnector", "ilpconnector", AccessRoll.CONNECTOR)
+        val alice = AuthInfo(Config.test_ethereum_address_alice, "alice", "alice", AccessRoll.USER)
+        val bob = AuthInfo(Config.test_ethereum_address_bob, "bob", "bob", AccessRoll.USER)
         // AuthInfo noBalance    = new AuthInfo(    "nobalance",    "nobalance",    "nobalance", "user");
-        val eve = AuthInfo("eve", "eve", "eve", "user")
+        val eve = AuthInfo(Config.test_ethereum_address_eve, "eve", "eve", AccessRoll.USER)
         users = HashMap<String, AuthInfo>()
-        users.put("admin", admin)
+        users.put(admin.login, admin)
         result.put(admin, intArrayOf(10000,-1000000000))
-        users.put("ilpconnector", ilpconnector)
+        users.put(ilpconnector.login, ilpconnector)
         result.put(ilpconnector, intArrayOf(100,0))
-        users.put("alice", alice)
+        users.put(alice.login, alice)
         result.put(alice, intArrayOf(100,0))
-        users.put("bob", bob)
+        users.put(bob.login, bob)
         result.put(bob, intArrayOf(0,0))
-        users.put("eve", eve)
-        result.put(eve, intArrayOf(0,0))
         // users.put("nobalance"   , noBalance   ); result.put(noBalance   ,     0);
         return result
     }
@@ -57,13 +56,12 @@ object AuthManager {
         return users
     }
 
-    fun setUser(id: String, pass: String, roll: String) {
-        val ai = AuthInfo(id, id, pass, roll)
-        users.put(id, ai)
+    fun setUser(ai: AuthInfo) {
+        users.put(ai.login, ai)
     }
 
     @JvmOverloads fun authenticate(context: RoutingContext, allowAnonymous: Boolean = false): AuthInfo {
-        try {
+
             val request = context.request()
 
             //  "GET /websocket?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJodHRwOi8vMTcyLjE3LjAuMTozMDAxLy9hY2NvdW50cy9hZG1pbiIsImlzcyI6IjE3Mi4xNy4wLjEifQ.yt95JiNCOzwn80MVP25KfXNhyHfxZmiclwCFATSN7wVNm3ODazPmaEqf8TLkvkiDJoHM49LqvDzgvzbKe_rSxw
@@ -82,12 +80,10 @@ object AuthManager {
                 }
                 return authInfo
             }
-            val authorization = request.headers().get(HttpHeaders.AUTHORIZATION)
+            val authorization : String = request.headers().get(HttpHeaders.AUTHORIZATION)
             if (authorization == null) {
-                if (allowAnonymous) {
-                    return AuthInfo.ANONYMOUS
-                }
-                throw ILPExceptionSupport.createILPUnauthorizedException()
+                if (allowAnonymous) return AuthInfo.ANONYMOUS
+                else throw ILPExceptionSupport.createILPUnauthorizedException()
             }
             val parts = authorization.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             val sscheme = parts[0]
@@ -102,20 +98,14 @@ object AuthManager {
 
             val authInfo = users[suser]
             if (authInfo == null) {
-                log.error("authInfo null. (User not int AuthManager.users lists)")
+                log.error("users[" + suser + "] null. (User not int AuthManager.users lists)")
                 throw ILPExceptionSupport.createILPUnauthorizedException()
             }
-            val isAdmin = authInfo.roll == "admin"
-            if (!isAdmin && authInfo.pass != spass) {
+            if (!authInfo.isAdmin && authInfo.pass != spass) {
                 log.error("user " + authInfo.id + " is not admin and pass doesn't match")
                 throw ILPExceptionSupport.createILPUnauthorizedException()
             }
             return authInfo
-        } catch (e: Exception) {
-            log.error("Unhandled Auth Exception: " + e.toString())
-            throw ILPExceptionSupport.createILPUnauthorizedException()
-        }
-
     }
 
 }/*do not allow anonymous access */

@@ -103,12 +103,12 @@ data class SimpleTransfer (
         }
 
         override fun getFromAccount(): InterledgerAddress {
-            val result = InterledgerAddress.Builder().value("TODO(0)").build()
+            val result = InterledgerAddress.builder().value("TODO(0)").build()
             return result
         }
 
         override fun getToAccount(): InterledgerAddress {
-            val result = InterledgerAddress.Builder().value("TODO(0)").build()
+            val result = InterledgerAddress.builder().value("TODO(0)").build()
             return result
         }
 

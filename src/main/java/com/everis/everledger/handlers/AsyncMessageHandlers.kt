@@ -192,7 +192,7 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
          */
         writeJsonRPCResponse(sws, -1 , "null", "null", "connect")
 
-        val account = AM.getAccountByName(ai.name)
+        val account = AM.getAccountByName(ai.login)
 
         registerServerWebSocket(ai, account, sws)
     }
@@ -244,7 +244,7 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
                             return@frameHandler
                         }
 
-                        if (!ai.isAdmin && ai.name != account /* TODO:(0) use account not in ai.associatedAccount/s*/) {
+                        if (!ai.isAdmin && ai.login != account /* TODO:(0) use account not in ai.associatedAccount/s*/) {
                             writeJsonRPCError(sws, id, 40300, "Not authorized")
                             return@frameHandler
                         }

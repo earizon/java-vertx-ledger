@@ -1,4 +1,5 @@
 package com.everis.everledger.impl.manager
+import com.everis.everledger.AccessRoll
 import com.everis.everledger.AuthInfo
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
@@ -35,7 +36,10 @@ public object SimpleAccountManager
         val ilpHold = SimpleAccount(ILP_HOLD_ACCOUNT,
             Money.of(0, Config.ledgerCurrencyCode), // TODO:(Kotlin) once kotlinified remove defaults
             Money.of(0, Config.ledgerCurrencyCode),
-            false)
+            false,
+            AuthInfo(Config.test_ethereum_address_escrow,
+                    /*login*/""+Math.random()+""+Math.random(),
+                    /*passw*/""+Math.random()+""+Math.random(), AccessRoll.USER ) )
         return store(ilpHold, false)
     }
 
@@ -91,7 +95,8 @@ println(">>>>> deleteme : "+auth.id + ", "+ bal_l[0] + ", "+bal_l[1])
              val account = SimpleAccount(auth.id,
                  Money.of(bal_l[0], Config.ledgerCurrencyCode),
                  Money.of(bal_l[1], Config.ledgerCurrencyCode),
-                 false)
+                 false,
+                 auth)
             SimpleAccountManager.store(account, false)
 
         }

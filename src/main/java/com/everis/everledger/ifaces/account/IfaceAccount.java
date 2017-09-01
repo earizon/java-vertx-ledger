@@ -1,5 +1,6 @@
 package com.everis.everledger.ifaces.account;
 
+
 import org.interledger.ledger.model.AccountInfo;
 
 /**

@@ -1,5 +1,6 @@
 package com.everis.everledger.handlers
 
+import com.everis.everledger.AccessRoll
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
@@ -105,7 +106,7 @@ private constructor() : RestEndpointHandler(
                 throw ILPExceptionSupport.createILPBadRequestException("unparseable amount")
             }
 
-            if (debit_ammount.getNumber().toFloat().toDouble() == 0.0) {
+            if (debit_ammount.number.toFloat().toDouble() == 0.0) {
                 throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F00_BAD_REQUEST, "debit is zero")
             }
             val debitor = AM.getAccountByName(account_name)
@@ -229,7 +230,7 @@ private constructor() : RestEndpointHandler(
                         "data for credits and/or debits doesn't match existing registry")
             }
         } else {
-            TM.createNewRemoteILPTransfer(receivedTransfer)
+            TM.prepareILPTransfer(receivedTransfer)
         }
         try { // TODO:(?) Refactor Next code for notification (next two loops) are
             // duplicated in FulfillmentHandler
@@ -266,7 +267,7 @@ private constructor() : RestEndpointHandler(
 
         val debit0_account = (transfer.debits[0] as Debit).account.localID
         val transferMatchUser = ai.id == debit0_account
-        if (!transferMatchUser && ai.roll != "admin") {
+        if (!transferMatchUser && ai.roll != AccessRoll.ADMIN) {
             log.error("transferMatchUser false: "
                     + "\n    ai.id    :" + ai.id
                     + "\n    debit0_account:" + debit0_account)

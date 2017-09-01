@@ -10,6 +10,7 @@ import java.util.HashSet
 import java.util.ArrayList
 // import java.util.Set
 import java.util.UUID
+import java.io.File
 
 import javax.money.MonetaryAmount
 
@@ -33,7 +34,20 @@ import com.everis.everledger.impl.SimpleTransfer
 import com.everis.everledger.impl.CC_NOT_PROVIDED
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.impl.ILPSpec2LocalTransferID
-import com.everis.everledger.impl.manager.SimpleAccountManager
+import org.web3j.crypto.CipherException
+import org.web3j.crypto.Credentials
+import org.web3j.crypto.WalletUtils
+import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameterName
+import org.web3j.protocol.core.Request
+import org.web3j.protocol.core.methods.response.EthGetBalance
+import org.web3j.protocol.core.methods.response.TransactionReceipt
+import org.web3j.protocol.http.HttpService
+import org.web3j.tx.Transfer
+import org.web3j.utils.Convert
+import java.math.BigDecimal
+import java.math.BigInteger
+
 /**
  * Simple in-memory {@code SimpleLedgerTransferManager}.
  *
@@ -83,6 +97,8 @@ private fun notifyUpdate(transfer : IfaceTransfer, fulfillment : Fulfillment, is
 
 
 object SimpleTransferManager : IfaceTransferManager {
+
+
     private val log          = LoggerFactory.getLogger(SimpleTransferManager::class.java)
     private val transferMap  = HashMap<ILocalTransfer.LocalTransferID, IfaceTransfer>() // In-memory database of pending/executed/cancelled transfers
 
@@ -153,7 +169,7 @@ object SimpleTransferManager : IfaceTransferManager {
         return result
     }
 
-    override fun createNewRemoteILPTransfer(newTransfer : IfaceTransfer ) {
+    override fun prepareILPTransfer(newTransfer : IfaceTransfer ) {
         log.debug("createNewRemoteILPTransfer")
 
         if (doesTransferExists(newTransfer.getTransferID())) {
@@ -220,9 +236,17 @@ object SimpleTransferManager : IfaceTransferManager {
 
     private fun __executeLocalTransfer(sender : IfaceLocalAccount , recipient : IfaceLocalAccount , amount : MonetaryAmount ) {
         // TODO: LOG local transfer execution.
+        val Euro2wei : BigInteger = BigInteger("1000000"); // TODO:(0)
+        val weiAmount = BigInteger(amount.number.toString()).times(Euro2wei)
         log.info("executeLocalTransfer {")
-        accountManager.getAccountByName(sender   .getLocalID()).debit (amount)
-        accountManager.getAccountByName(recipient.getLocalID()).credit(amount)
+        // accountManager.getAccountByName(sender   .getLocalID()).debit (amount)
+        // accountManager.getAccountByName(sender   .getLocalID()).debit (amount)
+        // accountManager.getAccountByName(recipient.getLocalID()).credit(amount)
+        val ethereumTXHashID = sendTransfer(
+            sender   .getLocalID(),
+            recipient.getLocalID(),
+            weiAmount,
+            transferUnit =  Convert.Unit.WEI)
         log.info("} executeLocalTransfer")
     }
 
@@ -234,5 +258,85 @@ object SimpleTransferManager : IfaceTransferManager {
     fun unitTestsGetTotalTransactions() : String {
         return "${transferMap.keys.size}"
     }
+
+    // IfaceEthereumBlockchain START {
+    // See org.web3j.console.WalletSendFunds ... for reference
+    val web3j = Web3j.build(HttpService())
+
+    private fun loadWalletFile(walletFile: File): Credentials {
+        while (true) {
+            val password = "1234" // TODO:(0)
+            try {
+                return WalletUtils.loadCredentials(password, walletFile)
+            } catch (e: CipherException) {
+                throw RuntimeException("Invalid password specified for wallet\n")
+            }
+        }
+    }
+
+    private fun getCredentials(walletFilePath: String): Credentials {
+        // TODO:(0) cache crenditials
+        val walletFile = File(walletFilePath)
+        if (!walletFile.exists() || !walletFile.isFile) {
+            // TODO:(0): Launch ILP exception?
+            throw RuntimeException("Unable to read wallet file: " + walletFile)
+        }
+
+        return loadWalletFile(walletFile)
+    }
+
+    private fun performTransfer(
+            web3j: Web3j, destinationAddress: String, credentials: Credentials,
+            amountInWei: BigInteger): TransactionReceipt {
+
+        log.info("Commencing transfer (this may take a few minutes) ")
+        try {
+            val future = Transfer.sendFundsAsync(
+                    web3j, credentials, destinationAddress, BigDecimal(amountInWei), Convert.Unit.WEI)
+
+            while (!future.isDone) {
+                Thread.sleep(500)
+            }
+            return future.get()
+        } catch (e: Exception) {
+            throw RuntimeException("Problem encountered transferring funds: \n" + e.message)
+        }
+    }
+
+    override fun /*receipt*/sendTransfer(
+            walletFilePath : String,
+            destinationAddress : String,
+            weiAmountToTransfer : BigInteger,
+            transferUnit: Convert.Unit) : String  {
+        val credentials = getCredentials(walletFilePath)
+        // console.printf("Wallet for address " + credentials.getAddress() + " loaded\n")
+
+        if (!WalletUtils.isValidAddress(destinationAddress)) {
+            // TODO:(0) Launch ILP exception?
+            throw RuntimeException("Invalid destination address specified")
+        }
+
+        // val amountInWei = Convert.toWei(weiAmountToTransfer, transferUnit)
+
+        val transactionReceipt = performTransfer(
+                web3j, destinationAddress, credentials, weiAmountToTransfer)
+
+        log.info("Funds have been successfully transferred from %s to %s%n" + "Transaction hash: %s%nMined block number: %s%n",
+                credentials.getAddress(),
+                destinationAddress,
+                transactionReceipt.getTransactionHash(),
+                transactionReceipt.getBlockNumber())
+        return transactionReceipt.getTransactionHash();
+    }
+
+    override  fun getWeiBalance(walletFilePath : String , transferUnit: Convert.Unit): BigInteger{
+        val credentials = getCredentials(walletFilePath)
+        val result  : EthGetBalance = web3j.ethGetBalance(credentials.address, DefaultBlockParameterName.LATEST).send()
+        return result.balance
+
+
+    }
+
+    // } IfaceEthereumBlockchain END
 }
 
