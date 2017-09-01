@@ -80,7 +80,13 @@ object AuthManager {
                 }
                 return authInfo
             }
-            val authorization : String = request.headers().get(HttpHeaders.AUTHORIZATION)
+            val authorization : String
+            try {
+                authorization = request.headers().get(HttpHeaders.AUTHORIZATION)
+            }catch(e : Exception){
+                if (allowAnonymous) return AuthInfo.ANONYMOUS
+                throw ILPExceptionSupport.createILPUnauthorizedException()
+            }
             if (authorization == null) {
                 if (allowAnonymous) return AuthInfo.ANONYMOUS
                 else throw ILPExceptionSupport.createILPUnauthorizedException()
