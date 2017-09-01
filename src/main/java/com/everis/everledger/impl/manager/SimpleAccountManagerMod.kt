@@ -51,10 +51,10 @@ public object SimpleAccountManager
     }
 
     override fun store(account: IfaceAccount, update: Boolean) :IfaceAccount {
-        if (update == false && hasAccount(account.name)) {
+        if (update == false && hasAccount(account.id)) {
             throw ILPExceptionSupport.createILPForbiddenException("account already exists")
         }
-        accountMap.put(account.name, account)
+        accountMap.put(account.id, account)
         return account;
     }
 
@@ -62,14 +62,14 @@ public object SimpleAccountManager
         return accountMap.containsKey(name)
     }
 
-    override fun getAccountByName(name: String): IfaceAccount {
-        accountMap.get(name)?.let { return accountMap.get(name)!! }
-        log.warn("'$name' account not found")
+    override fun getAccountById(id: String): IfaceAccount {
+        accountMap.get(id)?.let { return accountMap.get(id)!! }
+        log.warn("'$id' account not found")
         throw ILPExceptionSupport.createILPNotFoundException()
     }
 
-    override fun getAccounts(page: Int, pageSize: Int): MutableCollection<IfaceLocalAccount> {
-        val accounts : MutableList<IfaceLocalAccount> = mutableListOf()
+    override fun getAccounts(page: Int, pageSize: Int): MutableCollection<IfaceAccount> {
+        val accounts : MutableList<IfaceAccount> = mutableListOf()
         accountMap.values
                 .stream()
                 // .filter((LedgerAccount a) -> !a.getName().equals(ILP_HOLD_ACCOUNT))

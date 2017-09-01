@@ -32,7 +32,7 @@ class MessageHandler : RestEndpointHandler(arrayOf(HttpMethod.POST), arrayOf("me
 
         val ai = AuthManager.authenticate(context)
         val jsonMessageReceived = RestEndpointHandler.getBodyAsJson(context) // TODO:(?) Mark as Tainted object
-        val fromAccount = AM.getAccountByName(jsonMessageReceived.getString("from"))
+        val fromAccount = AM.getAccountById(jsonMessageReceived.getString("from"))
 
         log.debug("handlePost context.getBodyAsString():\n   " + context.bodyAsString)
 
@@ -90,7 +90,7 @@ class MessageHandler : RestEndpointHandler(arrayOf(HttpMethod.POST), arrayOf("me
             jsonMessageReceived.put("to" as String?,jsonMessageReceived.getString("account") as String?)
             jsonMessageReceived.put("from", Config.publicURL.toString() + "accounts/" + ai.id)
         }
-        val recipient = AM.getAccountByName(jsonMessageReceived.getString("to"))
+        val recipient = AM.getAccountById(jsonMessageReceived.getString("to"))
         val transferMatchUser = ai.id  == fromAccount.localID || ai.id == recipient.localID
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()
@@ -192,7 +192,7 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
          */
         writeJsonRPCResponse(sws, -1 , "null", "null", "connect")
 
-        val account = AM.getAccountByName(ai.login)
+        val account = AM.getAccountById(ai.id)
 
         registerServerWebSocket(ai, account, sws)
     }
@@ -232,30 +232,30 @@ class TransferWSEventHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arra
                     val eventType = EventType.parse(params.getString("eventType"))
                     val jsonAccounts = params.getJsonArray("accounts")
                     for (idx in 0..jsonAccounts.size() - 1) {
-                        var account = jsonAccounts.getString(idx)
-                        val offset = account.indexOf("/accounts/")
+                        var account_id = jsonAccounts.getString(idx)
+                        val offset = account_id.indexOf("/accounts/")
                         if (offset >= 0) {
-                            account = account.substring(offset + "/accounts/".length)
+                            account_id = account_id.substring(offset + "/accounts/".length)
                         }
                         try {
-                            AM.getAccountByName(account)
+                            AM.getAccountById(account_id)
                         } catch (e: Exception) {
-                            writeJsonRPCError(sws, id, 40002, "Invalid account: " + account)
+                            writeJsonRPCError(sws, id, 40002, "Invalid account: " + account_id)
                             return@frameHandler
                         }
 
-                        if (!ai.isAdmin && ai.login != account /* TODO:(0) use account not in ai.associatedAccount/s*/) {
+                        if (!ai.isAdmin && ai.id != account_id /* TODO:(0) use account not in ai.associatedAccount/s*/) {
                             writeJsonRPCError(sws, id, 40300, "Not authorized")
                             return@frameHandler
                         }
                         // TODO:(0) Check  channelAccountOwner..getLocalID() match account
-                        var listeners4Account: MutableSet<EventType>? = TransferWSEventHandler.listeners[sws]!!.get(account)
+                        var listeners4Account: MutableSet<EventType>? = TransferWSEventHandler.listeners[sws]!!.get(account_id)
                         if (listeners4Account != null) {
                             // TODO:(0) Clear all previous subcriptions
                         }
                         listeners4Account = HashSet<EventType>()
                         listeners4Account.add(eventType)
-                        listeners[sws]!!.put(account, listeners4Account)
+                        listeners[sws]!!.put(account_id, listeners4Account)
                     }
                     result = jsonAccounts.size()
                 } else if (method == "subscribe_all_accounts") {

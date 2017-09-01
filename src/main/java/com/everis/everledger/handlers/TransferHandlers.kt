@@ -92,11 +92,11 @@ private constructor() : RestEndpointHandler(
             log.debug("check123 jsonDebit: " + jsonDebit.encode())
             // debit0 will be similar to
             // {"account":"http://localhost/accounts/alice","amount":"50"}
-            var account_name = jsonDebit.getString("account")
-            if (account_name.lastIndexOf('/') > 0) {
-                account_name = account_name.substring(account_name.lastIndexOf('/') + 1)
+            var account_id = jsonDebit.getString("account")
+            if (account_id.lastIndexOf('/') > 0) {
+                account_id = account_id.substring(account_id.lastIndexOf('/') + 1)
             }
-            if (ai.id  == account_name) { transferMatchUser = true }
+            if (ai.id  == account_id) { transferMatchUser = true }
             val debit_ammount: MonetaryAmount = try {
                 val auxDebit = java.lang.Double.parseDouble(jsonDebit.getString("amount"))
                 totalDebitAmmount += auxDebit
@@ -109,7 +109,7 @@ private constructor() : RestEndpointHandler(
             if (debit_ammount.number.toFloat().toDouble() == 0.0) {
                 throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F00_BAD_REQUEST, "debit is zero")
             }
-            val debitor = AM.getAccountByName(account_name)
+            val debitor = AM.getAccountById(account_id)
             log.debug("check123 debit_ammount (must match jsonDebit ammount: " + debit_ammount.toString())
             Debit(debitor, debit_ammount)
         })
@@ -144,9 +144,9 @@ private constructor() : RestEndpointHandler(
              * } } } */
             // JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
             // COMMENTED OLD API         .getJsonObject("ilp_header");
-            var account_name = jsonCredit.getString("account")
-            if (account_name.lastIndexOf('/') > 0) {
-                account_name = account_name.substring(account_name.lastIndexOf('/') + 1)
+            var account_id = jsonCredit.getString("account")
+            if (account_id.lastIndexOf('/') > 0) {
+                account_id = account_id.substring(account_id.lastIndexOf('/') + 1)
             }
             val credit_ammount: MonetaryAmount = try {
                 val auxCredit = java.lang.Double.parseDouble(jsonCredit.getString("amount"))
@@ -160,7 +160,7 @@ private constructor() : RestEndpointHandler(
                 throw ILPExceptionSupport.createILPException(422,
                         InterledgerError.ErrorCode.F00_BAD_REQUEST, "credit is zero")
             }
-            val creditor = AM.getAccountByName(account_name)
+            val creditor = AM.getAccountById(account_id)
             // COMMENTED OLD API String ilp_ph_ilp_dst_address = jsonMemoILPHeader
             // COMMENTED OLD API         .getString("account");
 

@@ -79,7 +79,7 @@ data class SimpleTransfer (
 
         init { // TODO:(0) Check this is executed after val initialization
             checkBalancedTransaction()
-            fromAccount = AM.getAccountByName(credit_list[0].localAccount.localID)
+            fromAccount = AM.getAccountById(credit_list[0].localAccount.localID)
             // TODO:(1) Check that debit_list[idx].ammount.currency is always the same and match the ledger
             // TODO:(1) Check that credit_list[idx].ammount.currency is always the same.
             // FIXME: TODO: If fromAccount.ledger != "our ledger" throw RuntimeException.

@@ -12,11 +12,9 @@ import com.everis.everledger.util.ILPExceptionSupport
 import com.everis.everledger.util.JsonObjectBuilder
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpMethod
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
-import org.apache.commons.lang3.StringUtils
 import org.javamoney.moneta.Money
 import org.slf4j.LoggerFactory
 
@@ -28,6 +26,23 @@ private val PARAM_ETH_ADDRESS = "ethereum_address"
 private val PARAM_MIN_ALLOWED_BALANCE = "minimum_allowed_balance"
 private val PARAM_PASSWORD = "password"
 
+private fun accountToJsonObject(account: IfaceAccount, isAuthenticated: Boolean): JsonObject {
+    // TODO:(0) Move to JSON Support?
+
+    val build = JsonObjectBuilder.create()
+            .put("id", Config.publicURL.toString()+"/"+account.id)
+            .put("name", account.id)
+            .put("ledger", Config.publicURL.toString())
+    if (isAuthenticated) {
+        build
+                .put("balance", account.balanceAsString)
+                // .put("connector", "??????" /* TODO:(?) Recheck */)
+                .put("is_disabled", account.isDisabled)
+                .put("minimum_allowed_balance", account.ilpMinimumAllowedBalance.number.toString())
+    }
+
+    return build.get()
+}
 
 class AccountsHandler
 private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST), arrayOf("accounts/:" + PARAM_ID)) {
@@ -43,7 +58,7 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
     // }
         val data_id = ConversionUtil.parseNonEmptyString(context.request().getParam(PARAM_ID))
         val isAuthenticated = ai.roll == AccessRoll.ADMIN || ai.id  == data_id
-        val account = SimpleAccountManager.getAccountByName(data_id)
+        val account = SimpleAccountManager.getAccountById(data_id)
         val result = accountToJsonObject(account, isAuthenticated)
         response(context, HttpResponseStatus.OK, result)
     }
@@ -107,26 +122,7 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
         handlePut(context)
     }
 
-   private fun accountToJsonObject(account: IfaceAccount, isAuthenticated: Boolean): JsonObject {
-        var ledger = Config.publicURL.toString()
-        if (ledger.endsWith("/")) {
-            ledger = ledger.substring(0, ledger.length - 1)
-        }
 
-        val build = JsonObjectBuilder.create()
-                .put("id", account.id)
-                .put("name", account.id)
-                .put("ledger", ledger)
-        if (isAuthenticated) {
-            build
-                    .put("balance", account.balanceAsString)
-                    // .put("connector", "??????" /* TODO:(?) Recheck */)
-                    .put("is_disabled", account.isDisabled)
-                    .put("minimum_allowed_balance", account.ilpMinimumAllowedBalance.number.toString())
-        }
-
-        return build.get()
-    }
 
     companion object {
 
@@ -152,7 +148,7 @@ class AccountsListHandler private constructor() :
         val pageSize = request.getInteger("pageSize", 10)!!
         val response : JsonArray  = JsonArray()
         for (account in SimpleAccountManager.getAccounts(page, pageSize)) {
-            response.add((account as SimpleAccount).toJson())
+            response.add(accountToJsonObject(account, true))
         }
         context.response()
                 .putHeader("content-type", "application/json; charset=utf-8") //TODO create decorator

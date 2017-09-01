@@ -46,20 +46,9 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
     val ilpLedger = InterledgerAddress.builder().value(Config.ilpPrefix).build()
     override fun getILPLedger(): InterledgerAddress = ilpLedger
 
-    override fun getId(): String {
-        val baseURI = Config.publicURL.toString()
-        val sURI = baseURI + "accounts/" + getLocalID()
-        try {
-            val result = URI(sURI)
-            return result.toString()
-        } catch (e: URISyntaxException) {
-            throw RuntimeException("Can't create URI from string '$sURI'")
-        }
-    }
+    override fun getId(): String  = localID
 
-    override fun getName(): String {
-        return getLocalID()
-    }
+    override fun getName(): String = authInfo.login
 
     override fun getAddress(): InterledgerAddress =
             InterledgerAddress.builder().value(Config.ilpPrefix + uniqId).build()
@@ -79,13 +68,4 @@ data class SimpleAccount (// TODO:(0) Convert to "inmutable" object.
     override fun getILPMinimumAllowedBalance(): MonetaryAmount = minimumAllowedBalance
     // } END   IMPLEMENTATION IfaceILPSpecAccount
 
-    // Json Support {
-    public fun toJson() : JsonObject {
-        return JsonObject()
-            .put("id", uniqId)
-            .put("balance", balance.number.toString())
-            .put("minimumAllowedBalance", minimumAllowedBalance.number.toString())
-            .put("disabled", disabled.toString())
-    }
-    // }
 }

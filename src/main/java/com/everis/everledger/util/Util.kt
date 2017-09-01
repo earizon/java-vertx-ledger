@@ -220,7 +220,8 @@ object Config {
     val ilpPrefix = if (ilpPrefix01.endsWith(".")) ilpPrefix01 else ilpPrefix01+"."
     val ledgerCurrencyCode = getString("ledger.currency.code")
     val ledgerCurrencySymbol = getString("ledger.currency.symbol")
-    val ledgerPathPrefix = getString("ledger.path.prefix")
+    val ldpauxi01 = getString("ledger.path.prefix")
+    val ledgerPathPrefix = if(ldpauxi01.endsWith("/")) ldpauxi01.substring(0, ldpauxi01.length - 1) else ldpauxi01
 
     val serverHost = getString("server.host")
     val serverPort = getInteger("server.port")
