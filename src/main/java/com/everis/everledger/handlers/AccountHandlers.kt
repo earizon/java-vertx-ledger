@@ -31,7 +31,7 @@ private fun accountToJsonObject(account: IfaceAccount, isAuthenticated: Boolean)
     val build = JsonObjectBuilder.create()
             .put("id", Config.publicURL.toString()+"/accounts/"+account.id)
             .put("name", account.authInfo.login)
-            .put("ledger", Config.publicURL.toString())
+    //      .put("ledger", Config.publicURL.toString())
     if (isAuthenticated) {
         build
                 .put("balance", account.balanceAsString)
@@ -110,15 +110,14 @@ private constructor() : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMethod.P
         // if(data.containsKey(PARAM_DISABLED)) {
         //     ((SimpleLedgerAccount)account).setDisabled(data.getBoolean(PARAM_DISABLED, false));
         // }
-        response(context, if (exists) HttpResponseStatus.OK else HttpResponseStatus.CREATED,
-                JsonObjectBuilder.create().from(account))
+        response(context,
+                if (exists) HttpResponseStatus.OK else HttpResponseStatus.CREATED,
+                accountToJsonObject(account, true)  )
     }
 
     override fun handlePost(context: RoutingContext) {
         handlePut(context)
     }
-
-
 
     companion object {
 
