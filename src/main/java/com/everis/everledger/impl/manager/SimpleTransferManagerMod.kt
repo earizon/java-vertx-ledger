@@ -79,8 +79,8 @@ private fun notifyUpdate(transfer : IfaceTransfer, fulfillment : Fulfillment, is
                      TransferWSEventHandler.EventType.TRANSFER_CREATE
                 else TransferWSEventHandler.EventType.TRANSFER_UPDATE
         val setAffectedAccounts = HashSet<String>()
-        for (debit  in transfer.debits ) setAffectedAccounts.add( debit.localAccount.localID)
-        for (credit in transfer.credits) setAffectedAccounts.add(credit.localAccount.localID)
+        setAffectedAccounts.add(transfer.txInput .localAccount.localID)
+        setAffectedAccounts.add(transfer.txOutput.localAccount.localID)
 
         val relatedResources = HashMap<String, Any>()
         val relatedResourceKey = if (isExecution) "execution_condition_fulfillment"
@@ -124,28 +124,15 @@ object SimpleTransferManager : IfaceTransferManager {
 
     override fun executeLocalTransfer(transfer : IfaceTransfer ) : IfaceTransfer {
         // AccountUri sender, AccountUri recipient, MonetaryAmount amount)
-        val debit_list : Array<ILocalTransfer.Debit> = transfer.debits // TODO:(0) This function is not simetrict between debits and credits!!!
-        val debit0 = debit_list[0]
-        if (debit_list.size > 1) {
-            // STEP 1: Pass all debits to first account.
-            for ( debit in debit_list) {
-                val    sender : IfaceLocalAccount = debit.localAccount
-                val recipient : IfaceLocalAccount = debit0.localAccount
-                val amount : MonetaryAmount = debit.amount
-                __executeLocalTransfer(sender, recipient, amount)
-            }
-        }
-        // STEP 2: Pay crediters from first account:
-        val sender : IfaceLocalAccount  = debit0.localAccount
-        for (credit in transfer.credits) {
-            __executeLocalTransfer(sender, credit.localAccount, credit.amount)
-        }
+        // STEP 1: Pass all debits to first account.
+        __executeLocalTransfer(
+                transfer.txInput .localAccount,
+                transfer.txOutput.localAccount, transfer.amount)
 
         return (transfer as SimpleTransfer).copy(
-                    int_transferStatus=TransferStatus.EXECUTED,
-                    int_DTTM_prepared=ZonedDateTime.now(),
-                    int_DTTM_executed=ZonedDateTime.now()
-                    )
+                    _transferStatus=TransferStatus.EXECUTED,
+                    DTTM_prepared=ZonedDateTime.now(),
+                    DTTM_executed=ZonedDateTime.now() )
     }
 
     override fun doesTransferExists(transferId : ILocalTransfer.LocalTransferID) :Boolean {
@@ -189,9 +176,8 @@ object SimpleTransferManager : IfaceTransferManager {
         }
 
         // PUT Money on-hold:
-        for (debit in newTransfer.getDebits()) {
-            __executeLocalTransfer(debit.localAccount, accountManager.holdAccountILP, debit.amount)
-        }
+        __executeLocalTransfer(newTransfer.txInput.localAccount, accountManager.holdAccountILP, newTransfer.amount)
+
         // TODO:(0) Next line commented to make tests pass, but looks to be sensible to do so.
         // newTransfer.setTransferStatus(TransferStatus.PROPOSED)
     }
@@ -199,31 +185,27 @@ object SimpleTransferManager : IfaceTransferManager {
 
     private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) : IfaceTransfer {
         if (isExecution /* => DisburseFunds */) {
-            for (credit in transfer.getCredits()) {
-                __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = credit.localAccount, amount = credit.amount)
-            }
+            __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txOutput.localAccount, amount = transfer.amount)
             return (transfer as SimpleTransfer).copy(
-                    int_transferStatus=TransferStatus.EXECUTED,
-                    int_DTTM_executed=ZonedDateTime.now(),
+                    _transferStatus=TransferStatus.EXECUTED,
+                    DTTM_executed=ZonedDateTime.now(),
                     executionFF=FF )
         } else /* => Cancellation/Rollback  */ {
-            for (debit in transfer.getDebits()) {
-                __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = debit.localAccount, amount = debit.amount)
-            }
+            __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txInput.localAccount, amount = transfer.amount)
             return (transfer as SimpleTransfer).copy(
-                    int_transferStatus=TransferStatus.REJECTED,
-                    int_DTTM_executed=ZonedDateTime.now(),
+                    _transferStatus=TransferStatus.REJECTED,
+                    DTTM_executed=ZonedDateTime.now(),
                     executionFF=FF )
         }
         notifyUpdate(transfer = transfer, fulfillment = FF, isExecution = isExecution)
     }
 
-    // TODO:(0) Update returned instance in ddbb if needed
+    // TODO:(?) Update returned instance in ddbb if needed
     override fun executeILPTransfer(transfer : IfaceTransfer,    executionFulfillment : Fulfillment ) : IfaceTransfer {
         return executeOrCancelILPTransfer(transfer, executionFulfillment, true)
     }
 
-    // TODO:(0) Update returned instance in ddbb if needed
+    // TODO:(?) Update returned instance in ddbb if needed
     override fun cancelILPTransfer (transfer : IfaceTransfer, cancellationFulfillment : Fulfillment ) : IfaceTransfer {
         return executeOrCancelILPTransfer(transfer, cancellationFulfillment, false)
     }
@@ -236,12 +218,9 @@ object SimpleTransferManager : IfaceTransferManager {
 
     private fun __executeLocalTransfer(sender : IfaceLocalAccount , recipient : IfaceLocalAccount , amount : MonetaryAmount ) {
         // TODO: LOG local transfer execution.
-        val Euro2wei : BigInteger = BigInteger("1000000"); // TODO:(0)
+        val Euro2wei  = BigInteger("1000000"); // TODO:(0)
         val weiAmount = BigInteger(amount.number.toString()).times(Euro2wei)
         log.info("executeLocalTransfer {")
-        // accountManager.getAccountByName(sender   .getLocalID()).debit (amount)
-        // accountManager.getAccountByName(sender   .getLocalID()).debit (amount)
-        // accountManager.getAccountByName(recipient.getLocalID()).credit(amount)
         val ethereumTXHashID = sendTransfer(
             sender   .getLocalID(),
             recipient.getLocalID(),

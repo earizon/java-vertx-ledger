@@ -4,7 +4,6 @@ import com.everis.everledger.AuthInfo
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.ifaces.account.IfaceAccountManager
-import com.everis.everledger.ifaces.account.IfaceLocalAccount
 import com.everis.everledger.impl.SimpleAccount
 import com.everis.everledger.util.AuthManager
 import com.everis.everledger.util.ILPExceptionSupport
@@ -22,15 +21,19 @@ private val log             = LoggerFactory.getLogger(SimpleAccountManager::clas
  */
 public object SimpleAccountManager
     : IfaceAccountManager {
-    private var accountMap: MutableMap<String, IfaceAccount> = resetAccounts();
+    private var Id2AccountMap   : MutableMap<String, IfaceAccount> = TreeMap<String, IfaceAccount>()
+    // TODO:(?)
+    //    "patch" solution to allow reuse of five-bells-ledger tests
+    //    using login as account identifiers
+    private var login2AccountMap: MutableMap<String, IfaceAccount> = TreeMap<String, IfaceAccount>()
 
-    private fun resetAccounts() : MutableMap<String, IfaceAccount> {
-        accountMap = TreeMap<String, IfaceAccount>()
-        return accountMap
+    private fun resetAccounts() {
+        Id2AccountMap    = TreeMap<String, IfaceAccount>()
+        login2AccountMap = TreeMap<String, IfaceAccount>()
     }
 
     override fun getHOLDAccountILP(): IfaceAccount {
-        var existingAccount : IfaceAccount? = accountMap.get(ILP_HOLD_ACCOUNT)
+        var existingAccount : IfaceAccount? = Id2AccountMap.get(ILP_HOLD_ACCOUNT)
         existingAccount?.let { return existingAccount }
         // Create and store
         val ilpHold = SimpleAccount(ILP_HOLD_ACCOUNT,
@@ -54,23 +57,26 @@ public object SimpleAccountManager
         if (update == false && hasAccount(account.id)) {
             throw ILPExceptionSupport.createILPForbiddenException("account already exists")
         }
-        accountMap.put(account.id, account)
+        Id2AccountMap   .put(account.id            , account)
+        login2AccountMap.put(account.authInfo.login, account)
         return account;
     }
 
-    override fun hasAccount(name: String): Boolean {
-        return accountMap.containsKey(name)
+    override fun hasAccount(idOrLogin: String): Boolean {
+        return Id2AccountMap   .containsKey(idOrLogin)
+            || login2AccountMap.containsKey(idOrLogin)
     }
 
-    override fun getAccountById(id: String): IfaceAccount {
-        accountMap.get(id)?.let { return accountMap.get(id)!! }
-        log.warn("'$id' account not found")
+    override fun getAccountById(idOrLogin: String): IfaceAccount {
+        Id2AccountMap   .get(idOrLogin)?.let { return Id2AccountMap   .get(idOrLogin)!! }
+        login2AccountMap.get(idOrLogin)?.let { return login2AccountMap.get(idOrLogin)!! }
+        log.warn("'$idOrLogin' account not found")
         throw ILPExceptionSupport.createILPNotFoundException()
     }
 
     override fun getAccounts(page: Int, pageSize: Int): MutableCollection<IfaceAccount> {
         val accounts : MutableList<IfaceAccount> = mutableListOf()
-        accountMap.values
+        Id2AccountMap.values
                 .stream()
                 // .filter((LedgerAccount a) -> !a.getName().equals(ILP_HOLD_ACCOUNT))
                 .forEach(Consumer<IfaceAccount> { accounts.add(it) })
@@ -78,7 +84,7 @@ public object SimpleAccountManager
     }
 
     override fun getTotalAccounts(): Int {
-        return accountMap.size
+        return Id2AccountMap.size
     }
 
     fun developerTestingReset() {
