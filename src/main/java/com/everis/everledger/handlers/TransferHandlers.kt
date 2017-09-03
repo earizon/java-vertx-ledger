@@ -77,42 +77,34 @@ private constructor() : RestEndpointHandler(
         val transferID : ILocalTransfer.LocalTransferID = ILPSpec2LocalTransferID(ilpTransferID)
 
         // TODO: Check requestBody.getString("ledger") match ledger host/port
-
         // TODO: Check state is 'proposed' for new transactions?
-
         // TODO:(?) mark as "Tainted" object
         val debits = requestBody.getJsonArray("debits") ?: throw ILPExceptionSupport.createILPBadRequestException("debits not found")
 
         if (debits.size() != 1) {
             throw ILPExceptionSupport.createILPBadRequestException("Only one debitor supported by ledger")
         }
-        var totalDebitAmmount = 0.0
-        val debitList = Array<ILocalTransfer.Debit>(debits.size(), { idx ->
-            val jsonDebit = debits.getJsonObject(idx)
-            log.debug("check123 jsonDebit: " + jsonDebit.encode())
-            // debit0 will be similar to
-            // {"account":"http://localhost/accounts/alice","amount":"50"}
-            var account_id = jsonDebit.getString("account")
-            if (account_id.lastIndexOf('/') > 0) {
-                account_id = account_id.substring(account_id.lastIndexOf('/') + 1)
-            }
-            if (ai.id  == account_id) { transferMatchUser = true }
-            val debit_ammount: MonetaryAmount = try {
-                val auxDebit = java.lang.Double.parseDouble(jsonDebit.getString("amount"))
-                totalDebitAmmount += auxDebit
-                Money.of(auxDebit, currencyUnit)
-            } catch (e: Exception) {
-                println(e.toString())
-                throw ILPExceptionSupport.createILPBadRequestException("unparseable amount")
-            }
+        val jsonDebit = debits.getJsonObject(0)
+        // debit0 will be similar to
+        // {"account":"http://localhost/accounts/alice","amount":"50"}
+        var input_account_id = jsonDebit.getString("account")
+        if (input_account_id.lastIndexOf('/') > 0) {
+            input_account_id = input_account_id.substring(input_account_id.lastIndexOf('/') + 1)
+        }
+        if (ai.id  == input_account_id) { transferMatchUser = true }
+        val debit_ammount: MonetaryAmount = try {
+            val auxDebit = java.lang.Double.parseDouble(jsonDebit.getString("amount"))
+            Money.of(auxDebit, currencyUnit)
+        } catch (e: Exception) {
+            println(e.toString())
+            throw ILPExceptionSupport.createILPBadRequestException("unparseable amount")
+        }
+        if ( debit_ammount.number.toFloat().toDouble() == 0.0) {
+            throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F00_BAD_REQUEST, "debit is zero")
+        }
+        val debitor = AM.getAccountById(input_account_id)
+        log.debug("check123 debit_ammount (must match jsonDebit ammount: " + debit_ammount.toString())
 
-            if (debit_ammount.number.toFloat().toDouble() == 0.0) {
-                throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F00_BAD_REQUEST, "debit is zero")
-            }
-            val debitor = AM.getAccountById(account_id)
-            log.debug("check123 debit_ammount (must match jsonDebit ammount: " + debit_ammount.toString())
-            Debit(debitor, debit_ammount)
-        })
         if (!ai.isAdmin && !transferMatchUser) {
             throw ILPExceptionSupport.createILPForbiddenException()
         }
@@ -134,56 +126,32 @@ private constructor() : RestEndpointHandler(
         val URIExecutionCond: Condition = if (execution_condition != null)
             ConversionUtil.parseURI(URI.create(execution_condition))
             else CC_NOT_PROVIDED
-        var totalCreditAmmount = 0.0
-        val creditList = Array<ILocalTransfer.Credit>(credits.size() , { idx ->
-            val jsonCredit = credits.getJsonObject(idx)
-            /* { "account":"http://localhost:3002/accounts/ilpconnector",
-             * "amount":"1.01", "memo":{ "ilp_header":{
-             * "account":"ledger3.eur.alice.fe773626-81fb-4294-9a60-dc7b15ea841e"
-             * , "amount":"1", "data":{"expires_at":"2016-11-10T15:51:27.134Z"}
-             * } } } */
-            // JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
-            // COMMENTED OLD API         .getJsonObject("ilp_header");
-            var account_id = jsonCredit.getString("account")
-            if (account_id.lastIndexOf('/') > 0) {
-                account_id = account_id.substring(account_id.lastIndexOf('/') + 1)
-            }
-            val credit_ammount: MonetaryAmount = try {
-                val auxCredit = java.lang.Double.parseDouble(jsonCredit.getString("amount"))
-                totalCreditAmmount += auxCredit
-                Money.of(auxCredit, currencyUnit)
-            } catch (e: Exception) {
-                throw ILPExceptionSupport.createILPBadRequestException("unparseable amount")
-            }
+        val jsonCredit = credits.getJsonObject(0)
+        /* { "account":"http://localhost:3002/accounts/ilpconnector",
+         * "amount":"1.01", "memo":{ "ilp_header":{
+         * "account":"ledger3.eur.alice.fe773626-81fb-4294-9a60-dc7b15ea841e"
+         * , "amount":"1", "data":{"expires_at":"2016-11-10T15:51:27.134Z"}
+         * } } } */
+        // JsonObject jsonMemoILPHeader = jsonCredit.getJsonObject("memo")
+        // COMMENTED OLD API         .getJsonObject("ilp_header");
+        var credit_account_id = jsonCredit.getString("account")
+        if (credit_account_id.lastIndexOf('/') > 0) {
+            credit_account_id = credit_account_id.substring(credit_account_id.lastIndexOf('/') + 1)
+        }
 
-            if (credit_ammount.getNumber().toFloat().toDouble() == 0.0) {
-                throw ILPExceptionSupport.createILPException(422,
-                        InterledgerError.ErrorCode.F00_BAD_REQUEST, "credit is zero")
-            }
-            val creditor = AM.getAccountById(account_id)
-            // COMMENTED OLD API String ilp_ph_ilp_dst_address = jsonMemoILPHeader
-            // COMMENTED OLD API         .getString("account");
+        val credit_ammount: MonetaryAmount = try {
+            val auxCredit = java.lang.Double.parseDouble(jsonCredit.getString("amount"))
+            Money.of(auxCredit, currencyUnit)
+        } catch (e: Exception) {
+            throw ILPExceptionSupport.createILPBadRequestException("unparseable amount")
+        }
 
-            // COMMENTED OLD API InterledgerAddress dstAddress = InterledgerAddressBuilder.builder()
-            // COMMENTED OLD API         .value(ilp_ph_ilp_dst_address).build();
-            // COMMENTED OLD API String ilp_ph_amount = jsonMemoILPHeader.getString("amount");
-            // COMMENTED OLD API BigDecimal ammount = new BigDecimal(ilp_ph_amount);
-            // COMMENTED OLD API Condition ilp_ph_condition = URIExecutionCond;
-            // COMMENTED OLD API DTTM ilp_ph_expires = new DTTM(jsonMemoILPHeader.getJsonObject(
-            // COMMENTED OLD API         "data").getString("expires_at"));
-            // COMMENTED OLD API if (!DTTM_expires.equals(ilp_ph_expires)) {
-            // COMMENTED OLD API     DTTM_expires = ilp_ph_expires;
-            // COMMENTED OLD API }
-            // COMMENTED OLD API ZonedDateTime zdt = ZonedDateTime.parse((DTTM_expires.toString()));
-            // InterledgerPacketHeader(InterledgerAddress destinationAddress,
-            // BigDecimal amount,
-            // Condition condition, ZonedDateTime expiry)
-            // COMMENTED OLD API InterledgerPacketHeader memo_ph = new InterledgerPacketHeader(
-            // COMMENTED OLD API         dstAddress, ammount, ilp_ph_condition, zdt);
-            // In five-bells-ledger, memo goes into transfer_adjustments table (@ src/sql/pg/...)
-            Credit(creditor, credit_ammount/*, memo_ph*/) as ILocalTransfer.Credit
-        })
-        if (totalCreditAmmount != totalDebitAmmount) {
+        if (credit_ammount.getNumber().toFloat().toDouble() == 0.0) {
+            throw ILPExceptionSupport.createILPException(422,
+                    InterledgerError.ErrorCode.F00_BAD_REQUEST, "credit is zero")
+        }
+        val creditor = AM.getAccountById(credit_account_id)
+        if (!credit_ammount.equals(debit_ammount)) {
             throw ILPExceptionSupport.createILPException(422,
                     InterledgerError.ErrorCode.F00_BAD_REQUEST, "total credits do not match total debits")
         }
@@ -208,7 +176,9 @@ private constructor() : RestEndpointHandler(
         //        }
 
         val receivedTransfer = SimpleTransfer(
-                transferID as LocalTransferID, debitList, creditList,
+                transferID as LocalTransferID,
+                TXInputImpl(debitor, debit_ammount),
+                TXOutputImpl(creditor, credit_ammount/*, memo_ph*/),
                 URIExecutionCond, URICancelationCond,
                 DTTM_proposed, DTTM_prepared, DTTM_expires, TimeUtils.future, TimeUtils.future,
                 data, noteToSelf,
@@ -224,8 +194,8 @@ private constructor() : RestEndpointHandler(
         if (!isNewTransfer) {
             // Check that received json data match existing transaction.
             // TODO: Recheck (Multitransfer active now)
-            if (effectiveTransfer.credits[0] != receivedTransfer
-                    .credits[0] || effectiveTransfer.debits[0] != receivedTransfer.debits[0]) {
+            if (   effectiveTransfer.txInput != receivedTransfer.txInput
+                || effectiveTransfer.txInput != receivedTransfer.txInput) {
                 throw ILPExceptionSupport.createILPBadRequestException(
                         "data for credits and/or debits doesn't match existing registry")
             }
@@ -241,8 +211,8 @@ private constructor() : RestEndpointHandler(
                       TransferWSEventHandler.EventType.TRANSFER_CREATE
                  else TransferWSEventHandler.EventType.TRANSFER_UPDATE
             val setAffectedAccounts = HashSet<String>()
-            for (debit  in receivedTransfer.debits)  setAffectedAccounts.add((debit  as Debit ).account.localID)
-            for (credit in receivedTransfer.credits) setAffectedAccounts.add((credit as Credit).account.localID)
+            setAffectedAccounts.add(receivedTransfer.txOutput.localAccount.localID)
+            setAffectedAccounts.add(receivedTransfer.txInput .localAccount.localID)
             TransferWSEventHandler.notifyListener(setAffectedAccounts, eventType, resource, null)
         } catch (e: Exception) {
             log.warn("transaction created correctly but ilp-connector couldn't be notified due to " + e.toString())
@@ -265,12 +235,12 @@ private constructor() : RestEndpointHandler(
         val ilpTransferID = UUID.fromString(context.request().getParam(transferUUID))
         val transfer = TM.getTransferById(ILPSpec2LocalTransferID(ilpTransferID))
 
-        val debit0_account = (transfer.debits[0] as Debit).account.localID
+        val debit0_account = transfer.txInput.localAccount.localID
         val transferMatchUser = ai.id == debit0_account
         if (!transferMatchUser && ai.roll != AccessRoll.ADMIN) {
-            log.error("transferMatchUser false: "
+            log.error("transferMatchUser false and user is not ADMIN: "
                     + "\n    ai.id    :" + ai.id
-                    + "\n    debit0_account:" + debit0_account)
+                    + "\n    transfer.txInput.localAccount.localID:" + debit0_account)
             throw ILPExceptionSupport.createILPForbiddenException()
         }
         response( context, HttpResponseStatus.OK, (transfer as SimpleTransfer).toILPJSONStringifiedFormat())
@@ -313,9 +283,9 @@ class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("t
 
         val ja = JsonArray()
         for (transfer in transferList) {
-            if (ai.isAdmin
-                    || (transfer. debits[0] as  Debit).account.localID == ai.id
-                    || (transfer.credits[0] as Credit).account.localID == ai.id) {
+            // TODO:(?) For blockchains ai.isAdmin doesn't make any sense => There is no "root" admin user.
+            //      (Probably is better to never allow for isAdmin true)
+            if (  ai.isAdmin || transfer.txInput .localAccount.localID == ai.id ) {
                 ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
                 transferMatchUser = true
             }
@@ -364,18 +334,15 @@ class TransferStateHandler : RestEndpointHandler(
         val transferId = context.request().getParam(transferUUID)
         val transferID = LocalTransferID(transferId)
         var status = TransferStatus.PROPOSED // default value
-        var transferMatchUser = false
         if (!TM.doesTransferExists(transferID))
             throw ILPExceptionSupport.createILPNotFoundException()
 
         val transfer = TM.getTransferById(transferID)
         status = transfer.transferStatus
-        transferMatchUser = ai.id == (transfer. debits[0] as  Debit).account.localID
-                         || ai.id == (transfer.credits[0] as Credit).account.localID
+        var transferMatchUser = ai.id == transfer.txInput .localAccount.localID
 
-        if (!ai.isAdmin && !transferMatchUser) {
-            throw ILPExceptionSupport.createILPForbiddenException()
-        }
+        if (!ai.isAdmin && !transferMatchUser) throw ILPExceptionSupport.createILPForbiddenException()
+
         // REF: getStateResource @ transfers.js
 
         var receiptType: String? = context.request().getParam("type")
@@ -511,11 +478,6 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
             throw ILPExceptionSupport.createILPUnprocessableEntityException(
                     this.javaClass.name + "Transfer is not conditional")
         }
-        val transferMatchUser = // TODO:(?) Recheck
-                ai.id == transfer.debits[0].localAccount.localID || ai.id == transfer.credits[0].localAccount.localID
-        if (!ai.isAdmin && !transferMatchUser) {
-            throw ILPExceptionSupport.createILPForbiddenException()
-        }
 
         val sFulfillmentInput = context.bodyAsString
         val fulfillmentBytes = Base64.getDecoder().decode(sFulfillmentInput)
@@ -531,7 +493,7 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
         if (transfer.executionCondition == inputFF.condition) {
             if (!inputFF.validate(inputFF.condition))
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("execution fulfillment doesn't validate")
-            if (transfer.expiresAt.compareTo(ZonedDateTime.now()) < 0 && Config.unitTestsActive == false)
+            if (transfer.ilpExpiresAt.compareTo(ZonedDateTime.now()) < 0 && Config.unitTestsActive == false)
                 throw ILPExceptionSupport.createILPUnprocessableEntityException("transfer expired")
             if (transfer.transferStatus != TransferStatus.EXECUTED)
                 TM.executeILPTransfer(transfer, inputFF)
@@ -574,14 +536,14 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
         val transfer = TM.getTransferById(transferID)
 
         var transferMatchUser =
-                   ai.id == transfer.debits[0].localAccount.localID
-                || ai.id == transfer.credits[0].localAccount.localID
+                   ai.id == transfer.txInput .localAccount.localID
+                || ai.id == transfer.txOutput.localAccount.localID
         if (!ai.isAdmin && !(ai.isConnector && transferMatchUser))
             throw ILPExceptionSupport.createILPForbiddenException()
 
         val fulfillment = transfer.executionFulfillment
         if (fulfillment === FF_NOT_PROVIDED) {
-            if (transfer.expiresAt.compareTo(ZonedDateTime.now()) < 0) {
+            if (transfer.ilpExpiresAt.compareTo(ZonedDateTime.now()) < 0) {
                 throw ILPExceptionSupport.createILPNotFoundException("This transfer expired before it was fulfilled")
             }
             throw ILPExceptionSupport.createILPUnprocessableEntityException("Unprocessable Entity")

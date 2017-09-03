@@ -1,13 +1,8 @@
 package com.everis.everledger.ifaces.transfer;
 
-import java.time.ZonedDateTime;
-
 import com.everis.everledger.ifaces.account.IfaceLocalAccount;
-import org.interledger.Fulfillment;
 import org.interledger.ledger.model.TransferStatus;
-
 import javax.money.MonetaryAmount;
-
 
 /*
  * Note: This interfaces implement local (non-ILP-related)
@@ -20,7 +15,7 @@ import javax.money.MonetaryAmount;
  */
 public interface ILocalTransfer {
 
-    interface LocalTransferID {
+    interface LocalTransferID { // TODO:(?) Can be replaced and move getUniqueID to ILocalTransfer?
        String getUniqueID();
     };
 
@@ -28,42 +23,18 @@ public interface ILocalTransfer {
         IfaceLocalAccount getLocalAccount();
         MonetaryAmount    getAmount();
     }
-    interface  Debit extends TransferHalfEntry {}; // "marker" interface
-    interface Credit extends TransferHalfEntry {}; // "marker" interface
-    /*
-     * Get the transfer Unique ID
-     */
+
+    interface TXInput  extends TransferHalfEntry {}; // "marker" interface
+    interface TXOutput extends TransferHalfEntry {}; // "marker" interface
+
     LocalTransferID getTransferID();
 
-    /**
-     * Get the local account that funds are being debited from.
-     *
-     * @return local account identifier
-     */
-    Credit[] getCredits();
-
-    /**
-     * Get the local account that funds are being debited from.
-     *
-     * @return local account identifier
-     */
-    Debit[] getDebits();
+    TXInput getTXInput();
+    TXOutput getTXOutput();
 
     TransferStatus getTransferStatus();
 
-    // TODO:(0): the prepared/executed/rejected/proposed/expired are ILP related data move to ilp-core Interface.
-    public ZonedDateTime getDTTM_prepared();
+    void checkBalancedTransactionOrThrow();
 
-    public ZonedDateTime getDTTM_executed();
-
-    public ZonedDateTime getDTTM_rejected();
-
-    public ZonedDateTime getDTTM_expires();
-
-    public ZonedDateTime getDTTM_proposed();
-
-    public Fulfillment    getExecutionFulfillment();
-
-    public Fulfillment    getCancellationFulfillment();
-
+    boolean isAuthorized();
 }
