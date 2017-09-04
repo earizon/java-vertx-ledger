@@ -1,5 +1,7 @@
 package com.everis.everledger.ifaces.account;
 
+import com.everis.everledger.AuthInfo;
+
 import java.util.Collection;
 
 /**
@@ -27,4 +29,6 @@ public interface IfaceLocalAccountManager {
 
     // If update == false and account already registered => throw exception
     IfaceAccount store(IfaceAccount account, boolean update);
+
+    boolean authInfoMatchAccount(IfaceAccount account, AuthInfo ai);
 }

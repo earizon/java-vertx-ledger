@@ -1,6 +1,11 @@
 package com.everis.everledger.handlers
 
-import com.everis.everledger.AccessRoll
+/*
+ * TODO:(?) Remove debitor/creditor for code. Use TX_src/TX_dst or imilar to avoid confusion with debit/credit terms.
+ * TODO:(?) For blockchains ai.isAdmin doesn't make any sense => There is no "root" admin user.
+ */
+import com.everis.everledger.AuthInfo
+import com.everis.everledger.ifaces.account.IfaceAccount
 import com.everis.everledger.util.Config
 import com.everis.everledger.ifaces.account.IfaceLocalAccountManager
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
@@ -23,7 +28,6 @@ import org.interledger.ledger.model.TransferStatus
 import org.javamoney.moneta.Money
 import java.net.URI
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.time.ZonedDateTime
 import java.util.*
 import javax.money.Monetary
@@ -43,7 +47,6 @@ private constructor() : RestEndpointHandler(
         val ai = AuthManager.authenticate(context)
         val requestBody = RestEndpointHandler.getBodyAsJson(context)
 
-        var transferMatchUser = false
         log.trace(this.javaClass.name + "handlePut invoqued ")
         log.trace(context.bodyAsString)
         /*
@@ -91,7 +94,6 @@ private constructor() : RestEndpointHandler(
         if (input_account_id.lastIndexOf('/') > 0) {
             input_account_id = input_account_id.substring(input_account_id.lastIndexOf('/') + 1)
         }
-        if (ai.id  == input_account_id) { transferMatchUser = true }
         val debit_ammount: MonetaryAmount = try {
             val auxDebit = java.lang.Double.parseDouble(jsonDebit.getString("amount"))
             Money.of(auxDebit, currencyUnit)
@@ -103,11 +105,8 @@ private constructor() : RestEndpointHandler(
             throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F00_BAD_REQUEST, "debit is zero")
         }
         val debitor = AM.getAccountById(input_account_id)
-        log.debug("check123 debit_ammount (must match jsonDebit ammount: " + debit_ammount.toString())
+        _assertAuthInfoMatchTXDebitorOrThrow(debitor, ai)
 
-        if (!ai.isAdmin && !transferMatchUser) {
-            throw ILPExceptionSupport.createILPForbiddenException()
-        }
         val jsonMemo = requestBody.getJsonObject("memo")
         val sMemo = if (jsonMemo == null) "" else jsonMemo.encode()
         // REF: JsonArray ussage:
@@ -234,16 +233,20 @@ private constructor() : RestEndpointHandler(
         val ai = AuthManager.authenticate(context)
         val ilpTransferID = UUID.fromString(context.request().getParam(transferUUID))
         val transfer = TM.getTransferById(ILPSpec2LocalTransferID(ilpTransferID))
+        val debitor = AM.getAccountById(transfer.txInput.localAccount.localID)
+        _assertAuthInfoMatchTXDebitorOrThrow(debitor, ai)
+        response( context, HttpResponseStatus.OK, (transfer as SimpleTransfer).toILPJSONStringifiedFormat())
+    }
 
-        val debit0_account = transfer.txInput.localAccount.localID
-        val transferMatchUser = ai.id == debit0_account
-        if (!transferMatchUser && ai.roll != AccessRoll.ADMIN) {
+    private fun _assertAuthInfoMatchTXDebitorOrThrow(debitor: IfaceAccount, ai : AuthInfo){
+        var transferMatchUser = AM.authInfoMatchAccount(debitor, ai)
+        if (!ai.isAdmin && !transferMatchUser) {
             log.error("transferMatchUser false and user is not ADMIN: "
                     + "\n    ai.id    :" + ai.id
-                    + "\n    transfer.txInput.localAccount.localID:" + debit0_account)
+                    + "\n    transfer.txInput.localAccount.localID:" + debitor)
             throw ILPExceptionSupport.createILPForbiddenException()
         }
-        response( context, HttpResponseStatus.OK, (transfer as SimpleTransfer).toILPJSONStringifiedFormat())
+
     }
 
     companion object {
@@ -272,27 +275,23 @@ class TransfersHandler : RestEndpointHandler(arrayOf(HttpMethod.GET), arrayOf("t
          */
         log.trace(this.javaClass.name + "handleGet invoqued ")
         val ai = AuthManager.authenticate(context)
-        var transferMatchUser = false
 
         //        Condition condition = CryptoConditionUri.parse(URI.create(testVector.getConditionUri()));
         val sExecCond = context.request().getParam(execCondition)
         val executionCondition: Condition
         executionCondition = ConversionUtil.parseURI(URI.create(sExecCond))
-
         val transferList = TM.getTransfersByExecutionCondition(executionCondition)
 
         val ja = JsonArray()
         for (transfer in transferList) {
-            // TODO:(?) For blockchains ai.isAdmin doesn't make any sense => There is no "root" admin user.
-            //      (Probably is better to never allow for isAdmin true)
-            if (  ai.isAdmin || transfer.txInput .localAccount.localID == ai.id ) {
-                ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
-                transferMatchUser = true
-            }
+            val debitor  = AM.getAccountById(transfer.txInput .localAccount.localID)
+            val creditor = AM.getAccountById(transfer.txOutput.localAccount.localID)
+            if ( !ai.isAdmin &&
+                 !( AM.authInfoMatchAccount(debitor  , ai) ||
+                    AM.authInfoMatchAccount(creditor , ai) ) ) continue
+            ja.add((transfer as SimpleTransfer).toILPJSONStringifiedFormat())
         }
-        if (!ai.isAdmin && !transferMatchUser) {
-            throw ILPExceptionSupport.createILPForbiddenException()
-        }
+
         val response = ja.encode()
         context.response()
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -333,13 +332,13 @@ class TransferStateHandler : RestEndpointHandler(
 
         val transferId = context.request().getParam(transferUUID)
         val transferID = LocalTransferID(transferId)
-        var status = TransferStatus.PROPOSED // default value
         if (!TM.doesTransferExists(transferID))
             throw ILPExceptionSupport.createILPNotFoundException()
 
         val transfer = TM.getTransferById(transferID)
-        status = transfer.transferStatus
-        var transferMatchUser = ai.id == transfer.txInput .localAccount.localID
+        var status = transfer.transferStatus
+        val debitor  = AM.getAccountById(transfer.txInput .localAccount.localID)
+        var transferMatchUser = AM.authInfoMatchAccount(debitor , ai)
 
         if (!ai.isAdmin && !transferMatchUser) throw ILPExceptionSupport.createILPForbiddenException()
 
@@ -535,9 +534,10 @@ class FulfillmentHandler : RestEndpointHandler(arrayOf(HttpMethod.GET, HttpMetho
 
         val transfer = TM.getTransferById(transferID)
 
-        var transferMatchUser =
-                   ai.id == transfer.txInput .localAccount.localID
-                || ai.id == transfer.txOutput.localAccount.localID
+        val debitor  = AM.getAccountById(transfer.txInput .localAccount.localID)
+        val creditor = AM.getAccountById(transfer.txOutput.localAccount.localID)
+        var transferMatchUser = AM.authInfoMatchAccount(debitor , ai)
+                             || AM.authInfoMatchAccount(creditor, ai)
         if (!ai.isAdmin && !(ai.isConnector && transferMatchUser))
             throw ILPExceptionSupport.createILPForbiddenException()
 

@@ -48,11 +48,11 @@ public object SimpleAccountManager
 
     // } end IfaceILPSpecAccountManager implementation
 
-    // start IfaceILPSpecAccountManager implementation {
     init {
         resetAccounts()
     }
 
+    // start IfaceLocalAccountManager implementation {
     override fun store(account: IfaceAccount, update: Boolean) :IfaceAccount {
         if (update == false && hasAccount(account.id)) {
             throw ILPExceptionSupport.createILPForbiddenException("account already exists")
@@ -74,7 +74,7 @@ public object SimpleAccountManager
         throw ILPExceptionSupport.createILPNotFoundException()
     }
 
-    override fun getAccounts(page: Int, pageSize: Int): MutableCollection<IfaceAccount> {
+   override fun getAccounts(page: Int, pageSize: Int): MutableCollection<IfaceAccount> {
         val accounts : MutableList<IfaceAccount> = mutableListOf()
         Id2AccountMap.values
                 .stream()
@@ -86,6 +86,13 @@ public object SimpleAccountManager
     override fun getTotalAccounts(): Int {
         return Id2AccountMap.size
     }
+
+
+    override fun authInfoMatchAccount(account: IfaceAccount, ai: AuthInfo): Boolean =
+            ai.id  == account.id
+                    || ai.id == account.authInfo.login
+
+    // } end IfaceLocalAccountManager implementation
 
     fun developerTestingReset() {
         if (!Config.unitTestsActive) {
