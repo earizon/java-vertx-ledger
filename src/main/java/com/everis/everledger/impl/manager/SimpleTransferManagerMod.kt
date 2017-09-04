@@ -294,9 +294,12 @@ object SimpleTransferManager : IfaceTransferManager {
             while (!future.isDone) { Thread.sleep(500) }
             return future.get()
         } catch (e: Exception) {
-            if (e.localizedMessage.toLowerCase().indexOf("Insufficient funds") >= 0 )
-                throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F04_INSUFFICIENT_DST_AMOUNT,
-                    "debit is zero")
+            var message : String = e.message ?: ""
+            if (message.toLowerCase().indexOf("insufficient funds") >= 0) {
+                throw ILPExceptionSupport.createILPException(
+                   422, InterledgerError.ErrorCode.F04_INSUFFICIENT_DST_AMOUNT,
+                        "Insufficient amount ")
+            }
             throw RuntimeException("Problem encountered transferring funds: \n" + e.message)
         } finally {
             log.info("""
