@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.4"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.4-3"
     }
 }
 
@@ -16,7 +16,7 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 
-mainClassName = 'com.everis.everledger.BootUpKotlinKt'
+// mainClassName = 'com.everis.everledger.BootUpKotlinKt'
 
 defaultTasks 'run'
 
@@ -49,9 +49,14 @@ repositories {
 }
 
 dependencies {
-//  compile     projece(':java-ilp-core')
+    // compilation enabled just during development
+    if (true) {
+        // compile project(':web3j')
+        compile project(':java-ilp-core')
+    } else {
+        compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
+    }
     compile     "org.web3j:core:2.3.0"
-    compile     "org.interledger:java-ilp-core:${java_ilp_core_version}"
     compile     "javax.money:money-api:${money_api_version}"
     compile     "org.javamoney:moneta:${moneta_version}"
     compile     "com.google.guava:guava:${guava_version}"
@@ -67,7 +72,6 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-core:${hamcrest_core_version}"
 	testCompile "org.jetbrains.kotlin:kotlin-test"
 	testCompile "org.jetbrains.kotlin:kotlin-test-junit"
-    
 }
 
 sourceSets {
