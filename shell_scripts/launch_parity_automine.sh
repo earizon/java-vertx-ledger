@@ -56,7 +56,7 @@ cat <<EOF >$CWD/data_parity/dev.json
         "0000000000000000000000000000000000000002": { "balance": "1", "nonce": "1048576", "builtin": { "name": "sha256"   , "pricing": { "linear": { "base":   60, "word":  12 } } } },
         "0000000000000000000000000000000000000003": { "balance": "1", "nonce": "1048576", "builtin": { "name": "ripemd160", "pricing": { "linear": { "base":  600, "word": 120 } } } },
         "0000000000000000000000000000000000000004": { "balance": "1", "nonce": "1048576", "builtin": { "name": "identity" , "pricing": { "linear": { "base":   15, "word":   3 } } } },
-        "0x${PUB_ADDRESS_ESCROW}": { "balance": "0",                      "nonce": "1048576"  },
+        "0x${PUB_ADDRESS_ESCROW}": { "balance": "1000000000000000000000", "nonce": "1048576"  },
         "0x${PUB_ADDRESS_ADMIN}" : { "balance": "1000000000000000000000", "nonce": "1048576"  },
         "0x${PUB_ADDRESS_ALICE}" : { "balance": "1000000000000000000000", "nonce": "1048576"  },
         "0x${PUB_ADDRESS_BOB}  " : { "balance": "1000000000000000000000", "nonce": "1048576"  },

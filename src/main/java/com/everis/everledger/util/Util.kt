@@ -236,6 +236,7 @@ object Config {
     val tls_key = getString("server.tls_key")
     val tls_crt = getString("server.tls_cert")
 
+    val ethereum_address_escrow            = getString("ethereum.address.escrow")
     val test_ethereum_address_escrow       = getString("test.ethereum.address.escrow")
     val test_ethereum_address_admin        = getString("test.ethereum.address.admin")
     val test_ethereum_address_ilpconnector = getString("test.ethereum.address.ilpconnector")

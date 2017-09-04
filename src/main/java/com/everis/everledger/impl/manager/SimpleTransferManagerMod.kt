@@ -46,6 +46,8 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.Transfer
 import org.web3j.utils.Convert
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.ExecutionException
@@ -225,7 +227,8 @@ object SimpleTransferManager : IfaceTransferManager {
     private fun __executeLocalTransfer(sender : IfaceLocalAccount , recipient : IfaceLocalAccount , amount : MonetaryAmount ) : String {
         // TODO: LOG local transfer execution.
         val Euro2wei  = BigInteger("1000000"); // TODO:(0)
-        val weiAmount = BigInteger(amount.number.toString()).times(Euro2wei)
+        log.debug("__executeLocalTransfer amount.number.toString():"+amount.number.toString())
+        val weiAmount = BigInteger(""+amount.number.longValueExact() /* TODO:(0) can fail for big number */ ).times(Euro2wei)
         log.info("""
            |__executeLocalTransfer start {
            |    weiAmount: ${weiAmount.longValueExact()}
@@ -281,31 +284,41 @@ object SimpleTransferManager : IfaceTransferManager {
     }
 
     var log_tx_id = 0;
-    private fun performTransfer(
+    private fun _performTransfer(
             web3j: Web3j, destinationAddress: String, credentials: Credentials,
             amountInWei: BigInteger): TransactionReceipt {
         // TODO:(0) Make method async
         log_tx_id++;
-        var total = amountInWei.add(BigInteger("21000")) // TODO:(0) Hardcoded Mining fee
+        // var total = amountInWei.add(BigInteger("21000")) // TODO:(0) Hardcoded Mining fee
 
         try {
-            val future = Transfer.sendFundsAsync(
-                    web3j, credentials, destinationAddress, BigDecimal(total), Convert.Unit.WEI)
-            while (!future.isDone) { Thread.sleep(500) }
-            return future.get()
+            return Transfer.sendFunds(
+                    web3j, credentials, destinationAddress, BigDecimal(amountInWei), Convert.Unit.WEI)
+            // while (!future.isDone) { Thread.sleep(500) }
+            // return future.get()
         } catch (e: Exception) {
+            log.info("""
+               |>>>> src balance: ${web3j.ethGetBalance(     credentials.address, DefaultBlockParameterName.LATEST ).send().balance}
+               |>>>> dst balance: ${web3j.ethGetBalance("0x"+destinationAddress , DefaultBlockParameterName.LATEST ).send().balance}
+               |""".trimMargin("|"))
             var message : String = e.message ?: ""
-            if (message.toLowerCase().indexOf("insufficient funds") >= 0) {
+            if (message.toLowerCase().indexOf("insufficient funds ") >= 0) {
+                val writer = StringWriter()
+                val printWriter = PrintWriter(writer)
+                e.printStackTrace(printWriter)
+                printWriter.flush()
+
                 throw ILPExceptionSupport.createILPException(
                    422, InterledgerError.ErrorCode.F04_INSUFFICIENT_DST_AMOUNT,
-                        "Insufficient amount ")
+                        "Insufficient amount due to Ethereum error: " + e.toString() )
             }
-            throw RuntimeException("Problem encountered transferring funds: \n" + e.message)
+            throw RuntimeException(e)
         } finally {
             log.info("""
-            |$log_tx_id performTransfer start (this may take a few minutes){
+            |$log_tx_id _performTransfer start (this may take a few minutes){
+            |           src address        : ${credentials.address.toString()}
             |           destinantionAddress: $destinationAddress
-            |           amountInWei        : ${total.longValueExact()}
+            |           amountInWei        : ${amountInWei.longValueExact()}
             |}
         """.trimMargin("|"))
         }
@@ -320,20 +333,21 @@ object SimpleTransferManager : IfaceTransferManager {
         // console.printf("Wallet for address " + credentials.getAddress() + " loaded\n")
 
         if (!WalletUtils.isValidAddress(destinationAddress)) {
-            // TODO:(0) Launch ILP exception?
-            throw RuntimeException("Invalid destination address specified")
+            throw RuntimeException("destination address '"+destinationAddress+"' NOT valid")
         }
 
         // val amountInWei = Convert.toWei(weiAmountToTransfer, transferUnit)
 
-        val transactionReceipt = performTransfer(
+        val transactionReceipt = _performTransfer(
                 web3j, destinationAddress, credentials, weiAmountToTransfer)
 
-        log.info("Funds have been successfully transferred from %s to %s%n" + "Transaction hash: %s%nMined block number: %s%n",
-                credentials.getAddress(),
-                destinationAddress,
-                transactionReceipt.getTransactionHash(),
-                transactionReceipt.getBlockNumber())
+        log.info("""
+           |Funds have been successfully transferred. Details {
+           |    src_from: ${credentials.getAddress()}
+           |    dst_to  : ${destinationAddress}
+           |    Transaction hash  : ${transactionReceipt.getTransactionHash()}
+           |    Mined block number: ${transactionReceipt.getBlockNumber()}
+           |}""".trimMargin("|"))
         return transactionReceipt.getTransactionHash();
     }
 

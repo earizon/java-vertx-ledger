@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory
 import java.util.TreeMap
 
 import java.util.function.Consumer
-private val ILP_HOLD_ACCOUNT = "@@HOLD@@"
+private val ILP_HOLD_ACCOUNT =
+        if   (Config.unitTestsActive) Config.test_ethereum_address_escrow
+        else                          Config.ethereum_address_escrow
 
 private val log             = LoggerFactory.getLogger(SimpleAccountManager::class.java)
 /**

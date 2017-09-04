@@ -69,8 +69,14 @@ abstract class RestEndpointHandler(httpMethods: Array<HttpMethod>, uriList: Arra
                 when (context.request().method()) {
                     HttpMethod.HEAD -> handleHead(context)
                     HttpMethod.GET  -> handleGet(context)
-                    HttpMethod.POST -> handlePost(context)
-                    HttpMethod.PUT  -> handlePut(context)
+                    HttpMethod.POST -> {
+                        log.info ("POST BODY:"+context.body)
+                        handlePost(context)
+                    }
+                    HttpMethod.PUT  -> {
+                        log.info ("PUT  BODY:"+context.body)
+                        handlePut(context)
+                    }
                     else // CONNECT, DELETE, HEAD, OPTIONS, OTHER, PATCH, TRACE:
                     -> {}
                 }
