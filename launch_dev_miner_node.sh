@@ -16,7 +16,7 @@ for DIR in $DIR_L ; do
 done
 
 # PUB_KEY4PRIV_KEY* MUST match keystore_test/*
-PUB_KEY4PRIV_KEY_1="ec84a1d40430aaeed7733823a145e57d91430357"
+PUB_KEY4PRIV_KEY_1="6e5160b65a68f0b460abbf8b3ab8d3382de35a74"
 
 cat << EOF >tmp/ethereum/genesis.json
 {
@@ -73,8 +73,8 @@ GETH_OPTS="$GETH_OPTS --rpc  --ws "
 GETH_OPTS="$GETH_OPTS --rpcaddr 0.0.0.0 "
 GETH_OPTS="$GETH_OPTS -rpccorsdomain \"*\" "
 GETH_OPTS="$GETH_OPTS --networkid ${CHAIN_ID} "
-GETH_OPTS="$GETH_OPTS --unlock 0x$PUB_KEY4PRIV_KEY_1 "
-GETH_OPTS="$GETH_OPTS --password /root/.ethereum/password01"
+# GETH_OPTS="$GETH_OPTS --unlock 0x$PUB_KEY4PRIV_KEY_1 "
+# GETH_OPTS="$GETH_OPTS --password /root/.ethereum/password01"
 GETH_OPTS="$GETH_OPTS --datadir /root/.ethereum/ "
 
 # GETH_OPTS="$GETH_OPTS --unlock 0 "
