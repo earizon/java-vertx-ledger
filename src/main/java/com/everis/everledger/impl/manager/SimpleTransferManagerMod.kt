@@ -34,6 +34,7 @@ import com.everis.everledger.impl.SimpleTransfer
 import com.everis.everledger.impl.CC_NOT_PROVIDED
 import com.everis.everledger.ifaces.transfer.ILocalTransfer
 import com.everis.everledger.impl.ILPSpec2LocalTransferID
+import org.interledger.ilp.InterledgerError
 import org.web3j.crypto.CipherException
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.WalletUtils
@@ -47,6 +48,7 @@ import org.web3j.tx.Transfer
 import org.web3j.utils.Convert
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.ExecutionException
 
 /**
  * Simple in-memory {@code SimpleLedgerTransferManager}.
@@ -184,20 +186,24 @@ object SimpleTransferManager : IfaceTransferManager {
 
 
     private fun executeOrCancelILPTransfer(transfer : IfaceTransfer , FF : Fulfillment , isExecution : Boolean  /*false => isCancellation*/) : IfaceTransfer {
+        val result: IfaceTransfer
         if (isExecution /* => DisburseFunds */) {
-            __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txOutput.localAccount, amount = transfer.amount)
-            return (transfer as SimpleTransfer).copy(
+            var txReceipt = __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txOutput.localAccount, amount = transfer.amount)
+            result = (transfer as SimpleTransfer).copy(
                     _transferStatus=TransferStatus.EXECUTED,
                     DTTM_executed=ZonedDateTime.now(),
-                    executionFF=FF )
+                    executionFF=FF,
+                    receipt=txReceipt)
         } else /* => Cancellation/Rollback  */ {
-            __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txInput.localAccount, amount = transfer.amount)
-            return (transfer as SimpleTransfer).copy(
+            var txReceipt = __executeLocalTransfer(sender = accountManager.holdAccountILP, recipient = transfer.txInput.localAccount, amount = transfer.amount)
+            result = (transfer as SimpleTransfer).copy(
                     _transferStatus=TransferStatus.REJECTED,
                     DTTM_executed=ZonedDateTime.now(),
-                    executionFF=FF )
+                    executionFF=FF,
+                    receipt=txReceipt )
         }
         notifyUpdate(transfer = transfer, fulfillment = FF, isExecution = isExecution)
+        return result;
     }
 
     // TODO:(?) Update returned instance in ddbb if needed
@@ -216,17 +222,27 @@ object SimpleTransferManager : IfaceTransferManager {
 
     // } END IfaceILPSpecTransferManager implementation
 
-    private fun __executeLocalTransfer(sender : IfaceLocalAccount , recipient : IfaceLocalAccount , amount : MonetaryAmount ) {
+    private fun __executeLocalTransfer(sender : IfaceLocalAccount , recipient : IfaceLocalAccount , amount : MonetaryAmount ) : String {
         // TODO: LOG local transfer execution.
         val Euro2wei  = BigInteger("1000000"); // TODO:(0)
         val weiAmount = BigInteger(amount.number.toString()).times(Euro2wei)
-        log.info("executeLocalTransfer {")
+        log.info("""
+           |__executeLocalTransfer start {
+           |    weiAmount: ${weiAmount.longValueExact()}
+           |""".trimMargin("|"))
+        /*
+         * TODO:(0) Keep ethereumTXHashID "somewhere" in the local TX log
+         *      ==>  Create local TX log
+         */
         val ethereumTXHashID = sendTransfer(
-            sender   .getLocalID(),
+            "./wallets/"+sender.authInfo.login,
             recipient.getLocalID(),
             weiAmount,
-            transferUnit =  Convert.Unit.WEI)
-        log.info("} executeLocalTransfer")
+            Convert.Unit.WEI)
+        log.info("""
+             |    ethereumTXHashID: $ethereumTXHashID
+             |} executeLocalTransfer""".trimMargin("|"))
+        return ethereumTXHashID
     }
 
     // UnitTest / function test realated code
@@ -264,21 +280,31 @@ object SimpleTransferManager : IfaceTransferManager {
         return loadWalletFile(walletFile)
     }
 
+    var log_tx_id = 0;
     private fun performTransfer(
             web3j: Web3j, destinationAddress: String, credentials: Credentials,
             amountInWei: BigInteger): TransactionReceipt {
+        // TODO:(0) Make method async
+        log_tx_id++;
+        var total = amountInWei.add(BigInteger("21000")) // TODO:(0) Hardcoded Mining fee
 
-        log.info("Commencing transfer (this may take a few minutes) ")
         try {
             val future = Transfer.sendFundsAsync(
-                    web3j, credentials, destinationAddress, BigDecimal(amountInWei), Convert.Unit.WEI)
-
-            while (!future.isDone) {
-                Thread.sleep(500)
-            }
+                    web3j, credentials, destinationAddress, BigDecimal(total), Convert.Unit.WEI)
+            while (!future.isDone) { Thread.sleep(500) }
             return future.get()
         } catch (e: Exception) {
+            if (e.localizedMessage.toLowerCase().indexOf("Insufficient funds") >= 0 )
+                throw ILPExceptionSupport.createILPException(422, InterledgerError.ErrorCode.F04_INSUFFICIENT_DST_AMOUNT,
+                    "debit is zero")
             throw RuntimeException("Problem encountered transferring funds: \n" + e.message)
+        } finally {
+            log.info("""
+            |$log_tx_id performTransfer start (this may take a few minutes){
+            |           destinantionAddress: $destinationAddress
+            |           amountInWei        : ${total.longValueExact()}
+            |}
+        """.trimMargin("|"))
         }
     }
 
